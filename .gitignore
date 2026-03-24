@@ -27,6 +27,5 @@ yarn-error.log
 /storage/debugbar/
 .env
 /public/screenshots
-/config/app.php
 /config/verification.php
 /storage/installed
