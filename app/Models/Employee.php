@@ -40,6 +40,9 @@ class Employee extends Model
         'bank_identifier_code',
         'bank_branch',
         'tax_payer_id',
+        'tpin',           // ADD THIS
+        'napsa_number',   // ADD THIS
+        'nhima_number',   // ADD THIS
         'employee_status',
         'created_by'
     ];

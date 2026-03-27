@@ -436,7 +436,22 @@ export default function EmployeeShow() {
                         <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 tracking-wide">{t('Base Salary')}</h3>
                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">{employee.employee.base_salary}</p>
                       </div>
+
+                      
                     )}
+
+                    <div>
+  <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 tracking-wide">{t('TPIN')}</h3>
+  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">{employee.employee?.tpin || '-'}</p>
+</div>
+<div>
+  <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 tracking-wide">{t('NAPSA Number')}</h3>
+  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">{employee.employee?.napsa_number || '-'}</p>
+</div>
+<div>
+  <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 tracking-wide">{t('NHIMA Number')}</h3>
+  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">{employee.employee?.nhima_number || '-'}</p>
+</div>
                   </div>
                 </CardContent>
               </Card>

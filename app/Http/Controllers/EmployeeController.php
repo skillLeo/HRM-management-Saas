@@ -254,7 +254,9 @@ class EmployeeController extends Controller
                     'bank_identifier_code' => 'nullable|string|max:50',
                     'bank_branch' => 'nullable|string|max:255',
                     'tax_payer_id' => 'nullable|string|max:50',
-
+                    'tpin'=>'nullable|string|max:50',
+                    'napsa_number'=>'nullable|string|max:50',
+                    'nhima_number'=>'nullable|string|max:50',
                     // Documents
                     'documents' => 'nullable|array',
                     'documents.*.document_type_id' => 'required|exists:document_types,id',
@@ -323,6 +325,9 @@ class EmployeeController extends Controller
                 $employee->bank_identifier_code = $request->bank_identifier_code;
                 $employee->bank_branch = $request->bank_branch;
                 $employee->tax_payer_id = $request->tax_payer_id;
+                $employee->tpin          = $request->tpin;
+               $employee->napsa_number  = $request->napsa_number;
+                $employee->nhima_number  = $request->nhima_number;
                 $employee->base_salary = $request->salary;
                 $employee->created_by = creatorId();
                 $employee->save();
@@ -506,7 +511,9 @@ class EmployeeController extends Controller
                     'bank_identifier_code' => 'nullable|string|max:50',
                     'bank_branch' => 'nullable|string|max:255',
                     'tax_payer_id' => 'nullable|string|max:50',
-
+                        'tpin'=>'nullable|string|max:50',
+                    'napsa_number'=>'nullable|string|max:50',
+                    'nhima_number'=>'nullable|string|max:50',
                     // Documents
                     'documents' => 'nullable|array',
                     'documents.*.document_type_id' => 'required|exists:document_types,id',
@@ -566,6 +573,10 @@ class EmployeeController extends Controller
                 $employee->bank_identifier_code = $request->bank_identifier_code;
                 $employee->bank_branch = $request->bank_branch;
                 $employee->tax_payer_id = $request->tax_payer_id;
+                 $employee->tax_payer_id = $request->tax_payer_id;
+                $employee->tpin          = $request->tpin;
+               $employee->napsa_number  = $request->napsa_number;
+                $employee->nhima_number  = $request->nhima_number;
                 $employee->base_salary = $request->salary;
 
                 $employee->save();

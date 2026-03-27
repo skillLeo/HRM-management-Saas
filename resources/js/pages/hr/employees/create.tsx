@@ -52,6 +52,9 @@ export default function EmployeeCreate() {
     bank_identifier_code: '',
     bank_branch: '',
     tax_payer_id: '',
+    tpin: '',           // ADD
+    napsa_number: '',   // ADD
+    nhima_number: '',   // ADD
     salary: '',
     documents: []
   });
@@ -774,7 +777,41 @@ export default function EmployeeCreate() {
                 />
                 {errors.tax_payer_id && <p className="text-red-500 text-xs">{errors.tax_payer_id}</p>}
               </div>
+               <div className="space-y-2">
+  <Label htmlFor="tpin">{t('TPIN (Tax ID)')}</Label>
+  <Input
+    id="tpin"
+    value={formData.tpin}
+    onChange={(e) => handleChange('tpin', e.target.value)}
+    placeholder="e.g. 1234567890"
+    className={errors.tpin ? 'border-red-500' : ''}
+  />
+  {errors.tpin && <p className="text-red-500 text-xs">{errors.tpin}</p>}
+</div>
 
+<div className="space-y-2">
+  <Label htmlFor="napsa_number">{t('NAPSA Registration Number')}</Label>
+  <Input
+    id="napsa_number"
+    value={formData.napsa_number}
+    onChange={(e) => handleChange('napsa_number', e.target.value)}
+    placeholder="e.g. NAPSA-000123"
+    className={errors.napsa_number ? 'border-red-500' : ''}
+  />
+  {errors.napsa_number && <p className="text-red-500 text-xs">{errors.napsa_number}</p>}
+</div>
+
+<div className="space-y-2">
+  <Label htmlFor="nhima_number">{t('NHIMA Registration Number')}</Label>
+  <Input
+    id="nhima_number"
+    value={formData.nhima_number}
+    onChange={(e) => handleChange('nhima_number', e.target.value)}
+    placeholder="e.g. NHIMA-000123"
+    className={errors.nhima_number ? 'border-red-500' : ''}
+  />
+  {errors.nhima_number && <p className="text-red-500 text-xs">{errors.nhima_number}</p>}
+</div>
               <div className="space-y-2">
                 <Label htmlFor="salary" required>{t('Base Salary')}</Label>
                 <Input

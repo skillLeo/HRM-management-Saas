@@ -1,15 +1,18 @@
+// C:\xampp\htdocs\codecanyon-TLu4dAkq-hrm-saas-hr-and-payroll-tool (1)\main-file\resources\js\pages\settings\index.tsx
 import { PageTemplate } from '@/components/page-template';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { type NavItem } from '@/types';
 import { useEffect, useRef, useState } from 'react';
-import { Settings as SettingsIcon, Building, DollarSign, Users, RefreshCw, Palette, BookOpen, Award, FileText, Mail, Bell, Link2, CreditCard, Calendar, HardDrive, Shield, Bot, Cookie, Search, Webhook, Wallet, Clock, Fingerprint, Network, UserPlus, Briefcase, MailOpen, FileCheck } from 'lucide-react';
+import {
+  Settings as SettingsIcon, DollarSign, FileText, Mail,
+  CreditCard, HardDrive, Shield, Bot, Cookie, Search,
+  Palette, Clock, Fingerprint, Network, Briefcase, FileCheck
+} from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import SystemSettings from './components/system-settings';
 import { usePage } from '@inertiajs/react';
-
 import CurrencySettings from './components/currency-settings';
-
 import BrandSettings from './components/brand-settings';
 import EmailSettings from './components/email-settings';
 import PaymentSettings from './components/payment-settings';
@@ -27,20 +30,36 @@ import IpRestrictionSettings from './components/ip-restriction-settings';
 import NocSettings from './components/noc-settings';
 import ExperienceCertificateSettings from './components/experience-certificate-settings';
 import JoiningLetterSettings from './components/joining-letter-settings';
+import ZambiaTaxSettings from './components/zambia-tax-settings';
 import { Toaster } from '@/components/ui/toaster';
 import { useTranslation } from 'react-i18next';
-import { hasPermission } from '@/utils/permissions';
 import { useLayout } from '@/contexts/LayoutContext';
 
 export default function Settings() {
   const { t } = useTranslation();
   const { position } = useLayout();
 
-  const { systemSettings = {}, cacheSize = '0.00', timezones = {}, dateFormats = {}, timeFormats = {}, paymentSettings = {}, webhooks = [], auth = {}, globalSettings = {}, zektoSettings = {}, nocTemplates = [], joiningLetterTemplates = [], experienceCertificateTemplates = [], languages = [] } = usePage().props as any;
+  const {
+    systemSettings = {},
+    cacheSize = '0.00',
+    timezones = {},
+    dateFormats = {},
+    timeFormats = {},
+    paymentSettings = {},
+    webhooks = [],
+    auth = {},
+    globalSettings = {},
+    zektoSettings = {},
+    nocTemplates = [],
+    joiningLetterTemplates = [],
+    experienceCertificateTemplates = [],
+    languages = [],
+    zambiaTaxSettings = {},
+  } = usePage().props as any;
+
   const isSaas = globalSettings?.is_saas;
   const [activeSection, setActiveSection] = useState('system-settings');
 
-  // Define all possible sidebar navigation items
   const allSidebarNavItems: (NavItem & { permission?: string })[] = [
     {
       title: t('System Settings'),
@@ -103,6 +122,12 @@ export default function Settings() {
       permission: 'manage-joining-letter'
     },
     {
+      title: t('Zambia Tax Settings'),
+      href: '#zambia-tax-settings',
+      icon: <DollarSign className="h-4 w-4 mr-2" />,
+      permission: 'manage-zambia-tax-settings'
+    },
+    {
       title: t('Payment Settings'),
       href: '#payment-settings',
       icon: <CreditCard className="h-4 w-4 mr-2" />,
@@ -144,163 +169,127 @@ export default function Settings() {
       icon: <HardDrive className="h-4 w-4 mr-2" />,
       permission: 'manage-cache-settings'
     },
-    // {
-    //   title: t('Google Calendar Settings'),
-    //   href: '#google-calendar-settings',
-    //   icon: <Calendar className="h-4 w-4 mr-2" />,
-    //   permission: 'settings'
-    // },
   ];
 
-  // if (auth.user?.type !== 'superadmin') {
-  //   allSidebarNavItems.push({
-  //     title: t('Webhook Settings'),
-  //     href: '#webhook-settings',
-  //     icon: <Webhook className="h-4 w-4 mr-2" />,
-  //     permission: 'manage-webhook-settings'
-  //   });
-  // }
-  // Filter sidebar items based on user permissions
   const sidebarNavItems = allSidebarNavItems.filter(item => {
-    // Exclude Working Days Settings from superadmin
-    if (item.permission === 'manage-working-days-settings' && auth.user?.type === 'superadmin') {
-      return false;
-    }
-    if (item.permission === 'manage-biomatric-attedance-settings' && auth.user?.type === 'superadmin') {
-      return false;
-    }
-    if (item.permission === 'manage-ip-restriction-settings' && auth.user?.type === 'superadmin') {
-      return false;
-    }
-    // Exclude NOC Settings from superadmin
-    if (item.permission === 'manage-noc' && auth.user?.type === 'superadmin') {
-      return false;
-    }
-    // Exclude Experience Certificate Settings from superadmin
-    if (item.permission === 'manage-experience-certificate' && auth.user?.type === 'superadmin') {
-      return false;
-    }
-    // Exclude Joining Letter Settings from superadmin
-    if (item.permission === 'manage-joining-letter' && auth.user?.type === 'superadmin') {
-      return false;
-    }
-    // If no permission is required or user has the permission
-    if (!item.permission || (auth.permissions && auth.permissions.includes(item.permission))) {
-      return true;
-    }
-    // For company users, show different settings based on SaaS mode
+    if (item.permission === 'manage-working-days-settings' && auth.user?.type === 'superadmin') return false;
+    if (item.permission === 'manage-biomatric-attedance-settings' && auth.user?.type === 'superadmin') return false;
+    if (item.permission === 'manage-ip-restriction-settings' && auth.user?.type === 'superadmin') return false;
+    if (item.permission === 'manage-noc' && auth.user?.type === 'superadmin') return false;
+    if (item.permission === 'manage-experience-certificate' && auth.user?.type === 'superadmin') return false;
+    if (item.permission === 'manage-joining-letter' && auth.user?.type === 'superadmin') return false;
+    if (item.permission === 'manage-zambia-tax-settings' && auth.user?.type === 'superadmin') return false;
+
+    if (!item.permission || (auth.permissions && auth.permissions.includes(item.permission))) return true;
+
     if (auth.user && auth.user.type === 'company') {
-      // In non-SaaS mode, allow additional settings
-      const allowedPermissions = ['manage-system-settings', 'manage-email-settings', 'manage-currency-settings', 'manage-brand-settings', 'manage-webhook-settings', 'manage-working-days-settings', 'manage-biomatric-attedance-settings', 'manage-ip-restriction-settings', 'settings'];
+      const allowedPermissions = [
+        'manage-system-settings', 'manage-email-settings', 'manage-currency-settings',
+        'manage-brand-settings', 'manage-webhook-settings', 'manage-working-days-settings',
+        'manage-biomatric-attedance-settings', 'manage-ip-restriction-settings',
+        'manage-zambia-tax-settings',
+        'settings'
+      ];
       if (!isSaas) {
-        allowedPermissions.push('manage-storage-settings', 'manage-recaptcha-settings', 'manage-chatgpt-settings', 'manage-cookie-settings', 'manage-seo-settings', 'manage-cache-settings', 'manage-working-days-settings', 'manage-biomatric-attedance-settings', 'manage-ip-restriction-settings');
+        allowedPermissions.push(
+          'manage-storage-settings', 'manage-recaptcha-settings', 'manage-chatgpt-settings',
+          'manage-cookie-settings', 'manage-seo-settings', 'manage-cache-settings'
+        );
       }
-      return allowedPermissions.includes(item.permission);
+      return allowedPermissions.includes(item.permission ?? '');
     }
     return false;
   });
 
-  // Refs for each section
-  const systemSettingsRef = useRef<HTMLDivElement>(null);
-  const brandSettingsRef = useRef<HTMLDivElement>(null);
-
-  const currencySettingsRef = useRef<HTMLDivElement>(null);
-  const workingDaysSettingsRef = useRef<HTMLDivElement>(null);
-  const emailSettingsRef = useRef<HTMLDivElement>(null);
-  const paymentSettingsRef = useRef<HTMLDivElement>(null);
-  const storageSettingsRef = useRef<HTMLDivElement>(null);
-  const recaptchaSettingsRef = useRef<HTMLDivElement>(null);
-  const chatgptSettingsRef = useRef<HTMLDivElement>(null);
-  const cookieSettingsRef = useRef<HTMLDivElement>(null);
-  const seoSettingsRef = useRef<HTMLDivElement>(null);
-  const cacheSettingsRef = useRef<HTMLDivElement>(null);
-  const webhookSettingsRef = useRef<HTMLDivElement>(null);
-  const googleCalendarSettingsRef = useRef<HTMLDivElement>(null);
-  const googleWalletSettingsRef = useRef<HTMLDivElement>(null);
-  const zektoSettingsRef = useRef<HTMLDivElement>(null);
-  const ipRestrictionSettingsRef = useRef<HTMLDivElement>(null);
-  const nocSettingsRef = useRef<HTMLDivElement>(null);
+  // ─── Refs ────────────────────────────────────────────────────────────────
+  const systemSettingsRef                = useRef<HTMLDivElement>(null);
+  const brandSettingsRef                 = useRef<HTMLDivElement>(null);
+  const currencySettingsRef              = useRef<HTMLDivElement>(null);
+  const workingDaysSettingsRef           = useRef<HTMLDivElement>(null);
+  const emailSettingsRef                 = useRef<HTMLDivElement>(null);
+  const paymentSettingsRef               = useRef<HTMLDivElement>(null);
+  const storageSettingsRef               = useRef<HTMLDivElement>(null);
+  const recaptchaSettingsRef             = useRef<HTMLDivElement>(null);
+  const chatgptSettingsRef               = useRef<HTMLDivElement>(null);
+  const cookieSettingsRef                = useRef<HTMLDivElement>(null);
+  const seoSettingsRef                   = useRef<HTMLDivElement>(null);
+  const cacheSettingsRef                 = useRef<HTMLDivElement>(null);
+  const webhookSettingsRef               = useRef<HTMLDivElement>(null);
+  const googleCalendarSettingsRef        = useRef<HTMLDivElement>(null);
+  const googleWalletSettingsRef          = useRef<HTMLDivElement>(null);
+  const zektoSettingsRef                 = useRef<HTMLDivElement>(null);
+  const ipRestrictionSettingsRef         = useRef<HTMLDivElement>(null);
+  const nocSettingsRef                   = useRef<HTMLDivElement>(null);
   const experienceCertificateSettingsRef = useRef<HTMLDivElement>(null);
-  const joiningLetterSettingsRef = useRef<HTMLDivElement>(null);
+  const joiningLetterSettingsRef         = useRef<HTMLDivElement>(null);
+  const zambiaTaxSettingsRef             = useRef<HTMLDivElement>(null);
 
-
-  // Smart scroll functionality
+  // ─── Scroll tracking ─────────────────────────────────────────────────────
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 100; // Add offset for better UX
+      const scrollPosition = window.scrollY + 100;
 
-      // Get positions of each section
-      const systemSettingsPosition = systemSettingsRef.current?.offsetTop || 0;
-      const brandSettingsPosition = brandSettingsRef.current?.offsetTop || 0;
+      const pos = (ref: React.RefObject<HTMLDivElement>) => ref.current?.offsetTop || 0;
 
-      const currencySettingsPosition = currencySettingsRef.current?.offsetTop || 0;
-      const workingDaysSettingsPosition = workingDaysSettingsRef.current?.offsetTop || 0;
-      const emailSettingsPosition = emailSettingsRef.current?.offsetTop || 0;
-      const paymentSettingsPosition = paymentSettingsRef.current?.offsetTop || 0;
-      const storageSettingsPosition = storageSettingsRef.current?.offsetTop || 0;
-      const recaptchaSettingsPosition = recaptchaSettingsRef.current?.offsetTop || 0;
-      const chatgptSettingsPosition = chatgptSettingsRef.current?.offsetTop || 0;
-      const cookieSettingsPosition = cookieSettingsRef.current?.offsetTop || 0;
-      const seoSettingsPosition = seoSettingsRef.current?.offsetTop || 0;
-      const cacheSettingsPosition = cacheSettingsRef.current?.offsetTop || 0;
-      const webhookSettingsPosition = webhookSettingsRef.current?.offsetTop || 0;
-      const googleCalendarSettingsPosition = googleCalendarSettingsRef.current?.offsetTop || 0;
-      const googleWalletSettingsPosition = googleWalletSettingsRef.current?.offsetTop || 0;
-      const zektoSettingsPosition = zektoSettingsRef.current?.offsetTop || 0;
-      const ipRestrictionSettingsPosition = ipRestrictionSettingsRef.current?.offsetTop || 0;
-      const nocSettingsPosition = nocSettingsRef.current?.offsetTop || 0;
-      const experienceCertificateSettingsPosition = experienceCertificateSettingsRef.current?.offsetTop || 0;
-      const joiningLetterSettingsPosition = joiningLetterSettingsRef.current?.offsetTop || 0;
+      const zambiaTaxPos               = pos(zambiaTaxSettingsRef);
+      const joiningLetterPos           = pos(joiningLetterSettingsRef);
+      const experienceCertificatePos   = pos(experienceCertificateSettingsRef);
+      const nocPos                     = pos(nocSettingsRef);
+      const zektoPos                   = pos(zektoSettingsRef);
+      const ipRestrictionPos           = pos(ipRestrictionSettingsRef);
+      const cachePos                   = pos(cacheSettingsRef);
+      const seoPos                     = pos(seoSettingsRef);
+      const cookiePos                  = pos(cookieSettingsRef);
+      const chatgptPos                 = pos(chatgptSettingsRef);
+      const recaptchaPos               = pos(recaptchaSettingsRef);
+      const storagePos                 = pos(storageSettingsRef);
+      const paymentPos                 = pos(paymentSettingsRef);
+      const workingDaysPos             = pos(workingDaysSettingsRef);
+      const emailPos                   = pos(emailSettingsRef);
+      const currencyPos                = pos(currencySettingsRef);
+      const brandPos                   = pos(brandSettingsRef);
 
-      // Determine active section based on scroll position
-      // if (scrollPosition >= googleCalendarSettingsPosition) {
-      //   setActiveSection('google-calendar-settings');
-      // } 
-      //  if (scrollPosition >= webhookSettingsPosition) {
-      //   setActiveSection('webhook-settings');
-      // } 
-      if (scrollPosition >= joiningLetterSettingsPosition) {
+      if (scrollPosition >= zambiaTaxPos && zambiaTaxPos > 0) {
+        setActiveSection('zambia-tax-settings');
+      } else if (scrollPosition >= joiningLetterPos) {
         setActiveSection('joining-letter-settings');
-      } else if (scrollPosition >= experienceCertificateSettingsPosition) {
+      } else if (scrollPosition >= experienceCertificatePos) {
         setActiveSection('experience-certificate-settings');
-      } else if (scrollPosition >= nocSettingsPosition) {
+      } else if (scrollPosition >= nocPos) {
         setActiveSection('noc-settings');
-      } else if (scrollPosition >= zektoSettingsPosition) {
+      } else if (scrollPosition >= zektoPos) {
         setActiveSection('zekto-settings');
-      } else if (scrollPosition >= ipRestrictionSettingsPosition) {
+      } else if (scrollPosition >= ipRestrictionPos) {
         setActiveSection('ip-restriction-settings');
-      } else if (scrollPosition >= cacheSettingsPosition) {
+      } else if (scrollPosition >= cachePos) {
         setActiveSection('cache-settings');
-      } else if (scrollPosition >= seoSettingsPosition) {
+      } else if (scrollPosition >= seoPos) {
         setActiveSection('seo-settings');
-      } else if (scrollPosition >= cookieSettingsPosition) {
+      } else if (scrollPosition >= cookiePos) {
         setActiveSection('cookie-settings');
-      } else if (scrollPosition >= chatgptSettingsPosition) {
+      } else if (scrollPosition >= chatgptPos) {
         setActiveSection('chatgpt-settings');
-      } else if (scrollPosition >= recaptchaSettingsPosition) {
+      } else if (scrollPosition >= recaptchaPos) {
         setActiveSection('recaptcha-settings');
-      } else if (scrollPosition >= storageSettingsPosition) {
+      } else if (scrollPosition >= storagePos) {
         setActiveSection('storage-settings');
-      } else if (scrollPosition >= paymentSettingsPosition) {
+      } else if (scrollPosition >= paymentPos) {
         setActiveSection('payment-settings');
-      } else if (scrollPosition >= workingDaysSettingsPosition) {
+      } else if (scrollPosition >= workingDaysPos) {
         setActiveSection('working-days-settings');
-      } else if (scrollPosition >= emailSettingsPosition) {
+      } else if (scrollPosition >= emailPos) {
         setActiveSection('email-settings');
-      } else if (scrollPosition >= currencySettingsPosition) {
+      } else if (scrollPosition >= currencyPos) {
         setActiveSection('currency-settings');
-
-      } else if (scrollPosition >= brandSettingsPosition) {
+      } else if (scrollPosition >= brandPos) {
         setActiveSection('brand-settings');
       } else {
         setActiveSection('system-settings');
       }
     };
 
-    // Add scroll event listener
     window.addEventListener('scroll', handleScroll);
 
-    // Initial check for hash in URL
     const hash = window.location.hash.replace('#', '');
     if (hash) {
       const element = document.getElementById(hash);
@@ -310,12 +299,9 @@ export default function Settings() {
       }
     }
 
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Handle navigation click
   const handleNavClick = (href: string) => {
     const id = href.replace('#', '');
     const element = document.getElementById(id);
@@ -334,9 +320,9 @@ export default function Settings() {
         { title: t('Settings') }
       ]}
     >
-      <div className={`flex flex-col md:flex-row gap-8`} dir={position === 'right' ? 'rtl' : 'ltr'}>
-        {/* <div className={`flex flex-col md:flex-row gap-8 ${position === 'rtl' ? 'md:flex-row-reverse' : ''}`}> */}
-        {/* Sidebar Navigation */}
+      <div className="flex flex-col md:flex-row gap-8" dir={position === 'right' ? 'rtl' : 'ltr'}>
+
+        {/* Sidebar */}
         <div className="md:w-64 flex-shrink-0">
           <div className="sticky top-20">
             <ScrollArea className="h-[calc(100vh-5rem)]">
@@ -361,7 +347,8 @@ export default function Settings() {
 
         {/* Main Content */}
         <div className="flex-1">
-          {/* System Settings Section */}
+
+          {/* System Settings */}
           {(auth.permissions?.includes('manage-system-settings') || auth.user?.type === 'superadmin' || auth.user?.type === 'company') && (
             <section id="system-settings" ref={systemSettingsRef} className="mb-8">
               <SystemSettings
@@ -374,135 +361,124 @@ export default function Settings() {
             </section>
           )}
 
-          {/* Brand Settings Section */}
+          {/* Brand Settings */}
           {(auth.permissions?.includes('manage-brand-settings') || auth.user?.type === 'superadmin') && (
             <section id="brand-settings" ref={brandSettingsRef} className="mb-8">
               <BrandSettings settings={systemSettings} />
             </section>
           )}
 
-
-
-          {/* Currency Settings Section */}
+          {/* Currency Settings */}
           {(auth.permissions?.includes('manage-currency-settings') || auth.user?.type === 'superadmin' || auth.user?.type === 'company') && (
             <section id="currency-settings" ref={currencySettingsRef} className="mb-8">
               <CurrencySettings />
             </section>
           )}
 
-          {/* Email Settings Section */}
+          {/* Email Settings */}
           {(auth.permissions?.includes('manage-email-settings') || auth.user?.type === 'superadmin') && (
             <section id="email-settings" ref={emailSettingsRef} className="mb-8">
               <EmailSettings />
             </section>
           )}
 
-          {/* Working Days Settings Section */}
+          {/* Working Days Settings */}
           {auth.user?.type !== 'superadmin' && (auth.permissions?.includes('manage-working-days-settings') || auth.user?.type === 'company') && (
             <section id="working-days-settings" ref={workingDaysSettingsRef} className="mb-8">
               <WorkingDaysSettings settings={systemSettings} />
             </section>
           )}
 
-          {/* IP Restriction Settings Section */}
-          {auth.user?.type === 'company' && (auth.permissions?.includes('manage-ip-restriction-settings')) && (
+          {/* IP Restriction Settings */}
+          {auth.user?.type === 'company' && auth.permissions?.includes('manage-ip-restriction-settings') && (
             <section id="ip-restriction-settings" ref={ipRestrictionSettingsRef} className="mb-8">
               <IpRestrictionSettings />
             </section>
           )}
 
-          {/* Zekto Settings Section */}
-          {auth.user?.type === 'company' && (auth.permissions?.includes('manage-biomatric-attedance-settings')) && (
+          {/* Zekto Settings */}
+          {auth.user?.type === 'company' && auth.permissions?.includes('manage-biomatric-attedance-settings') && (
             <section id="zekto-settings" ref={zektoSettingsRef} className="mb-8">
               <ZektoSettings settings={zektoSettings} />
             </section>
           )}
 
-           {/* NOC Settings Section */}
-          {auth.user?.type === 'company' && (auth.permissions?.includes('manage-noc')) && (
+          {/* NOC Settings */}
+          {auth.user?.type === 'company' && auth.permissions?.includes('manage-noc') && (
             <section id="noc-settings" ref={nocSettingsRef} className="mb-8">
               <NocSettings templates={nocTemplates} />
             </section>
           )}
 
-          {/* Experience Certificate Settings Section */}
-          {auth.user?.type === 'company' && (auth.permissions?.includes('manage-experience-certificate')) && (
+          {/* Experience Certificate Settings */}
+          {auth.user?.type === 'company' && auth.permissions?.includes('manage-experience-certificate') && (
             <section id="experience-certificate-settings" ref={experienceCertificateSettingsRef} className="mb-8">
               <ExperienceCertificateSettings templates={experienceCertificateTemplates} />
             </section>
           )}
 
-          {/* Joining Letter Settings Section */}
-          {auth.user?.type === 'company' && (auth.permissions?.includes('manage-joining-letter')) && (
+          {/* Joining Letter Settings */}
+          {auth.user?.type === 'company' && auth.permissions?.includes('manage-joining-letter') && (
             <section id="joining-letter-settings" ref={joiningLetterSettingsRef} className="mb-8">
               <JoiningLetterSettings templates={joiningLetterTemplates} />
             </section>
           )}
 
+          {/* Zambia Tax Settings */}
+          {auth.user?.type === 'company' && (
+            <section id="zambia-tax-settings" ref={zambiaTaxSettingsRef} className="mb-8">
+              <ZambiaTaxSettings settings={zambiaTaxSettings} />
+            </section>
+          )}
 
-          {/* Payment Settings Section */}
+          {/* Payment Settings */}
           {(auth.permissions?.includes('manage-payment-settings') || auth.user?.type === 'superadmin') && (
             <section id="payment-settings" ref={paymentSettingsRef} className="mb-8">
               <PaymentSettings settings={paymentSettings} />
             </section>
           )}
 
-          {/* Storage Settings Section */}
+          {/* Storage Settings */}
           {(auth.permissions?.includes('manage-settings') && (auth.user?.type === 'superadmin' || (auth.user?.type === 'company' && !isSaas))) && (
             <section id="storage-settings" ref={storageSettingsRef} className="mb-8">
               <StorageSettings settings={systemSettings} />
             </section>
           )}
 
-          {/* ReCaptcha Settings Section */}
+          {/* ReCaptcha Settings */}
           {(auth.permissions?.includes('manage-recaptcha-settings') || auth.user?.type === 'superadmin' || (auth.user?.type === 'company' && !isSaas)) && (
             <section id="recaptcha-settings" ref={recaptchaSettingsRef} className="mb-8">
               <RecaptchaSettings settings={systemSettings} />
             </section>
           )}
 
-          {/* Chat GPT Settings Section */}
+          {/* Chat GPT Settings */}
           {(auth.permissions?.includes('manage-chatgpt-settings') || auth.user?.type === 'superadmin' || (auth.user?.type === 'company' && !isSaas)) && (
             <section id="chatgpt-settings" ref={chatgptSettingsRef} className="mb-8">
               <ChatGptSettings settings={systemSettings} />
             </section>
           )}
 
-          {/* Cookie Settings Section */}
+          {/* Cookie Settings */}
           {(auth.permissions?.includes('manage-cookie-settings') || auth.user?.type === 'superadmin' || (auth.user?.type === 'company' && !isSaas)) && (
             <section id="cookie-settings" ref={cookieSettingsRef} className="mb-8">
               <CookieSettings settings={systemSettings} />
             </section>
           )}
 
-          {/* SEO Settings Section */}
+          {/* SEO Settings */}
           {(auth.permissions?.includes('manage-seo-settings') || auth.user?.type === 'superadmin' || (auth.user?.type === 'company' && !isSaas)) && (
             <section id="seo-settings" ref={seoSettingsRef} className="mb-8">
               <SeoSettings settings={systemSettings} />
             </section>
           )}
 
-          {/* Cache Settings Section */}
+          {/* Cache Settings */}
           {(auth.permissions?.includes('manage-cache-settings') || auth.user?.type === 'superadmin' || (auth.user?.type === 'company' && !isSaas)) && (
             <section id="cache-settings" ref={cacheSettingsRef} className="mb-8">
               <CacheSettings cacheSize={cacheSize} />
             </section>
           )}
-
-          {/* Google Calendar Settings Section */}
-          {/* {(auth.permissions?.includes('settings') || auth.user?.type === 'company') && (
-            <section id="google-calendar-settings" ref={googleCalendarSettingsRef} className="mb-8">
-              <GoogleCalendarSettings settings={systemSettings} />
-            </section>
-          )} */}
-
-         
-          {/* Webhook Settings Section */}
-          {/* {(auth.permissions?.includes('manage-webhook-settings') && auth.user?.type !== 'superadmin') && (
-            <section id="webhook-settings" ref={webhookSettingsRef} className="mb-8">
-              <WebhookSettings webhooks={webhooks} />
-            </section>
-          )} */}
 
         </div>
       </div>

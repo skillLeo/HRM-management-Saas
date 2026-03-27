@@ -16,53 +16,73 @@ use App\Models\JoiningLetterTemplate;
 
 class SettingsController extends Controller
 {
-    /**
-     * Display the main settings page.
-     *
-     * @return \Inertia\Response
-     */
     public function index()
     {
-        // Get system settings using helper function
         $systemSettings = settings();
         $currencies = Currency::all();
         $paymentSettings = PaymentSetting::getUserSettings(auth()->id());
         $webhooks = Webhook::where('user_id', auth()->id())->get();
-        $ipRestrictions = IpRestriction::whereIn('created_by', getCompanyAndUsersId())->orderBy('id', 'desc')->get();
+        $ipRestrictions = IpRestriction::whereIn('created_by', getCompanyAndUsersId())
+            ->orderBy('id', 'desc')->get();
 
-        // Get Zekto settings for company users
-        $zektoSettings = [];
         $zektoSettings = [
-            'zkteco_api_url' => isset($systemSettings['zkteco_api_url']) ? $systemSettings['zkteco_api_url'] : '',
-            'zkteco_username' => isset($systemSettings['zkteco_username']) ? $systemSettings['zkteco_username'] : '',
-            'zkteco_password' => isset($systemSettings['zkteco_password']) ? $systemSettings['zkteco_password'] : '',
-            'zkteco_auth_token' => isset($systemSettings['zkteco_auth_token']) ? $systemSettings['zkteco_auth_token'] : '',
+            'zkteco_api_url'    => $systemSettings['zkteco_api_url']    ?? '',
+            'zkteco_username'   => $systemSettings['zkteco_username']   ?? '',
+            'zkteco_password'   => $systemSettings['zkteco_password']   ?? '',
+            'zkteco_auth_token' => $systemSettings['zkteco_auth_token'] ?? '',
         ];
 
-        // Get NOC templates for company users
-        $nocTemplates = NocTemplate::where('created_by', Auth::user()->id)->get();
+        $nocTemplates                   = NocTemplate::where('created_by', Auth::id())->get();
+        $joiningLetterTemplates         = JoiningLetterTemplate::where('created_by', Auth::id())->get();
+        $experienceCertificateTemplates = ExperienceCertificateTemplate::where('created_by', Auth::id())->get();
 
-        // Get Joining Letter templates for company users
-        $joiningLetterTemplates = JoiningLetterTemplate::where('created_by', Auth::user()->id)->get();
+        // Zambia Tax Settings
+        // AFTER — replace with this
+$zambiaDefaults = [
+    'zambia_paye_slab_1_min'     => '0',
+    'zambia_paye_slab_1_max'     => '5100',
+    'zambia_paye_slab_1_rate'    => '0',
+    'zambia_paye_slab_2_min'     => '5101',
+    'zambia_paye_slab_2_max'     => '7100',
+    'zambia_paye_slab_2_rate'    => '20',
+    'zambia_paye_slab_3_min'     => '7101',
+    'zambia_paye_slab_3_max'     => '9200',
+    'zambia_paye_slab_3_rate'    => '30',
+    'zambia_paye_slab_4_min'     => '9201',
+    'zambia_paye_slab_4_max'     => '999999999',
+    'zambia_paye_slab_4_rate'    => '37',
+    'zambia_napsa_employee_rate' => '5',
+    'zambia_napsa_employer_rate' => '5',
+    'zambia_napsa_monthly_cap'   => '1073.20',
+    'zambia_nhima_employee_rate' => '1',
+    'zambia_nhima_employer_rate' => '1',
+    'zambia_sdl_rate'            => '0.5',
+];
 
-        // Get Experience Certificate templates for company users
-        $experienceCertificateTemplates = ExperienceCertificateTemplate::where('created_by', Auth::user()->id)->get();
+$zambiaTaxSettings = array_merge(
+    $zambiaDefaults,
+    Setting::where('user_id', creatorId())
+        ->where('key', 'like', 'zambia_%')
+        ->pluck('value', 'key')
+        ->toArray()
+);
 
         return Inertia::render('settings/index', [
-            'systemSettings' => $systemSettings,
-            'settings' => $systemSettings, // For helper functions
-            'cacheSize' => getCacheSize(),
-            'currencies' => $currencies,
-            'timezones' => config('timezones'),
-            'dateFormats' => config('dateformat'),
-            'timeFormats' => config('timeformat'),
-            'paymentSettings' => $paymentSettings,
-            'webhooks' => $webhooks,
-            'zektoSettings' => $zektoSettings,
-            'ipRestrictions' => $ipRestrictions,
-            'nocTemplates' => $nocTemplates,
-            'joiningLetterTemplates' => $joiningLetterTemplates,
-            'experienceCertificateTemplates' => $experienceCertificateTemplates,
+            'systemSettings'                  => $systemSettings,
+            'settings'                        => $systemSettings,
+            'cacheSize'                       => getCacheSize(),
+            'currencies'                      => $currencies,
+            'timezones'                       => config('timezones'),
+            'dateFormats'                     => config('dateformat'),
+            'timeFormats'                     => config('timeformat'),
+            'paymentSettings'                 => $paymentSettings,
+            'webhooks'                        => $webhooks,
+            'zektoSettings'                   => $zektoSettings,
+            'ipRestrictions'                  => $ipRestrictions,
+            'nocTemplates'                    => $nocTemplates,
+            'joiningLetterTemplates'          => $joiningLetterTemplates,
+            'experienceCertificateTemplates'  => $experienceCertificateTemplates,
+            'zambiaTaxSettings'               => $zambiaTaxSettings,
         ]);
     }
 }

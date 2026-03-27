@@ -467,7 +467,7 @@ export default function EmployeeSalaries() {
                 label: emp.name
               })) : []
             },
-            { name: 'basic_salary', label: t('Basic Salary'), type: 'number', min: 0, step: 0.01, readOnly: true },
+{ name: 'basic_salary', label: t('Basic Salary'), type: 'number', min: 0, step: 0.01, required: true, placeholder: t('Enter basic salary amount') },
             {
               name: 'components',
               label: t('Salary Components'),

@@ -86,7 +86,6 @@ class EmployeeSalaryController extends Controller
                             $employeeModel->base_salary = $employeeSalary->basic_salary;
                             $employeeModel->save();
                         }
-
                     }
                     // If base_salary exists → update salary table
                     else {
@@ -134,7 +133,7 @@ class EmployeeSalaryController extends Controller
             if ($request->has('sort_field') && !empty($request->sort_field)) {
                 $sortField = $request->sort_field;
                 $sortDirection = $request->sort_direction ?? 'asc';
-                
+
                 if ($sortField === 'basic_salary') {
                     $query->orderBy('basic_salary', $sortDirection);
                 } else {
@@ -258,6 +257,13 @@ class EmployeeSalaryController extends Controller
 
                 $employeeSalary->update($validated);
 
+                // Sync basic salary back to employee profile
+                $employee = \App\Models\Employee::where('user_id', $employeeSalary->employee_id)->first();
+                if ($employee) {
+                    $employee->base_salary = $validated['basic_salary'];
+                    $employee->save();
+                }
+
                 return redirect()->back()->with('success', __('Employee salary updated successfully'));
             } catch (\Exception $e) {
                 return redirect()->back()->with('error', $e->getMessage() ?: __('Failed to update employee salary'));
@@ -315,16 +321,16 @@ class EmployeeSalaryController extends Controller
                 //     ->first();
 
                 $employeeSalary = EmployeeSalary::with(['employee'])
-                ->where('id',$employeeSalaryId)
-                ->where(function ($q) {
-                    if (Auth::user()->can('manage-any-employee-salaries')) {
-                        $q->whereIn('created_by', getCompanyAndUsersId());
-                    } elseif (Auth::user()->can('manage-own-employee-salaries')) {
-                        $q->where('created_by', Auth::id())->orWhere('employee_id', Auth::id())->where('is_active', 1);
-                    } else {
-                        $q->whereRaw('1 = 0');
-                    }
-                })->first();
+                    ->where('id', $employeeSalaryId)
+                    ->where(function ($q) {
+                        if (Auth::user()->can('manage-any-employee-salaries')) {
+                            $q->whereIn('created_by', getCompanyAndUsersId());
+                        } elseif (Auth::user()->can('manage-own-employee-salaries')) {
+                            $q->where('created_by', Auth::id())->orWhere('employee_id', Auth::id())->where('is_active', 1);
+                        } else {
+                            $q->whereRaw('1 = 0');
+                        }
+                    })->first();
 
                 if (!$employeeSalary) {
                     return redirect()->route('hr.employee-salaries.index')

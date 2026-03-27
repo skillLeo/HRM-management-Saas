@@ -119,4 +119,28 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
     Route::middleware('permission:update-experience-certificate')->group(function () {
         Route::post('settings/experience-certificate/update', [ExperienceCertificateTemplateController::class, 'update'])->name('settings.experience-certificate.update');
     });
+
+    // Zambia Tax Settings routes
+     // Zambia Tax Settings routes
+    Route::middleware('permission:manage-zambia-tax-settings')->group(function () {
+        Route::post('settings/zambia-tax/update',
+            [\App\Http\Controllers\Settings\ZambiaTaxSettingController::class, 'update']
+        )->name('settings.zambia-tax.update');
+    });
+
+    // Zambia Compliance Reports — uses manage-payroll-runs permission (HR already has this)
+    Route::middleware('permission:manage-payroll-runs')->group(function () {
+        Route::get('hr/zambia-reports', [\App\Http\Controllers\ZambiaReportController::class, 'index'])
+            ->name('hr.zambia-reports.index');
+        Route::post('hr/zambia-reports/paye-p11', [\App\Http\Controllers\ZambiaReportController::class, 'payeP11'])
+            ->name('hr.zambia-reports.paye-p11');
+        Route::post('hr/zambia-reports/napsa-schedule', [\App\Http\Controllers\ZambiaReportController::class, 'napsaSchedule'])
+            ->name('hr.zambia-reports.napsa-schedule');
+        Route::post('hr/zambia-reports/nhima-report', [\App\Http\Controllers\ZambiaReportController::class, 'nhimaReport'])
+            ->name('hr.zambia-reports.nhima-report');
+        Route::post('hr/zambia-reports/bank-schedule', [\App\Http\Controllers\ZambiaReportController::class, 'bankSchedule'])
+            ->name('hr.zambia-reports.bank-schedule');
+        Route::post('hr/zambia-reports/payroll-summary', [\App\Http\Controllers\ZambiaReportController::class, 'payrollSummary'])
+            ->name('hr.zambia-reports.payroll-summary');
+    });
 });

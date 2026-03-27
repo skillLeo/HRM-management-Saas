@@ -170,45 +170,56 @@ class PayslipController extends Controller
     // }
 
     public function download($payslipId)
-    {
-        try {
-            $payslip = Payslip::with(['employee', 'payrollEntry.payrollRun', 'payrollEntry.employee.employee'])
-                ->where('id', $payslipId)
-                ->whereIn('created_by', getCompanyAndUsersId())
-                ->first();
+{
+    try {
+        $payslip = Payslip::with([
+            'employee',
+            'payrollEntry.payrollRun',
+            'payrollEntry.employee.employee'
+        ])
+            ->where('id', $payslipId)
+            ->whereIn('created_by', getCompanyAndUsersId())
+            ->first();
 
-            if (!$payslip) {
-                return response()->json(['error' => __('Payslip not found.')], 404);
-            }
-
-            $payrollEntry = $payslip->payrollEntry;
-            $companySettings = settings();
-            $companyUser = User::find(getCompanyId(Auth::user()->id));
-
-            if ($companyUser) {
-                $companySettings = array_merge($companySettings, [
-                    'companyEmail' => $companyUser->email ?? null,
-                ]);
-            }
-
-            $data = [
-                'payslip' => $payslip,
-                'payrollEntry' => $payrollEntry,
-                'employee' => $payrollEntry->employee,
-                'payrollRun' => $payrollEntry->payrollRun,
-                'earnings' => $payrollEntry->earnings_breakdown ?? [],
-                'deductions' => $payrollEntry->deductions_breakdown ?? [],
-                'employeeData' => $payrollEntry->employee->employee,
-                'companySettings' => $companySettings,
-            ];
-
-            $payslip->markAsDownloaded();
-
-            return view('payslips.template', $data);
-        } catch (\Exception $e) {
-            return response()->json(['error' => __('Failed to download payslip: :message', ['message' => $e->getMessage()])], 500);
+        if (!$payslip) {
+            return response()->json(['error' => __('Payslip not found.')], 404);
         }
+
+        $payrollEntry = $payslip->payrollEntry;
+        
+        // Force-load the employee relation if not already loaded
+        $userModel = $payrollEntry->employee; // This is the User model
+        if ($userModel && !$userModel->relationLoaded('employee')) {
+            $userModel->load('employee');
+        }
+
+        $companySettings = settings();
+        $companyUser = User::find(getCompanyId(Auth::user()->id));
+
+        if ($companyUser) {
+            $companySettings = array_merge($companySettings, [
+                'companyEmail' => $companyUser->email ?? null,
+            ]);
+        }
+
+        $data = [
+            'payslip'         => $payslip,
+            'payrollEntry'    => $payrollEntry,
+            'employee'        => $userModel,
+            'payrollRun'      => $payrollEntry->payrollRun,
+            'earnings'        => $payrollEntry->earnings_breakdown ?? [],
+            'deductions'      => $payrollEntry->deductions_breakdown ?? [],
+            'employeeData'    => $userModel?->employee,
+            'companySettings' => $companySettings,
+        ];
+
+        $payslip->markAsDownloaded();
+
+        return view('payslips.template', $data);
+    } catch (\Exception $e) {
+        return response()->json(['error' => __('Failed to download payslip: :message', ['message' => $e->getMessage()])], 500);
     }
+}
 
     public function bulkGenerate(Request $request)
     {

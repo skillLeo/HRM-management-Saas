@@ -855,10 +855,17 @@ export function AppSidebar() {
             });
         }
 
-        if (hasPermission(permissions, 'manage-payslips')) {
+         if (hasPermission(permissions, 'manage-payslips')) {
             payrollChildren.push({
                 title: t('Payslips'),
                 href: route('hr.payslips.index')
+            });
+        }
+
+        if (hasPermission(permissions, 'manage-payroll-runs')) {
+            payrollChildren.push({
+                title: t('Zambia Reports'),
+                href: route('hr.zambia-reports.index')
             });
         }
 
