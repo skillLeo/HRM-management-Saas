@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,11 @@
 
 namespace YooKassa\Request\Payments;
 
+use InvalidArgumentException;
 use YooKassa\Common\Exceptions\InvalidPropertyValueException;
 use YooKassa\Common\Exceptions\InvalidPropertyValueTypeException;
+use YooKassa\Common\ListObject;
+use YooKassa\Common\ListObjectInterface;
 use YooKassa\Model\AmountInterface;
 use YooKassa\Model\Deal\PaymentDealInfo;
 use YooKassa\Model\Metadata;
@@ -37,9 +40,14 @@ use YooKassa\Request\Payments\ConfirmationAttributes\AbstractConfirmationAttribu
 use YooKassa\Request\Payments\ConfirmationAttributes\ConfirmationAttributesFactory;
 use YooKassa\Request\Payments\PaymentData\AbstractPaymentData;
 use YooKassa\Request\Payments\PaymentData\PaymentDataFactory;
+use YooKassa\Request\Payments\PaymentOrderData\AbstractPaymentOrder;
+use YooKassa\Request\Payments\PaymentOrderData\PaymentOrderFactory;
 use YooKassa\Request\Payments\ReceiverData\AbstractReceiver;
 use YooKassa\Request\Payments\ReceiverData\ReceiverFactory;
+use YooKassa\Request\Payments\StatementData\AbstractStatement;
+use YooKassa\Request\Payments\StatementData\StatementFactory;
 use YooKassa\Validator\Constraints as Assert;
+use YooKassa\Validator\Exceptions\ValidatorParameterException;
 
 /**
  * Класс, представляющий модель CreateCaptureRequest.
@@ -73,7 +81,9 @@ use YooKassa\Validator\Constraints as Assert;
  * @property PaymentDealInfo $deal Данные о сделке, в составе которой проходит платеж
  * @property string $merchantCustomerId Идентификатор покупателя в вашей системе, например электронная почта или номер телефона
  * @property string $merchant_customer_id Идентификатор покупателя в вашей системе, например электронная почта или номер телефона
+ * @property AbstractPaymentOrder $payment_order Платежное поручение — распоряжение на перевод банку для оплаты жилищно-коммунальных услуг (ЖКУ), сведения о платеже для регистрации в ГИС ЖКХ. Необходимо передавать при [оплате ЖКУ](/developers/payment-acceptance/scenario-extensions/utility-payments).
  * @property AbstractReceiver|null $receiver Реквизиты получателя оплаты при пополнении электронного кошелька, банковского счета или баланса телефона
+ * @property AbstractStatement[]|ListObjectInterface $statements Данные для отправки справки. Необходимо передавать, если вы хотите, чтобы после оплаты пользователь получил справку.  Сейчас доступен один тип справок — квитанция по платежу. Это информация об успешном платеже, которую ЮKassa отправляет на электронную почту пользователя.  Квитанцию можно отправить, если оплата прошла с банковской карты, через SberPay или СБП. Отправка квитанции доступна во всех сценариях интеграции.
  */
 class CreatePaymentRequest extends AbstractPaymentRequest implements CreatePaymentRequestInterface
 {
@@ -172,6 +182,17 @@ class CreatePaymentRequest extends AbstractPaymentRequest implements CreatePayme
     private ?string $_merchant_customer_id = null;
 
     /**
+     * Платежное поручение — распоряжение на перевод банку для оплаты жилищно-коммунальных услуг (ЖКУ), сведения о платеже для регистрации в ГИС ЖКХ.
+     *
+     * Необходимо передавать при [оплате ЖКУ](/developers/payment-acceptance/scenario-extensions/utility-payments).
+     *
+     * @var AbstractPaymentOrder|null
+     */
+    #[Assert\Valid]
+    #[Assert\Type(AbstractPaymentOrder::class)]
+    private ?AbstractPaymentOrder $_payment_order = null;
+
+    /**
      * Реквизиты получателя оплаты при пополнении электронного кошелька, банковского счета или баланса телефона
      *
      * @var AbstractReceiver|null
@@ -179,6 +200,16 @@ class CreatePaymentRequest extends AbstractPaymentRequest implements CreatePayme
     #[Assert\Valid]
     #[Assert\Type(AbstractReceiver::class)]
     private ?AbstractReceiver $_receiver = null;
+
+    /**
+     * Данные для отправки справки. Необходимо передавать, если вы хотите, чтобы после оплаты пользователь получил справку.  Сейчас доступен один тип справок — квитанция по платежу. Это информация об успешном платеже, которую ЮKassa отправляет на электронную почту пользователя.  Квитанцию можно отправить, если оплата прошла с банковской карты, через SberPay или СБП. Отправка квитанции доступна во всех [сценариях интеграции](/developers/payment-acceptance/getting-started/selecting-integration-scenario).
+     *
+     * @var AbstractStatement[]|ListObjectInterface|null
+     */
+    #[Assert\Valid]
+    #[Assert\AllType(AbstractStatement::class)]
+    #[Assert\Type(ListObject::class)]
+    private ?ListObject $_statements = null;
 
     /**
      * Возвращает описание транзакции
@@ -612,6 +643,42 @@ class CreatePaymentRequest extends AbstractPaymentRequest implements CreatePayme
     }
 
     /**
+     * Возвращает платежное поручение.
+     *
+     * @return AbstractPaymentOrder|null
+     */
+    public function getPaymentOrder(): ?AbstractPaymentOrder
+    {
+        return $this->_payment_order;
+    }
+
+    /**
+     * Проверяет, было ли установлено платежное поручение.
+     *
+     * @return bool True если платежное поручение было установлены, false если нет
+     */
+    public function hasPaymentOrder(): bool
+    {
+        return null !== $this->_payment_order;
+    }
+
+    /**
+     * Устанавливает платежное поручение.
+     *
+     * @param AbstractPaymentOrder|array|null $payment_order Платежное поручение
+     *
+     * @return self
+     */
+    public function setPaymentOrder(mixed $payment_order = null): self
+    {
+        if (is_array($payment_order)) {
+            $payment_order = (new PaymentOrderFactory())->factoryFromArray($payment_order);
+        }
+        $this->_payment_order = $this->validatePropertyValue('_payment_order', $payment_order);
+        return $this;
+    }
+
+    /**
      * Возвращает реквизиты получателя оплаты.
      *
      * @return AbstractReceiver|null Реквизиты получателя оплаты при пополнении электронного кошелька, банковского счета или баланса телефона.
@@ -645,6 +712,63 @@ class CreatePaymentRequest extends AbstractPaymentRequest implements CreatePayme
             $receiver = $factory->factoryFromArray($receiver);
         }
         $this->_receiver = $this->validatePropertyValue('_receiver', $receiver);
+        return $this;
+    }
+
+    /**
+     * Возвращает данные для отправки справки.
+     *
+     * @return AbstractStatement[]|ListObjectInterface Данные для отправки справки
+     */
+    public function getStatements(): ListObjectInterface
+    {
+        if ($this->_statements === null) {
+            $this->_statements = new ListObject(AbstractStatement::class);
+        }
+        return $this->_statements;
+    }
+
+    /**
+     * Проверяет, были ли установлены данные для отправки справки.
+     *
+     * @return bool True если данные для отправки справки были установлены, false если нет
+     */
+    public function hasStatements(): bool
+    {
+        return !empty($this->_statements) && $this->_statements->count() > 0;
+    }
+
+    /**
+     * Устанавливает данные для отправки справки.
+     *
+     * @param ListObjectInterface|array|null $statements Данные для отправки справки
+     *
+     * @return self
+     */
+    public function setStatements(mixed $statements = null): self
+    {
+        $_statements = null;
+        if (!empty($statements)) {
+            if ($statements instanceof ListObjectInterface) {
+                $_statements = $statements;
+            } else if (is_array($statements)) {
+                $factory = new StatementFactory();
+                $_statements = new ListObject(AbstractStatement::class);
+
+                foreach ($statements as $item) {
+                    if (is_array($item)) {
+                        $_statements->add($factory->factoryFromArray($item));
+                    } else if ($item instanceof AbstractStatement) {
+                        $_statements->add($item);
+                    } else {
+                        throw new InvalidArgumentException('Statements item must be an array or an object of AbstractStatement');
+                    }
+                }
+            } else {
+                throw new ValidatorParameterException('Statements must be an array or an object of ListObjectInterface');
+            }
+        }
+        $this->_statements = $this->validatePropertyValue('_statements', $_statements);
         return $this;
     }
 

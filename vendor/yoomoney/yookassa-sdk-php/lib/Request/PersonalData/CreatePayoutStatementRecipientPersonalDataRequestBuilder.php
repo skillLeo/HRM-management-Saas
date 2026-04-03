@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,7 @@ use YooKassa\Request\PersonalData\PersonalDataType\PayoutStatementRecipientPerso
  *
  * Класс билдера объектов запросов к API на создание платежа.
  *
- * @example 02-builder.php 210 20 Пример использования билдера
+ * @example 02-builder.php 210 19 Пример использования билдера
  *
  * @category Class
  * @package  YooKassa\Request

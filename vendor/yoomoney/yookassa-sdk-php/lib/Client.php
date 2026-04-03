@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -52,6 +52,7 @@ use YooKassa\Model\Invoice\InvoiceInterface;
 use YooKassa\Model\Payment\PaymentInterface;
 use YooKassa\Model\Payout\PayoutInterface;
 use YooKassa\Model\PersonalData\PersonalDataInterface;
+use YooKassa\Model\SavePaymentMethod\SavePaymentMethodInterface;
 use YooKassa\Model\SelfEmployed\SelfEmployedInterface;
 use YooKassa\Model\Webhook\Webhook;
 use YooKassa\Request\Deals\CreateDealRequest;
@@ -67,6 +68,10 @@ use YooKassa\Request\Invoices\CreateInvoiceRequest;
 use YooKassa\Request\Invoices\CreateInvoiceRequestInterface;
 use YooKassa\Request\Invoices\CreateInvoiceRequestSerializer;
 use YooKassa\Request\Invoices\InvoiceResponse;
+use YooKassa\Request\PaymentMethods\CreatePaymentMethodRequest;
+use YooKassa\Request\PaymentMethods\CreatePaymentMethodRequestInterface;
+use YooKassa\Request\PaymentMethods\CreatePaymentMethodRequestSerializer;
+use YooKassa\Request\PaymentMethods\PaymentMethodResponse;
 use YooKassa\Request\Payments\CancelResponse;
 use YooKassa\Request\Payments\CreateCaptureRequest;
 use YooKassa\Request\Payments\CreateCaptureRequestInterface;
@@ -86,6 +91,10 @@ use YooKassa\Request\Payouts\CreatePayoutRequestInterface;
 use YooKassa\Request\Payouts\CreatePayoutRequestSerializer;
 use YooKassa\Request\Payouts\CreatePayoutResponse;
 use YooKassa\Request\Payouts\PayoutResponse;
+use YooKassa\Request\Payouts\PayoutsRequest;
+use YooKassa\Request\Payouts\PayoutsRequestInterface;
+use YooKassa\Request\Payouts\PayoutsRequestSerializer;
+use YooKassa\Request\Payouts\PayoutsResponse;
 use YooKassa\Request\Payouts\SbpBanksResponse;
 use YooKassa\Request\PersonalData\PersonalDataResponse;
 use YooKassa\Request\PersonalData\PersonalDataType\AbstractPersonalDataRequest;
@@ -118,14 +127,14 @@ use YooKassa\Request\Webhook\WebhookListResponse;
 /**
  * Класс клиента API.
  *
- * @example 01-client.php 3 7 Создание клиента
+ * @example 01-client.php 3 9 Создание клиента
  */
 class Client extends BaseClient
 {
     /**
      * Текущая версия библиотеки.
      */
-    public const SDK_VERSION = '3.8.1';
+    public const SDK_VERSION = '3.13.1';
 
     /**
      * Получить список платежей магазина.
@@ -201,7 +210,7 @@ class Client extends BaseClient
      * <li>metadata — дополнительные данные (передаются магазином).</li>
      * </ul>
      *
-     * @example 01-client.php 21 28 Запрос на создание платежа
+     * @example 01-client.php 21 27 Запрос на создание платежа
      *
      * @param array|CreatePaymentRequestInterface $paymentData Запрос на создание платежа
      * @param null|string $idempotenceKey [Ключ идемпотентности](https://yookassa.ru/developers/using-api/basics?lang=php#idempotence)
@@ -249,7 +258,7 @@ class Client extends BaseClient
      * Запрос позволяет получить информацию о текущем состоянии платежа по его уникальному идентификатору.
      * Выдает объект платежа {@link PaymentInterface} в актуальном статусе.
      *
-     * @example 01-client.php 173 8 Получить информацию о платеже
+     * @example 01-client.php 173 7 Получить информацию о платеже
      *
      * @param string $paymentId Идентификатор платежа
      *
@@ -301,7 +310,7 @@ class Client extends BaseClient
      * у вас есть 7 дней на подтверждение платежа. Для остальных способов оплаты платеж необходимо подтвердить
      * в течение 6 часов.
      *
-     * @example 01-client.php 51 35 Подтверждение платежа
+     * @example 01-client.php 51 34 Подтверждение платежа
      *
      * @param array|CreateCaptureRequestInterface $captureData Запрос на создание подтверждения платежа
      * @param string $paymentId Идентификатор платежа
@@ -357,7 +366,7 @@ class Client extends BaseClient
      * возвращать деньги на счет плательщика. Для платежей банковскими картами отмена происходит мгновенно.
      * Для остальных способов оплаты возврат может занимать до нескольких дней.
      *
-     * @example 01-client.php 88 10 Отменить незавершенную оплату заказа
+     * @example 01-client.php 88 9 Отменить незавершенную оплату заказа
      *
      * @param string $paymentId Идентификатор платежа
      * @param null|string $idempotenceKey [Ключ идемпотентности](https://yookassa.ru/developers/using-api/basics?lang=php#idempotence)
@@ -456,7 +465,7 @@ class Client extends BaseClient
      * этого платежа. Создание возврата возможно только для платежей в статусе `succeeded`. Комиссии за проведение
      * возврата нет. Комиссия, которую ЮKassa берёт за проведение исходного платежа, не возвращается.
      *
-     * @example 01-client.php 145 26 Запрос на создание возврата
+     * @example 01-client.php 145 25 Запрос на создание возврата
      *
      * @param array|CreateRefundRequestInterface $refundData Запрос на создание возврата
      * @param null|string $idempotenceKey [Ключ идемпотентности](https://yookassa.ru/developers/using-api/basics?lang=php#idempotence)
@@ -506,7 +515,7 @@ class Client extends BaseClient
      * Запрос позволяет получить информацию о текущем состоянии возврата по его уникальному идентификатору.
      * В ответ на запрос придет объект возврата {@link RefundResponse} в актуальном статусе.
      *
-     * @example 01-client.php 183 8 Получить информацию о возврате
+     * @example 01-client.php 183 7 Получить информацию о возврате
      *
      * @param string $refundId Идентификатор возврата
      *
@@ -724,7 +733,7 @@ class Client extends BaseClient
      * Создает объект чека — `Receipt`. Возвращает успешно созданный чек по уникальному идентификатору
      * платежа или возврата.
      *
-     * @example 01-client.php 100 43 Запрос на создание чека
+     * @example 01-client.php 100 42 Запрос на создание чека
      *
      * @param array|CreatePostReceiptRequestInterface $receiptData Запрос на создание чека
      * @param null|string $idempotenceKey [Ключ идемпотентности](https://yookassa.ru/developers/using-api/basics?lang=php#idempotence)
@@ -772,7 +781,7 @@ class Client extends BaseClient
      * Запрос позволяет получить информацию о текущем состоянии чека по его уникальному идентификатору.
      * Выдает объект чека {@link ReceiptResponseInterface} в актуальном статусе.
      *
-     * @example 01-client.php 173 8 Получить информацию о чеке
+     * @example 01-client.php 173 7 Получить информацию о чеке
      *
      * @param string $receiptId Идентификатор чека
      *
@@ -829,7 +838,7 @@ class Client extends BaseClient
      * <li>description — Описание сделки (не более 128 символов). Используется для фильтрации при получении списка сделок.</li>
      * </ul>
      *
-     * @example 01-client.php 316 18 Запрос на создание сделки
+     * @example 01-client.php 316 17 Запрос на создание сделки
      *
      * @param array|CreateDealRequestInterface $dealData Запрос на создание сделки
      * @param null|string $idempotenceKey [Ключ идемпотентности](https://yookassa.ru/developers/using-api/basics?lang=php#idempotence)
@@ -874,7 +883,7 @@ class Client extends BaseClient
      * Запрос позволяет получить информацию о текущем состоянии сделки по её уникальному идентификатору.
      * Выдает объект чека {@link DealInteface} в актуальном статусе.
      *
-     * @example 01-client.php 336 8 Получить информацию о сделке
+     * @example 01-client.php 336 7 Получить информацию о сделке
      *
      * @param string $dealId Идентификатор сделки
      *
@@ -987,7 +996,7 @@ class Client extends BaseClient
      * <li>metadata — любые дополнительные данные, которые нужны вам для работы (например, ваш внутренний идентификатор заказа).</li>
      * </ul>
      *
-     * @example 01-client.php 376 26 Запрос на создание выплаты
+     * @example 01-client.php 376 25 Запрос на создание выплаты
      *
      * @param array|CreatePayoutRequestInterface $payoutData Запрос на создание выплаты
      * @param null|string $idempotenceKey [Ключ идемпотентности](https://yookassa.ru/developers/using-api/basics?lang=php#idempotence)
@@ -1046,7 +1055,7 @@ class Client extends BaseClient
      * @throws UnauthorizedException Неверное имя пользователя или пароль или невалидный OAuth-токен при аутентификации
      * @throws ExtensionNotFoundException Требуемое PHP расширение не установлено
      *
-     * @example 01-client.php 405 9 Получить информацию о выплате
+     * @example 01-client.php 405 8 Получить информацию о выплате
      */
     public function getPayoutInfo(string $payoutId): ?PayoutInterface
     {
@@ -1075,11 +1084,62 @@ class Client extends BaseClient
     }
 
     /**
+     * Получить список выплат магазина.
+     *
+     * Запрос позволяет получить список выплат, отфильтрованный по заданным критериям.
+     * В ответ на запрос вернется список выплат с учетом переданных параметров. В списке будет информация о платежах,
+     * созданных за последние 3 года. Список будет отсортирован по времени создания выплат в порядке убывания.
+     * Если результатов больше, чем задано в `limit`, список будет выводиться фрагментами. В этом случае в ответе
+     * на запрос вернется фрагмент списка и параметр `next_cursor` с указателем на следующий фрагмент.
+     *
+     * @example 01-client.php 617 25 Получить список выплат магазина с фильтрацией
+     *
+     * @param array|PayoutsRequestInterface|null $filter Параметры фильтрации
+     *
+     * @throws ApiException Неожиданный код ошибки
+     * @throws BadApiRequestException Неправильный запрос. Чаще всего этот статус выдается из-за нарушения правил взаимодействия с API
+     * @throws ForbiddenException Секретный ключ или OAuth-токен верный, но не хватает прав для совершения операции
+     * @throws InternalServerError Технические неполадки на стороне ЮKassa. Результат обработки запроса неизвестен. Повторите запрос позднее с тем же ключом идемпотентности
+     * @throws NotFoundException Ресурс не найден
+     * @throws ResponseProcessingException Запрос был принят на обработку, но она не завершена
+     * @throws TooManyRequestsException Превышен лимит запросов в единицу времени. Попробуйте снизить интенсивность запросов
+     * @throws UnauthorizedException Неверное имя пользователя или пароль или невалидный OAuth-токен при аутентификации
+     * @throws ExtensionNotFoundException Требуемое PHP расширение не установлено
+     * @throws Exception
+     */
+    public function getPayouts(mixed $filter = null): ?PayoutsResponse
+    {
+        $path = self::PAYOUTS_PATH;
+
+        if (null === $filter) {
+            $queryParams = [];
+        } else {
+            if (is_array($filter)) {
+                $filter = PayoutsRequest::builder()->build($filter);
+            }
+            $serializer = new PayoutsRequestSerializer();
+            $queryParams = $serializer->serialize($filter);
+        }
+
+        $response = $this->execute($path, HttpVerb::GET, $queryParams);
+
+        $payoutsResponse = null;
+        if (200 === $response->getCode()) {
+            $responseArray = $this->decodeData($response);
+            $payoutsResponse = new PayoutsResponse($responseArray);
+        } else {
+            $this->handleError($response);
+        }
+
+        return $payoutsResponse;
+    }
+
+    /**
      * Информация о магазине.
      *
      * Запрос позволяет получить информацию о магазине для переданного OAuth-токена.
      *
-     * @example 01-client.php 12 7 Информация о магазине
+     * @example 01-client.php 12 6 Информация о магазине
      *
      * @param null|array|int|string $filter Параметры поиска. В настоящее время доступен только `on_behalf_of`
      *
@@ -1128,7 +1188,7 @@ class Client extends BaseClient
      * Идентификатор созданного объекта персональных данных необходимо использовать в запросе на проведение выплаты через СБП с проверкой получателя.
      * [Подробнее о выплатах с проверкой получателя](/developers/payouts/scenario-extensions/recipient-check)
      *
-     * @example 01-client.php 416 17 Запрос на создание персональных данных
+     * @example 01-client.php 416 16 Запрос на создание персональных данных
      *
      * @param array|AbstractPersonalDataRequest $personalData Запрос на создание персональных данных
      * @param null|string $idempotenceKey [Ключ идемпотентности](https://yookassa.ru/developers/using-api/basics?lang=php#idempotence)
@@ -1176,7 +1236,7 @@ class Client extends BaseClient
      * Запрос позволяет получить информацию о текущем состоянии персональных данных по их уникальному идентификатору.
      * Выдает объект платежа {@link PersonalDataInterface} в актуальном статусе.
      *
-     * @example 01-client.php 435 9 Получить информацию о персональных данных
+     * @example 01-client.php 435 8 Получить информацию о персональных данных
      *
      * @param string $personalDataId Идентификатор персональных данных
      *
@@ -1223,7 +1283,7 @@ class Client extends BaseClient
      * Список нужно вывести получателю выплаты, идентификатор выбранного участника СБП необходимо использовать
      * в запросе на создание выплаты.
      *
-     * @example 01-client.php 474 7 Получить список участников СБП
+     * @example 01-client.php 474 6 Получить список участников СБП
      *
      * @throws ApiException Неожиданный код ошибки
      * @throws BadApiRequestException Неправильный запрос. Чаще всего этот статус выдается из-за нарушения правил взаимодействия с API
@@ -1262,7 +1322,7 @@ class Client extends BaseClient
      *
      * Идентификатор созданного объекта самозанятого необходимо использовать в запросе на проведение выплаты.
      *
-     * @example 01-client.php 446 15 Запрос на создание самозанятого
+     * @example 01-client.php 446 14 Запрос на создание самозанятого
      *
      * @param array|SelfEmployedRequestInterface $selfEmployed Запрос на создание самозанятого
      * @param null|string $idempotenceKey [Ключ идемпотентности](https://yookassa.ru/developers/using-api/basics?lang=php#idempotence)
@@ -1306,7 +1366,7 @@ class Client extends BaseClient
      *
      * С помощью этого запроса вы можете получить информацию о текущем статусе самозанятого по его уникальному идентификатору.
      *
-     * @example 01-client.php 463 9 Получить информацию о самозанятом
+     * @example 01-client.php 463 8 Получить информацию о самозанятом
      *
      * @param string $selfEmployedId Идентификатор самозанятого
      *
@@ -1349,7 +1409,7 @@ class Client extends BaseClient
      *
      * Используйте этот запрос, чтобы создать в ЮKassa [объект счета](https://yookassa.ru/developers/api?codeLang=bash#create_invoice).
      *
-     * @example 01-client.php 484 69 Запрос на создание счёта
+     * @example 01-client.php 483 68 Запрос на создание счёта
      *
      * @param array|CreateInvoiceRequestInterface $invoice
      * @param string|null $idempotenceKey
@@ -1397,7 +1457,7 @@ class Client extends BaseClient
      *
      * С помощью этого запроса вы можете получить информацию о текущем статусе счета по его уникальному идентификатору.
      *
-     * @example 01-client.php 555 14 Получить информацию о счете
+     * @example 01-client.php 554 13 Получить информацию о счете
      *
      * @param string $invoiceId Идентификатор счета
      *
@@ -1432,6 +1492,99 @@ class Client extends BaseClient
         if (200 === $response->getCode()) {
             $resultArray = $this->decodeData($response);
             $result = new InvoiceResponse($resultArray);
+        } else {
+            $this->handleError($response);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Создание способа оплаты.
+     *
+     * Используйте этот запрос, чтобы создать в ЮKassa [объект способа оплаты](https://yookassa.ru/developers/api#create_payment_method).
+     * В запросе необходимо передать код способа оплаты, который вы хотите сохранить, и при необходимости дополнительные параметры, связанные с той функциональностью, которую вы хотите использовать.
+     *
+     * Идентификатор созданного способа оплаты вы можете использовать при проведении [автоплатежей](/developers/payment-acceptance/scenario-extensions/recurring-payments/create-recurring) или [выплат](/developers/payouts/scenario-extensions/multipurpose-token).
+     *
+     * @example 01-client.php 569 34 Запрос на создание способа оплаты
+     *
+     * @param array|CreatePaymentMethodRequestInterface $paymentMethod
+     * @param string|null $idempotenceKey
+     *
+     * @return SavePaymentMethodInterface|null
+     * @throws ApiConnectionException
+     * @throws ApiException
+     * @throws AuthorizeException
+     * @throws BadApiRequestException
+     * @throws ExtensionNotFoundException
+     * @throws ForbiddenException
+     * @throws InternalServerError
+     * @throws NotFoundException
+     * @throws ResponseProcessingException
+     * @throws TooManyRequestsException
+     * @throws UnauthorizedException
+     * @throws JsonException
+     *
+     */
+    public function createPaymentMethod(array|CreatePaymentMethodRequestInterface $paymentMethod, ?string $idempotenceKey = null): ?SavePaymentMethodInterface
+    {
+        $path = self::PAYMENT_METHODS_PATH;
+
+        $headers = [self::IDEMPOTENCE_KEY_HEADER => $idempotenceKey ?: UUID::v4()];
+        $request = is_array($paymentMethod) ? CreatePaymentMethodRequest::builder()->build($paymentMethod) : $paymentMethod;
+
+        $serializer = new CreatePaymentMethodRequestSerializer();
+        $serializedData = $serializer->serialize($request);
+        $httpBody = $this->encodeData($serializedData);
+
+        $response = $this->execute($path, HttpVerb::POST, [], $httpBody, $headers);
+
+        $result = null;
+        if (200 === $response->getCode()) {
+            $resultArray = $this->decodeData($response);
+            $result = new PaymentMethodResponse($resultArray);
+        } else {
+            $this->handleError($response);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Получить информацию о способе оплаты
+     *
+     * Используйте этот запрос, чтобы получить информацию о текущем состоянии способа оплаты по его уникальному идентификатору.
+     *
+     * @param string $paymentMethodId Идентификатор способа оплаты
+     *
+     * @example 01-client.php 605 10 Получить информацию о способе оплаты
+     *
+     * @return SavePaymentMethodInterface|null
+     * @throws ApiConnectionException
+     * @throws ApiException
+     * @throws AuthorizeException
+     * @throws BadApiRequestException
+     * @throws ExtensionNotFoundException
+     * @throws ForbiddenException
+     * @throws InternalServerError
+     * @throws JsonException
+     * @throws NotFoundException
+     * @throws ResponseProcessingException
+     * @throws TooManyRequestsException
+     * @throws UnauthorizedException
+     *
+     */
+    public function getPaymentMethodInfo(string $paymentMethodId): ?SavePaymentMethodInterface
+    {
+        $path = self::PAYMENT_METHODS_PATH . '/' . $paymentMethodId;
+
+        $response = $this->execute($path, HttpVerb::GET, []);
+
+        $result = null;
+        if (200 === $response->getCode()) {
+            $resultArray = $this->decodeData($response);
+            $result = new PaymentMethodResponse($resultArray);
         } else {
             $this->handleError($response);
         }

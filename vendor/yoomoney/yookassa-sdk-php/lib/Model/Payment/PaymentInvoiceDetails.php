@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,12 +40,12 @@ use YooKassa\Validator\Constraints as Assert;
  * @author   cms@yoomoney.ru
  * @link     https://yookassa.ru/developers/api
  *
- * @property string $id Идентификатор счета в ЮКасса.
+ * @property string $id Идентификатор счета в ЮKassa.
  */
 class PaymentInvoiceDetails extends AbstractObject
 {
     /**
-     * Идентификатор счета в ЮКасса.
+     * Идентификатор счета в ЮKassa.
      *
      * @var string|null
      */
@@ -57,7 +57,7 @@ class PaymentInvoiceDetails extends AbstractObject
     /**
      * Возвращает id.
      *
-     * @return string|null Идентификатор счета в ЮКасса.
+     * @return string|null Идентификатор счета в ЮKassa.
      */
     public function getId(): ?string
     {
@@ -67,7 +67,7 @@ class PaymentInvoiceDetails extends AbstractObject
     /**
      * Устанавливает id.
      *
-     * @param string|null $id Идентификатор счета в ЮКасса.
+     * @param string|null $id Идентификатор счета в ЮKassa.
      *
      * @return self
      */

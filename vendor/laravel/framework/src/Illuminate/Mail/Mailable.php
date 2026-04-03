@@ -250,8 +250,12 @@ class Mailable implements MailableContract, Renderable
 
         $queueName = property_exists($this, 'queue') ? $this->queue : null;
 
+        $job = $this->newQueuedJob();
+
+        $job->delay($delay);
+
         return $queue->connection($connection)->laterOn(
-            $queueName ?: null, $delay, $this->newQueuedJob()
+            $queueName ?: null, $delay, $job
         );
     }
 
@@ -262,7 +266,13 @@ class Mailable implements MailableContract, Renderable
      */
     protected function newQueuedJob()
     {
+        $messageGroup = $this->messageGroup ?? (method_exists($this, 'messageGroup') ? $this->messageGroup() : null);
+
+        $deduplicator = $this->deduplicator ?? (method_exists($this, 'deduplicationId') ? $this->deduplicationId(...) : null);
+
         return Container::getInstance()->make(SendQueuedMailable::class, ['mailable' => $this])
+            ->onGroup($messageGroup)
+            ->withDeduplicator($deduplicator)
             ->through(array_merge(
                 method_exists($this, 'middleware') ? $this->middleware() : [],
                 $this->middleware ?? []
@@ -1184,13 +1194,17 @@ class Mailable implements MailableContract, Renderable
     /**
      * Add a metadata header to the message when supported by the underlying transport.
      *
-     * @param  string  $key
-     * @param  string  $value
+     * @param  array|string  $key
+     * @param  string|null  $value
      * @return $this
      */
-    public function metadata($key, $value)
+    public function metadata($key, $value = null)
     {
-        $this->metadata[$key] = $value;
+        if (is_array($key)) {
+            $this->metadata = array_merge($this->metadata, $key);
+        } else {
+            $this->metadata[$key] = $value;
+        }
 
         return $this;
     }
@@ -1401,9 +1415,9 @@ class Mailable implements MailableContract, Renderable
      */
     public function assertSeeInHtml($string, $escape = true)
     {
-        $string = $escape ? EncodedHtmlString::convert($string, withQuote: isset($this->markdown)) : $string;
+        $string = $escape ? EncodedHtmlString::convert($string, withQuote: true) : $string;
 
-        [$html, $text] = $this->renderForAssertions();
+        [$html] = $this->renderForAssertions();
 
         PHPUnit::assertStringContainsString(
             $string,
@@ -1423,9 +1437,9 @@ class Mailable implements MailableContract, Renderable
      */
     public function assertDontSeeInHtml($string, $escape = true)
     {
-        $string = $escape ? EncodedHtmlString::convert($string, withQuote: isset($this->markdown)) : $string;
+        $string = $escape ? EncodedHtmlString::convert($string, withQuote: true) : $string;
 
-        [$html, $text] = $this->renderForAssertions();
+        [$html] = $this->renderForAssertions();
 
         PHPUnit::assertStringNotContainsString(
             $string,
@@ -1446,10 +1460,10 @@ class Mailable implements MailableContract, Renderable
     public function assertSeeInOrderInHtml($strings, $escape = true)
     {
         $strings = $escape ? array_map(function ($string) {
-            return EncodedHtmlString::convert($string, withQuote: isset($this->markdown));
+            return EncodedHtmlString::convert($string, withQuote: true);
         }, $strings) : $strings;
 
-        [$html, $text] = $this->renderForAssertions();
+        [$html] = $this->renderForAssertions();
 
         PHPUnit::assertThat($strings, new SeeInOrder($html));
 
@@ -1464,7 +1478,7 @@ class Mailable implements MailableContract, Renderable
      */
     public function assertSeeInText($string)
     {
-        [$html, $text] = $this->renderForAssertions();
+        [, $text] = $this->renderForAssertions();
 
         PHPUnit::assertStringContainsString(
             $string,
@@ -1483,7 +1497,7 @@ class Mailable implements MailableContract, Renderable
      */
     public function assertDontSeeInText($string)
     {
-        [$html, $text] = $this->renderForAssertions();
+        [, $text] = $this->renderForAssertions();
 
         PHPUnit::assertStringNotContainsString(
             $string,
@@ -1502,7 +1516,7 @@ class Mailable implements MailableContract, Renderable
      */
     public function assertSeeInOrderInText($strings)
     {
-        [$html, $text] = $this->renderForAssertions();
+        [, $text] = $this->renderForAssertions();
 
         PHPUnit::assertThat($strings, new SeeInOrder($text));
 
@@ -1809,6 +1823,17 @@ class Mailable implements MailableContract, Renderable
             ->each(function ($attachment) {
                 $this->attach($attachment);
             });
+    }
+
+    /**
+     * Determine if the mailable will be sent by the given mailer.
+     *
+     * @param  string  $mailer
+     * @return bool
+     */
+    public function usesMailer($mailer)
+    {
+        return $this->mailer === $mailer;
     }
 
     /**

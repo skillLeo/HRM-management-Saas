@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,11 +64,13 @@ use YooKassa\Model\Receipt\SettlementInterface;
  * @property DateTime $registered_at Дата и время формирования чека в фискальном накопителе.
  * @property int $taxSystemCode Код системы налогообложения. Число 1-6.
  * @property int $tax_system_code Код системы налогообложения. Число 1-6.
+ * @property bool $internet Признак проведения платежа в интернете (тег в 54 ФЗ — 1125) — указывает на оплату через интернет.
+ * @property int $timezone Номер часовой зоны для адреса, по которому вы принимаете платежи (тег в 54 ФЗ — 1011).
  * @property ListObjectInterface|IndustryDetails[] $receiptIndustryDetails Отраслевой реквизит чека.
  * @property ListObjectInterface|IndustryDetails[] $receipt_industry_details Отраслевой реквизит чека.
  * @property OperationalDetails $receiptOperationalDetails Операционный реквизит чека.
  * @property OperationalDetails $receipt_operational_details Операционный реквизит чека.
- * @property ListObjectInterface|ReceiptResponseItemInterface[] $items Список товаров в заказе.
+ * @property ListObjectInterface|ReceiptResponseItemInterface[] $items Список товаров в заказе: для [Чеков от ЮKassa](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/yoomoney/basics) — не более 80 товаров, для [сторонних онлайн-касс](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) — не более 100 товаров.
  * @property ListObjectInterface|SettlementInterface[] $settlements Перечень совершенных расчетов.
  * @property string $onBehalfOf Идентификатор магазина.
  * @property string $on_behalf_of Идентификатор магазина.
@@ -126,7 +128,7 @@ abstract class AbstractReceiptResponse extends AbstractObject implements Receipt
     #[Assert\Type('string')]
     protected ?string $_fiscal_provider_id = null;
 
-    /** @var ReceiptResponseItemInterface[]|ListObjectInterface Список товаров в заказе */
+    /** @var ReceiptResponseItemInterface[]|ListObjectInterface Список товаров в заказе: для [Чеков от ЮKassa](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/yoomoney/basics) — не более 80 товаров, для [сторонних онлайн-касс](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) — не более 100 товаров */
     #[Assert\NotBlank]
     #[Assert\Type(ListObject::class)]
     #[Assert\AllType(ReceiptResponseItem::class)]
@@ -160,6 +162,35 @@ abstract class AbstractReceiptResponse extends AbstractObject implements Receipt
     /** @var string|null Идентификатор магазина */
     #[Assert\Type('string')]
     protected ?string $_on_behalf_of = null;
+
+    /**
+     * Признак проведения платежа в интернете (тег в 54 ФЗ — 1125) — указывает на оплату через интернет.
+     *
+     * Возможные значения:
+     * * `true` — оплата прошла онлайн, через интернет (например, на вашем сайте или в приложении);
+     * * `false` — оплата прошла оффлайн (например, в торговой точке или при встрече с курьером).
+     *
+     * По умолчанию `false`.`true`. Если вы принимаете платежи офлайн, передайте в запросе значение `false`.
+     *
+     * @var bool|null
+     */
+    #[Assert\Type('bool')]
+    protected ?bool $_internet = null;
+
+    /**
+     * Номер часовой зоны для адреса, по которому вы принимаете платежи (тег в 54 ФЗ — 1011).
+     * Указывается, только если в чеке есть товары, которые подлежат обязательной маркировке (в `items.mark_code_info` передается параметр `gs_1m`, `short` или `fur`).
+     *
+     * Перечень возможных значений:
+     * * [для Чеков от ЮKassa](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/yoomoney/parameters-values#timezone)
+     * * [для сторонних онлайн-касс](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/parameters-values#timezone)
+     *
+     * @var int|null
+     */
+    #[Assert\Type('int')]
+    #[Assert\GreaterThanOrEqual(1)]
+    #[Assert\LessThanOrEqual(11)]
+    protected ?int $_timezone = null;
 
     /**
      * AbstractReceiptResponse constructor.
@@ -401,7 +432,7 @@ abstract class AbstractReceiptResponse extends AbstractObject implements Receipt
     /**
      * Устанавливает список позиций в чеке.
      *
-     * @param ReceiptResponseItemInterface[]|null $items Список товаров в заказе
+     * @param ReceiptResponseItemInterface[]|null $items Список товаров в заказе: для [Чеков от ЮKassa](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/yoomoney/basics) — не более 80 товаров, для [сторонних онлайн-касс](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) — не более 100 товаров
      *
      * @return self
      */
@@ -547,6 +578,52 @@ abstract class AbstractReceiptResponse extends AbstractObject implements Receipt
     public function setOnBehalfOf(?string $on_behalf_of = null): self
     {
         $this->_on_behalf_of = $this->validatePropertyValue('_on_behalf_of', $on_behalf_of);
+        return $this;
+    }
+
+    /**
+     * Возвращает признак проведения платежа в интернете.
+     *
+     * @return bool|null Признак проведения платежа в интернете
+     */
+    public function getInternet(): ?bool
+    {
+        return $this->_internet;
+    }
+
+    /**
+     * Устанавливает признак проведения платежа в интернете.
+     *
+     * @param bool|null $internet Признак проведения платежа в интернете (тег в 54 ФЗ — 1125) — указывает на оплату через интернет.
+     *
+     * @return self
+     */
+    public function setInternet(?bool $internet = null): self
+    {
+        $this->_internet = $this->validatePropertyValue('_internet', $internet);
+        return $this;
+    }
+
+    /**
+     * Возвращает номер часовой зоны.
+     *
+     * @return int|null Номер часовой зоны
+     */
+    public function getTimezone(): ?int
+    {
+        return $this->_timezone;
+    }
+
+    /**
+     * Устанавливает номер часовой зоны.
+     *
+     * @param int|null $timezone Номер часовой зоны для адреса, по которому вы принимаете платежи (тег в 54 ФЗ — 1011).
+     *
+     * @return self
+     */
+    public function setTimezone(?int $timezone = null): self
+    {
+        $this->_timezone = $this->validatePropertyValue('_timezone', $timezone);
         return $this;
     }
 

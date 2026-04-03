@@ -70,8 +70,8 @@ var_dump($response);
 | public | [setPayoutDestinationData()](../classes/YooKassa-Request-Payouts-CreatePayoutRequestBuilder.md#method_setPayoutDestinationData) |  | Устанавливает объект с информацией для создания метода оплаты. |
 | public | [setPayoutToken()](../classes/YooKassa-Request-Payouts-CreatePayoutRequestBuilder.md#method_setPayoutToken) |  | Устанавливает одноразовый токен для проведения выплаты. |
 | public | [setPersonalData()](../classes/YooKassa-Request-Payouts-CreatePayoutRequestBuilder.md#method_setPersonalData) |  | Устанавливает персональные данные получателя выплаты. |
-| public | [setReceiptData()](../classes/YooKassa-Request-Payouts-CreatePayoutRequestBuilder.md#method_setReceiptData) |  | Устанавливает данные для формирования чека в сервисе Мой налог. |
-| public | [setSelfEmployed()](../classes/YooKassa-Request-Payouts-CreatePayoutRequestBuilder.md#method_setSelfEmployed) |  | Устанавливает данные самозанятого, который получит выплату. |
+| public | [setReceiptData()](../classes/YooKassa-Request-Payouts-CreatePayoutRequestBuilder.md#method_setReceiptData) | *deprecated* | Устанавливает данные для формирования чека в сервисе Мой налог. |
+| public | [setSelfEmployed()](../classes/YooKassa-Request-Payouts-CreatePayoutRequestBuilder.md#method_setSelfEmployed) | *deprecated* | Устанавливает данные самозанятого, который получит выплату. |
 | protected | [initCurrentObject()](../classes/YooKassa-Request-Payouts-CreatePayoutRequestBuilder.md#method_initCurrentObject) |  | Инициализирует объект запроса, который в дальнейшем будет собираться билдером |
 
 ---
@@ -353,45 +353,49 @@ public setPersonalData(null|array|\YooKassa\Request\Payouts\PayoutPersonalData[]
 
 
 <a name="method_setReceiptData" class="anchor"></a>
-#### public setReceiptData() : \YooKassa\Request\Payouts\CreatePayoutRequestBuilder
+#### (deprecated) - public setReceiptData() : \YooKassa\Request\Payouts\CreatePayoutRequestBuilder
 
 ```php
-public setReceiptData(null|array|\YooKassa\Request\Payouts\IncomeReceiptData $value) : \YooKassa\Request\Payouts\CreatePayoutRequestBuilder
+public setReceiptData(null|array $value) : \YooKassa\Request\Payouts\CreatePayoutRequestBuilder
 ```
 
 **Summary**
 
 Устанавливает данные для формирования чека в сервисе Мой налог.
 
+**Deprecated**
+DeprecatedБудет удален в следующих версиях
 **Details:**
 * Inherited From: [\YooKassa\Request\Payouts\CreatePayoutRequestBuilder](../classes/YooKassa-Request-Payouts-CreatePayoutRequestBuilder.md)
 
 ##### Parameters:
 | Type | Name | Description |
 | ---- | ---- | ----------- |
-| <code lang="php">null OR array OR \YooKassa\Request\Payouts\IncomeReceiptData</code> | value  | Данные для формирования чека в сервисе Мой налог |
+| <code lang="php">null OR array</code> | value  | Данные для формирования чека в сервисе Мой налог |
 
 **Returns:** \YooKassa\Request\Payouts\CreatePayoutRequestBuilder - 
 
 
 <a name="method_setSelfEmployed" class="anchor"></a>
-#### public setSelfEmployed() : \YooKassa\Request\Payouts\CreatePayoutRequestBuilder
+#### (deprecated) - public setSelfEmployed() : \YooKassa\Request\Payouts\CreatePayoutRequestBuilder
 
 ```php
-public setSelfEmployed(null|array|\YooKassa\Request\Payouts\PayoutSelfEmployedInfo $value) : \YooKassa\Request\Payouts\CreatePayoutRequestBuilder
+public setSelfEmployed(null|array $value) : \YooKassa\Request\Payouts\CreatePayoutRequestBuilder
 ```
 
 **Summary**
 
 Устанавливает данные самозанятого, который получит выплату.
 
+**Deprecated**
+DeprecatedБудет удален в следующих версиях
 **Details:**
 * Inherited From: [\YooKassa\Request\Payouts\CreatePayoutRequestBuilder](../classes/YooKassa-Request-Payouts-CreatePayoutRequestBuilder.md)
 
 ##### Parameters:
 | Type | Name | Description |
 | ---- | ---- | ----------- |
-| <code lang="php">null OR array OR \YooKassa\Request\Payouts\PayoutSelfEmployedInfo</code> | value  | Данные самозанятого, который получит выплату |
+| <code lang="php">null OR array</code> | value  | Данные самозанятого, который получит выплату |
 
 **Returns:** \YooKassa\Request\Payouts\CreatePayoutRequestBuilder - 
 
@@ -425,10 +429,10 @@ protected initCurrentObject() : \YooKassa\Request\Payouts\CreatePayoutRequest
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 33](../reports/deprecated.md)
+* [Deprecated - 43](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2025-07-01 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2026-03-13 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2025 YooMoney
+&copy; 2026 YooMoney

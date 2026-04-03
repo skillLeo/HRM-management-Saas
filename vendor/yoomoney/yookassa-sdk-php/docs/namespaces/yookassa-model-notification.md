@@ -19,6 +19,7 @@
 | [\YooKassa\Model\Notification\NotificationDealClosed](../classes/YooKassa-Model-Notification-NotificationDealClosed.md) | Класс объекта, присылаемого API при изменении статуса сделки на &quot;closed&quot;. |
 | [\YooKassa\Model\Notification\NotificationEventType](../classes/YooKassa-Model-Notification-NotificationEventType.md) | NotificationEventType - Тип уведомления. |
 | [\YooKassa\Model\Notification\NotificationFactory](../classes/YooKassa-Model-Notification-NotificationFactory.md) | Фабрика для получения конкретного объекта уведомления. |
+| [\YooKassa\Model\Notification\NotificationPaymentMethodActive](../classes/YooKassa-Model-Notification-NotificationPaymentMethodActive.md) | Класс объекта, присылаемого API при сохранении способа оплаты. |
 | [\YooKassa\Model\Notification\NotificationPayoutCanceled](../classes/YooKassa-Model-Notification-NotificationPayoutCanceled.md) | Класс объекта, присылаемого API при изменении статуса выплаты на &quot;canceled&quot;. |
 | [\YooKassa\Model\Notification\NotificationPayoutSucceeded](../classes/YooKassa-Model-Notification-NotificationPayoutSucceeded.md) | Класс объекта, присылаемого API при изменении статуса выплаты на &quot;succeeded&quot;. |
 | [\YooKassa\Model\Notification\NotificationRefundSucceeded](../classes/YooKassa-Model-Notification-NotificationRefundSucceeded.md) | Класс объекта, присылаемого API при изменении статуса возврата на &quot;succeeded&quot;. |
@@ -37,10 +38,10 @@
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 33](../reports/deprecated.md)
+* [Deprecated - 43](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2025-07-01 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2026-03-13 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2025 YooMoney
+&copy; 2026 YooMoney

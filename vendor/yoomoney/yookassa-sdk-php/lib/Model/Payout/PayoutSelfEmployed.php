@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,10 +32,14 @@ use YooKassa\Validator\Constraints as Assert;
 /**
  * Класс, представляющий модель PayoutSelfEmployed.
  *
+ * Данные самозанятого, который получит выплату. Только для обычных выплат.
+ * Устаревший параметр. Раньше использовался для выплат самозанятым. Сейчас функциональность недоступна. Параметр сохранен для поддержки обратной совместимости, в новых версиях API может быть удален.
+ *
  * @category Class
  * @package  YooKassa\Model
  * @author   cms@yoomoney.ru
  * @link     https://yookassa.ru/developers/api
+ *
  * @property string $id Идентификатор самозанятого в ЮKassa.
  */
 class PayoutSelfEmployed extends AbstractObject

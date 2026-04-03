@@ -1389,6 +1389,7 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
             'create-payslips',
             'download-payslips',
             'send-payslips',
+            'approve-payroll-runs',
         ];
     }
 

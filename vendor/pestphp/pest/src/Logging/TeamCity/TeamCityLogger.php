@@ -200,7 +200,7 @@ final class TeamCityLogger
 
     public function testFinished(Finished $event): void
     {
-        if (! $this->time instanceof \PHPUnit\Event\Telemetry\HRTime) {
+        if (! $this->time instanceof HRTime) {
             throw ShouldNotHappen::fromMessage('Start time has not been set.');
         }
 
@@ -232,7 +232,6 @@ final class TeamCityLogger
             $reflector = new ReflectionClass($telemetry);
 
             $property = $reflector->getProperty('current');
-            $property->setAccessible(true);
             $snapshot = $property->getValue($telemetry);
             assert($snapshot instanceof Snapshot);
 

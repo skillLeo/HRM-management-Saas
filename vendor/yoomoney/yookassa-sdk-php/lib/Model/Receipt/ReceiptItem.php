@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,11 +35,10 @@ use YooKassa\Validator\Exceptions\EmptyPropertyValueException;
 use YooKassa\Validator\Exceptions\InvalidPropertyValueException;
 use YooKassa\Validator\Exceptions\InvalidPropertyValueTypeException;
 use YooKassa\Helpers\ProductCode;
-use YooKassa\Helpers\TypeCast;
 use YooKassa\Model\AmountInterface;
 
 /**
- * Информация о товарной позиции в заказе, позиция фискального чека.
+ * Информация о товарной позиции в заказе. Используется для формирования чека.
  *
  * @category Class
  * @package  YooKassa\Model
@@ -53,14 +52,16 @@ use YooKassa\Model\AmountInterface;
  * @property Supplier $supplier Информация о поставщике товара или услуги (тег в 54 ФЗ — 1224)
  * @property string $agentType Тип посредника, реализующего товар или услугу
  * @property string $agent_type Тип посредника, реализующего товар или услугу
- * @property int $vatCode Ставка НДС (тег в 54 ФЗ — 1199), число 1-10
- * @property int $vat_code Ставка НДС (тег в 54 ФЗ — 1199), число 1-10
+ * @property int $vatCode Ставка НДС (тег в 54 ФЗ — 1199), число 1-12
+ * @property int $vat_code Ставка НДС (тег в 54 ФЗ — 1199), число 1-12
  * @property string $paymentSubject Признак предмета расчета (тег в 54 ФЗ — 1212)
  * @property string $payment_subject Признак предмета расчета (тег в 54 ФЗ — 1212)
  * @property string $paymentMode Признак способа расчета (тег в 54 ФЗ — 1214)
  * @property string $payment_mode Признак способа расчета (тег в 54 ФЗ — 1214)
  * @property string $productCode Код товара (тег в 54 ФЗ — 1162)
  * @property string $product_code Код товара (тег в 54 ФЗ — 1162)
+ * @property int $plannedStatus Планируемый статус товара. Тег в 54 ФЗ — 2003
+ * @property int $planned_status Планируемый статус товара. Тег в 54 ФЗ — 2003
  * @property MarkCodeInfo $markCodeInfo Код товара (тег в 54 ФЗ — 1163)
  * @property MarkCodeInfo $mark_code_info Код товара (тег в 54 ФЗ — 1163)
  * @property string $measure Мера количества предмета расчета (тег в 54 ФЗ — 2108)
@@ -128,12 +129,12 @@ class ReceiptItem extends AbstractObject implements ReceiptItemInterface
     private ?AmountInterface $_amount = null;
 
     /**
-     * @var null|int Ставка НДС, число 1-10 (тег в 54 ФЗ — 1199)
+     * @var null|int Ставка НДС, число 1-12 (тег в 54 ФЗ — 1199)
      */
     #[Assert\NotBlank]
     #[Assert\Type('int')]
     #[Assert\GreaterThanOrEqual(1)]
-    #[Assert\LessThanOrEqual(10)]
+    #[Assert\LessThanOrEqual(12)]
     private ?int $_vat_code = null;
 
     /**
@@ -180,6 +181,14 @@ class ReceiptItem extends AbstractObject implements ReceiptItemInterface
     #[Assert\Length(max: 96)]
     #[Assert\Regex(pattern: '/^[0-9A-F ]{2,96}$/')]
     private ?string $_product_code = null;
+
+    /**
+     * @var int|null Планируемый статус товара. Тег в 54 ФЗ — 2003. Указывается только для товаров, которые подлежат обязательной маркировке
+     */
+    #[Assert\Type('int')]
+    #[Assert\GreaterThanOrEqual(1)]
+    #[Assert\LessThanOrEqual(6)]
+    private ?int $_planned_status = null;
 
     /**
      * @var MarkCodeInfo|null Код товара (тег в 54 ФЗ — 1163).
@@ -315,7 +324,7 @@ class ReceiptItem extends AbstractObject implements ReceiptItemInterface
     /**
      * Возвращает ставку НДС
      *
-     * @return null|int Ставка НДС, число 1-10, или null, если ставка не задана
+     * @return null|int Ставка НДС, число 1-12, или null, если ставка не задана
      */
     public function getVatCode(): ?int
     {
@@ -325,7 +334,7 @@ class ReceiptItem extends AbstractObject implements ReceiptItemInterface
     /**
      * Устанавливает ставку НДС
      *
-     * @param null|int $value Ставка НДС, число 1-10
+     * @param null|int $value Ставка НДС, число 1-12
      *
      * @return self
      *
@@ -407,6 +416,29 @@ class ReceiptItem extends AbstractObject implements ReceiptItemInterface
         }
 
         $this->_product_code = $this->validatePropertyValue('_product_code', $product_code);
+        return $this;
+    }
+
+    /**
+     * Возвращает планируемый статус товара.
+     *
+     * @return int|null Планируемый статус товара
+     */
+    public function getPlannedStatus(): ?int
+    {
+        return $this->_planned_status;
+    }
+
+    /**
+     * Устанавливает планируемый статус товара.
+     *
+     * @param int|null $planned_status Планируемый статус товара
+     *
+     * @return self
+     */
+    public function setPlannedStatus(?int $planned_status = null): self
+    {
+        $this->_planned_status = $this->validatePropertyValue('_planned_status', $planned_status);
         return $this;
     }
 

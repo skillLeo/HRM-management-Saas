@@ -2,7 +2,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@
 namespace YooKassa\Request;
 
 use YooKassa\Common\AbstractObject;
+use YooKassa\Common\ListObject;
 use YooKassa\Validator\Constraints as Assert;
 use YooKassa\Common\ListObjectInterface;
 
@@ -58,6 +59,13 @@ abstract class AbstractListResponse extends AbstractObject
      */
     #[Assert\Type('string')]
     protected ?string $_next_cursor = null;
+
+    /**
+     * Список объектов определенного типа
+     *
+     * @var ListObject|null
+     */
+    protected ?ListObject $_items = null;
 
     /**
      * @param iterable $sourceArray

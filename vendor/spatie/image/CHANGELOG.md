@@ -2,6 +2,84 @@
 
 All notable changes to `image` will be documented in this file
 
+## 3.9.3 - 2026-03-01
+
+### What's Changed
+
+* Fix VipsDriver `format()` being ignored when saving to a path with a different extension
+
+**Full Changelog**: https://github.com/spatie/image/compare/3.9.2...3.9.3
+
+## 3.9.1 - 2026-01-12
+
+### What's Changed
+
+* Bump dependabot/fetch-metadata from 2.4.0 to 2.5.0 by @dependabot[bot] in https://github.com/spatie/image/pull/318
+* Fix PSR-4 filename mismatch for CannotOptimizePng exception by @abkrim in https://github.com/spatie/image/pull/317
+
+### New Contributors
+
+* @abkrim made their first contribution in https://github.com/spatie/image/pull/317
+
+**Full Changelog**: https://github.com/spatie/image/compare/3.9.0...3.9.1
+
+## 3.9.0 - 2026-01-07
+
+### What's Changed
+
+* Add support for Vips by @freekmurze in https://github.com/spatie/image/pull/286
+
+**Full Changelog**: https://github.com/spatie/image/compare/3.8.7...3.9.0
+
+## 3.8.7 - 2025-11-24
+
+### What's Changed
+
+* Bump stefanzweifel/git-auto-commit-action from 6 to 7 by @dependabot[bot] in https://github.com/spatie/image/pull/308
+* Bump actions/setup-node from 5 to 6 by @dependabot[bot] in https://github.com/spatie/image/pull/309
+* ci: add tests for PHP 8.5 by @Chris53897 in https://github.com/spatie/image/pull/312
+* Change default driver to Gd when Imagick is not available by @andreasnij in https://github.com/spatie/image/pull/315
+* Bump actions/checkout from 5 to 6 by @dependabot[bot] in https://github.com/spatie/image/pull/314
+* Added Symfony 8 support to all symfony/* packages. by @thecaliskan in https://github.com/spatie/image/pull/313
+
+### New Contributors
+
+* @Chris53897 made their first contribution in https://github.com/spatie/image/pull/312
+* @andreasnij made their first contribution in https://github.com/spatie/image/pull/315
+* @thecaliskan made their first contribution in https://github.com/spatie/image/pull/313
+
+**Full Changelog**: https://github.com/spatie/image/compare/3.8.6...3.8.7
+
+## 3.8.6 - 2025-09-25
+
+### What's Changed
+
+* Bump aglipanci/laravel-pint-action from 2.5 to 2.6 by @dependabot[bot] in https://github.com/spatie/image/pull/302
+* Update issue template by @AlexVanderbist in https://github.com/spatie/image/pull/305
+* Bump actions/setup-node from 4 to 5 by @dependabot[bot] in https://github.com/spatie/image/pull/304
+* Bump actions/checkout from 4 to 5 by @dependabot[bot] in https://github.com/spatie/image/pull/303
+* fix(gddriver): fix CouldNotLoadImage::make error by @glesende in https://github.com/spatie/image/pull/307
+
+### New Contributors
+
+* @glesende made their first contribution in https://github.com/spatie/image/pull/307
+
+**Full Changelog**: https://github.com/spatie/image/compare/3.8.5...3.8.6
+
+## 3.8.5 - 2025-06-27
+
+### What's Changed
+
+* Fix tests by @timvandijck in https://github.com/spatie/image/pull/299
+* Bump stefanzweifel/git-auto-commit-action from 5 to 6 by @dependabot in https://github.com/spatie/image/pull/300
+* Focal Crop and Resize by @GarethSomers in https://github.com/spatie/image/pull/301
+
+### New Contributors
+
+* @GarethSomers made their first contribution in https://github.com/spatie/image/pull/301
+
+**Full Changelog**: https://github.com/spatie/image/compare/3.8.4...3.8.5
+
 ## 3.8.4 - 2025-06-04
 
 ### What's Changed

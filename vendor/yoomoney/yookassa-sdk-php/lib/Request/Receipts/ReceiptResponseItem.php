@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -56,8 +56,8 @@ use YooKassa\Model\Receipt\SupplierInterface;
  * @property float $quantity Количество (тег в 54 ФЗ — 1023)
  * @property float $amount Суммарная стоимость покупаемого товара в копейках/центах
  * @property AmountInterface $price Цена товара (тег в 54 ФЗ — 1079)
- * @property int $vatCode Ставка НДС, число 1-10 (тег в 54 ФЗ — 1199)
- * @property int $vat_code Ставка НДС, число 1-10 (тег в 54 ФЗ — 1199)
+ * @property int $vatCode Ставка НДС, число 1-12 (тег в 54 ФЗ — 1199)
+ * @property int $vat_code Ставка НДС, число 1-12 (тег в 54 ФЗ — 1199)
  * @property string $paymentSubject Признак предмета расчета (тег в 54 ФЗ — 1212)
  * @property string $payment_subject Признак предмета расчета (тег в 54 ФЗ — 1212)
  * @property string $paymentMode Признак способа расчета (тег в 54 ФЗ — 1214)
@@ -75,6 +75,8 @@ use YooKassa\Model\Receipt\SupplierInterface;
  * @property string $measure Мера количества предмета расчета (тег в 54 ФЗ — 2108)
  * @property string $productCode Код товара — уникальный номер, который присваивается экземпляру товара при маркировке (тег в 54 ФЗ — 1162)
  * @property string $product_code Код товара — уникальный номер, который присваивается экземпляру товара при маркировке (тег в 54 ФЗ — 1162)
+ * @property int $plannedStatus Планируемый статус товара. Тег в 54 ФЗ — 2003
+ * @property int $planned_status Планируемый статус товара. Тег в 54 ФЗ — 2003
  * @property string $markMode Режим обработки кода маркировки (тег в 54 ФЗ — 2102)
  * @property string $mark_mode Режим обработки кода маркировки (тег в 54 ФЗ — 2102)
  * @property MarkQuantity $markQuantity Дробное количество маркированного товара (тег в 54 ФЗ — 1291)
@@ -117,12 +119,12 @@ class ReceiptResponseItem extends AbstractObject implements ReceiptResponseItemI
     private ?AmountInterface $_amount = null;
 
     /**
-     * @var int|null Ставка НДС, число 1-10 (тег в 54 ФЗ — 1199)
+     * @var int|null Ставка НДС, число 1-12 (тег в 54 ФЗ — 1199)
      */
     #[Assert\NotBlank]
     #[Assert\Type('int')]
     #[Assert\GreaterThanOrEqual(1)]
-    #[Assert\LessThanOrEqual(10)]
+    #[Assert\LessThanOrEqual(12)]
     private ?int $_vat_code = null;
 
     /**
@@ -207,6 +209,14 @@ class ReceiptResponseItem extends AbstractObject implements ReceiptResponseItemI
     #[Assert\Length(max: 96)]
     #[Assert\Regex(pattern: '/^[0-9A-F ]{2,96}$/')]
     private ?string $_product_code = null;
+
+    /**
+     * @var int|null Планируемый статус товара. Тег в 54 ФЗ — 2003. Указывается только для товаров, которые подлежат обязательной маркировке
+     */
+    #[Assert\Type('int')]
+    #[Assert\GreaterThanOrEqual(1)]
+    #[Assert\LessThanOrEqual(6)]
+    private ?int $_planned_status = null;
 
     /**
      * @var string|null Режим обработки кода маркировки (тег в 54 ФЗ — 2102). Должен принимать значение равное «0».
@@ -318,7 +328,7 @@ class ReceiptResponseItem extends AbstractObject implements ReceiptResponseItemI
     /**
      * Возвращает ставку НДС
      *
-     * @return null|int Ставка НДС, число 1-10, или null, если ставка не задана
+     * @return null|int Ставка НДС, число 1-12, или null, если ставка не задана
      */
     public function getVatCode(): ?int
     {
@@ -328,7 +338,7 @@ class ReceiptResponseItem extends AbstractObject implements ReceiptResponseItemI
     /**
      * Устанавливает ставку НДС
      *
-     * @param int|null $vat_code Ставка НДС, число 1-10
+     * @param int|null $vat_code Ставка НДС, число 1-12
      *
      * @return self
      */
@@ -484,6 +494,29 @@ class ReceiptResponseItem extends AbstractObject implements ReceiptResponseItemI
         }
 
         $this->_product_code = $this->validatePropertyValue('_product_code', $product_code);
+        return $this;
+    }
+
+    /**
+     * Возвращает планируемый статус товара.
+     *
+     * @return int|null Планируемый статус товара
+     */
+    public function getPlannedStatus(): ?int
+    {
+        return $this->_planned_status;
+    }
+
+    /**
+     * Устанавливает планируемый статус товара.
+     *
+     * @param int|null $planned_status Планируемый статус товара
+     *
+     * @return self
+     */
+    public function setPlannedStatus(?int $planned_status = null): self
+    {
+        $this->_planned_status = $this->validatePropertyValue('_planned_status', $planned_status);
         return $this;
     }
 

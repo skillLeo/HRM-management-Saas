@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,7 +40,7 @@ use YooKassa\Validator\Constraints as Assert;
  * @author   cms@yoomoney.ru
  * @link     https://yookassa.ru/developers/api
  *
- * @property string $rate Налоговая ставка (в процентах). Возможные значения: ~`5`, ~`7`, ~`10`, ~`18` и ~`20`.
+ * @property string $rate Налоговая ставка (в процентах). Возможные значения: ~`5`, ~`7`, ~`10`, ~`20` и ~`22`.  С 1 января 2026 года ставка НДС 22% применяется вместо ставки 20%.
  * @property AmountInterface $amount Сумма НДС
 */
 class CalculatedVatData extends AbstractVatData

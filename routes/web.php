@@ -1151,6 +1151,14 @@ Route::middleware(['auth', 'verified', 'setting'])->group(function () {
             Route::delete('hr/payroll-runs/{payrollRun}', [PayrollRunController::class, 'destroy'])->middleware('permission:delete-payroll-runs')->name('hr.payroll-runs.destroy');
             Route::put('hr/payroll-runs/{payrollRun}/process', [PayrollRunController::class, 'process'])->middleware('permission:process-payroll-runs')->name('hr.payroll-runs.process');
             Route::delete('hr/payroll-entries/{payrollEntry}', [PayrollRunController::class, 'destroyEntry'])->name('hr.payroll-entries.destroy');
+            
+
+
+
+            Route::put('payroll-runs/{id}/unlock',    
+            [PayrollRunController::class, 'unlock'])->name('hr.payroll-runs.unlock');
+Route::put('payroll-runs/{id}/submit-final', [PayrollRunController::class, 'submitFinal'])->name('hr.payroll-runs.submit-final');
+Route::put('payroll-runs/{id}/approve-final',[PayrollRunController::class, 'approveFinal'])->name('hr.payroll-runs.approve-final');
         });
 
         // Payslips routes
@@ -1296,6 +1304,9 @@ Route::middleware(['auth', 'verified', 'setting'])->group(function () {
 
         Route::post('impersonate/leave', [ImpersonateController::class, 'leave'])->name('impersonate.leave');
     }); // End plan.access middleware group
+
+
+    
 });
 
 require __DIR__.'/settings.php';

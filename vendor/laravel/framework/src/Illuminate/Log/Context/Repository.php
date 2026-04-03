@@ -535,12 +535,16 @@ class Repository
     }
 
     /**
+     * @template TReturn of mixed
+     *
      * Run the callback function with the given context values and restore the original context state when complete.
      *
-     * @param  callable  $callback
+     * @param  (callable(): TReturn)  $callback
      * @param  array<string, mixed>  $data
      * @param  array<string, mixed>  $hidden
-     * @return mixed
+     * @return TReturn
+     *
+     * @throws \Throwable
      */
     public function scope(callable $callback, array $data = [], array $hidden = [])
     {
@@ -576,7 +580,7 @@ class Repository
     /**
      * Execute the given callback when context is about to be dehydrated.
      *
-     * @param  callable  $callback
+     * @param  (callable(static): void)  $callback
      * @return $this
      */
     public function dehydrating($callback)
@@ -589,7 +593,7 @@ class Repository
     /**
      * Execute the given callback when context has been hydrated.
      *
-     * @param  callable  $callback
+     * @param  (callable(static): void)  $callback
      * @return $this
      */
     public function hydrated($callback)

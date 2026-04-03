@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,8 +44,8 @@ use YooKassa\Model\AmountInterface;
  * @property MarkQuantity $mark_quantity Дробное количество маркированного товара (тег в 54 ФЗ — 1291)
  * @property float $amount Суммарная стоимость покупаемого товара в копейках/центах
  * @property AmountInterface $price Цена товара (тег в 54 ФЗ — 1079)
- * @property int $vatCode Ставка НДС, число 1-10 (тег в 54 ФЗ — 1199)
- * @property int $vat_code Ставка НДС, число 1-10 (тег в 54 ФЗ — 1199)
+ * @property int $vatCode Ставка НДС, число 1-12 (тег в 54 ФЗ — 1199)
+ * @property int $vat_code Ставка НДС, число 1-12 (тег в 54 ФЗ — 1199)
  * @property string $paymentSubject Признак предмета расчета (тег в 54 ФЗ — 1212)
  * @property string $payment_subject Признак предмета расчета (тег в 54 ФЗ — 1212)
  * @property string $paymentMode Признак способа расчета (тег в 54 ФЗ — 1214)
@@ -57,6 +57,8 @@ use YooKassa\Model\AmountInterface;
  * @property float $excise Сумма акциза товара с учетом копеек (тег в 54 ФЗ — 1229)
  * @property string $productCode Код товара — уникальный номер, который присваивается экземпляру товара при маркировке (тег в 54 ФЗ — 1162)
  * @property string $product_code Код товара — уникальный номер, который присваивается экземпляру товара при маркировке (тег в 54 ФЗ — 1162)
+ * @property int $plannedStatus Планируемый статус товара. Тег в 54 ФЗ — 2003
+ * @property int $planned_status Планируемый статус товара. Тег в 54 ФЗ — 2003
  * @property MarkCodeInfo $markCodeInfo Код товара (тег в 54 ФЗ — 1163)
  * @property MarkCodeInfo $mark_code_info Код товара (тег в 54 ФЗ — 1163)
  * @property string $markMode Режим обработки кода маркировки (тег в 54 ФЗ — 2102)
@@ -102,7 +104,7 @@ interface ReceiptItemInterface
     /**
      * Возвращает ставку НДС
      *
-     * @return null|int Ставка НДС, число 1-10, или null, если ставка не задана
+     * @return null|int Ставка НДС, число 1-12, или null, если ставка не задана
      */
     public function getVatCode(): ?int;
 
@@ -126,6 +128,13 @@ interface ReceiptItemInterface
      * @return null|string Код товара
      */
     public function getProductCode(): ?string;
+
+    /**
+     * Возвращает планируемый статус товара.
+     *
+     * @return int|null Планируемый статус товара
+     */
+    public function getPlannedStatus(): ?int;
 
     /**
      * Возвращает код товара.

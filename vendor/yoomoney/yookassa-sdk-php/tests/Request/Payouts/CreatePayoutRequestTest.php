@@ -1,28 +1,28 @@
 <?php
 
 /*
-* The MIT License
-*
-* Copyright (c) 2024 "YooMoney", NBСO LLC
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*/
+ * The MIT License
+ *
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 namespace Tests\YooKassa\Request\Payouts;
 
@@ -35,11 +35,9 @@ use YooKassa\Model\Metadata;
 use YooKassa\Model\MonetaryAmount;
 use YooKassa\Request\Payouts\CreatePayoutRequest;
 use YooKassa\Request\Payouts\CreatePayoutRequestBuilder;
-use YooKassa\Request\Payouts\IncomeReceiptData;
 use YooKassa\Request\Payouts\PayoutDestinationData\PayoutDestinationDataBankCard;
 use YooKassa\Request\Payouts\PayoutDestinationData\PayoutDestinationDataFactory;
 use YooKassa\Request\Payouts\PayoutPersonalData;
-use YooKassa\Request\Payouts\PayoutSelfEmployedInfo;
 
 /**
  * CreatePayoutRequestTest
@@ -426,124 +424,6 @@ class CreatePayoutRequestTest extends AbstractTestCase
     }
 
     /**
-     * Test property "self_employed"
-     * @dataProvider validSelfEmployedDataProvider
-     * @param mixed $value
-     *
-     * @return void
-     * @throws Exception
-     */
-    public function testSelfEmployed(mixed $value): void
-    {
-        $instance = $this->getTestInstance();
-        self::assertEmpty($instance->getSelfEmployed());
-        self::assertEmpty($instance->self_employed);
-        $instance->setSelfEmployed($value);
-        self::assertEquals($value, is_array($value) ? $instance->getSelfEmployed()->toArray() : $instance->getSelfEmployed());
-        self::assertEquals($value, is_array($value) ? $instance->self_employed->toArray() : $instance->self_employed);
-        if (!empty($value)) {
-            self::assertTrue($instance->hasSelfEmployed());
-            self::assertNotNull($instance->getSelfEmployed());
-            self::assertNotNull($instance->self_employed);
-        }
-    }
-
-    /**
-     * Test invalid property "self_employed"
-     * @dataProvider invalidSelfEmployedDataProvider
-     * @param mixed $value
-     * @param string $exceptionClass
-     *
-     * @return void
-     */
-    public function testInvalidSelfEmployed(mixed $value, string $exceptionClass): void
-    {
-        $instance = $this->getTestInstance();
-
-        $this->expectException($exceptionClass);
-        $instance->setSelfEmployed($value);
-    }
-
-    /**
-     * @return array[]
-     * @throws Exception
-     */
-    public function validSelfEmployedDataProvider(): array
-    {
-        $instance = $this->getTestInstance();
-        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_self_employed'));
-    }
-
-    /**
-     * @return array[]
-     * @throws Exception
-     */
-    public function invalidSelfEmployedDataProvider(): array
-    {
-        $instance = $this->getTestInstance();
-        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_self_employed'));
-    }
-
-    /**
-     * Test property "receipt_data"
-     * @dataProvider validReceiptDataDataProvider
-     * @param mixed $value
-     *
-     * @return void
-     * @throws Exception
-     */
-    public function testReceiptData(mixed $value): void
-    {
-        $instance = $this->getTestInstance();
-        self::assertEmpty($instance->getReceiptData());
-        self::assertEmpty($instance->receipt_data);
-        $instance->setReceiptData($value);
-        self::assertEquals($value, is_array($value) ? $instance->getReceiptData()->toArray() : $instance->getReceiptData());
-        self::assertEquals($value, is_array($value) ? $instance->receipt_data->toArray() : $instance->receipt_data);
-        if (!empty($value)) {
-            self::assertTrue($instance->hasReceiptData());
-            self::assertNotNull($instance->getReceiptData());
-            self::assertNotNull($instance->receipt_data);
-        }
-    }
-
-    /**
-     * Test invalid property "receipt_data"
-     * @dataProvider invalidReceiptDataDataProvider
-     * @param mixed $value
-     * @param string $exceptionClass
-     *
-     * @return void
-     */
-    public function testInvalidReceiptData(mixed $value, string $exceptionClass): void
-    {
-        $instance = $this->getTestInstance();
-
-        $this->expectException($exceptionClass);
-        $instance->setReceiptData($value);
-    }
-
-    /**
-     * @return array[]
-     * @throws Exception
-     */
-    public function validReceiptDataDataProvider(): array
-    {
-        $instance = $this->getTestInstance();
-        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_receipt_data'));
-    }
-
-    /**
-     * @return array[]
-     * @throws Exception
-     */
-    public function invalidReceiptDataDataProvider(): array
-    {
-        $instance = $this->getTestInstance();
-        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_receipt_data'));
-    }
-
-    /**
      * Test property "personal_data"
      * @dataProvider validPersonalDataDataProvider
      * @param mixed $value
@@ -724,10 +604,6 @@ class CreatePayoutRequestTest extends AbstractTestCase
         $instance->setPaymentMethodId('test');
         self::assertFalse($instance->validate());
         $instance->setPersonalData([new PayoutPersonalData(['id' => Random::str(36, 50)])]);
-        self::assertFalse($instance->validate());
-        $instance->setReceiptData(new IncomeReceiptData(['service_name' => Random::str(1, 50)]));
-        self::assertFalse($instance->validate());
-        $instance->setSelfEmployed(new PayoutSelfEmployedInfo(['id' => Random::str(36, 50)]));
         self::assertFalse($instance->validate());
 
         $instance->setPayoutToken(Random::str(10));

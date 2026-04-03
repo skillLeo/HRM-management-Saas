@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -56,7 +56,7 @@ use YooKassa\Model\Receipt\SettlementInterface;
  * @property IndustryDetails[] $receipt_industry_details Отраслевой реквизит чека
  * @property OperationalDetails $receiptOperationalDetails Операционный реквизит чека
  * @property OperationalDetails $receipt_operational_details Операционный реквизит чека
- * @property ReceiptItemInterface[] $items Список товаров в заказе
+ * @property ReceiptItemInterface[] $items Список товаров в заказе: для [Чеков от ЮKassa](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/yoomoney/basics) — не более 80 товаров, для [сторонних онлайн-касс](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) — не более 100 товаров
  * @property SettlementInterface[] $settlements Массив оплат, обеспечивающих выдачу товара
  */
 interface CreatePostReceiptRequestInterface
@@ -195,7 +195,7 @@ interface CreatePostReceiptRequestInterface
     public function setCustomer(mixed $customer): CreatePostReceiptRequestInterface;
 
     /**
-     * Возвращает список товаров в заказе.
+     * Возвращает Список товаров в заказе: для [Чеков от ЮKassa](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/yoomoney/basics) — не более 80 товаров, для [сторонних онлайн-касс](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) — не более 100 товаров.
      *
      *  @return ReceiptItemInterface[]|ListObjectInterface|null
      */

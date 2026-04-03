@@ -1,28 +1,28 @@
 <?php
 
 /*
-* The MIT License
-*
-* Copyright (c) 2024 "YooMoney", NBСO LLC
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*/
+ * The MIT License
+ *
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 namespace Tests\YooKassa\Request\Payouts;
 
@@ -38,9 +38,7 @@ use YooKassa\Model\Payment\PaymentMethodType;
 use YooKassa\Model\Payout\Payout;
 use YooKassa\Model\Payout\PayoutDestinationType;
 use YooKassa\Request\Payouts\CreatePayoutRequestBuilder;
-use YooKassa\Request\Payouts\IncomeReceiptData;
 use YooKassa\Request\Payouts\PayoutDestinationData\PayoutDestinationDataFactory;
-use YooKassa\Request\Payouts\PayoutSelfEmployedInfo;
 
 /**
  * CreatePayoutRequestBuilderTest
@@ -69,56 +67,6 @@ class CreatePayoutRequestBuilderTest extends TestCase
         } else {
             self::assertNotNull($instance->getDeal());
             self::assertEquals($options['deal'], $instance->getDeal()->toArray());
-        }
-    }
-
-    /**
-     * @dataProvider validDataProvider
-     *
-     * @param mixed $options
-     *
-     * @throws Exception
-     */
-    public function testSetSelfEmployed(mixed $options): void
-    {
-        $builder = new CreatePayoutRequestBuilder();
-        $builder->setOptions($options);
-        $instance = $builder->build();
-
-        if (empty($options['self_employed'])) {
-            self::assertNull($instance->getSelfEmployed());
-        } else {
-            self::assertNotNull($instance->getSelfEmployed());
-            if (is_array($options['self_employed'])) {
-                self::assertEquals($options['self_employed'], $instance->getSelfEmployed()->toArray());
-            } else {
-                self::assertEquals($options['self_employed'], $instance->getSelfEmployed());
-            }
-        }
-    }
-
-    /**
-     * @dataProvider validDataProvider
-     *
-     * @param mixed $options
-     *
-     * @throws Exception
-     */
-    public function testSetReceiptData(mixed $options): void
-    {
-        $builder = new CreatePayoutRequestBuilder();
-        $builder->setOptions($options);
-        $instance = $builder->build();
-
-        if (empty($options['receipt_data'])) {
-            self::assertNull($instance->getReceiptData());
-        } else {
-            self::assertNotNull($instance->getReceiptData());
-            if (is_array($options['receipt_data'])) {
-                self::assertEquals($options['receipt_data'], $instance->getReceiptData()->toArray());
-            } else {
-                self::assertEquals($options['receipt_data'], $instance->getReceiptData());
-            }
         }
     }
 
@@ -303,13 +251,6 @@ class CreatePayoutRequestBuilderTest extends TestCase
                     'deal' => [
                         'id' => Random::str(36, 50),
                     ],
-                    'self_employed' => new PayoutSelfEmployedInfo([
-                        'id' => Random::str(36, 50),
-                    ]),
-                    'receipt_data' => new IncomeReceiptData([
-                        'service_name' => Random::str(36, 50),
-                        'amount' => new MonetaryAmount(Random::int(1, 99)),
-                    ]),
                 ],
             ],
         ];
@@ -325,13 +266,6 @@ class CreatePayoutRequestBuilderTest extends TestCase
                 'metadata' => ['test' => 'test'],
                 'deal' => [
                     'id' => Random::str(36, 50),
-                ],
-                'self_employed' => new PayoutSelfEmployedInfo([
-                    'id' => Random::str(36, 50),
-                ]),
-                'receipt_data' => [
-                    'service_name' => Random::str(36, 50),
-                    'amount' => ['value' => Random::int(1, 99), 'currency' => CurrencyCode::RUB],
                 ],
             ];
             $result[] = [$request];
@@ -356,7 +290,7 @@ class CreatePayoutRequestBuilderTest extends TestCase
             [
                 'type' => PaymentMethodType::SBP,
                 'phone' => Random::str(4, 15, '0123456789'),
-                'bank_id' => Random::str(4, 12, '0123456789'),
+                'bank_id' => Random::str(12, 12, '0123456789'),
             ],
         ];
     }
@@ -442,18 +376,6 @@ class CreatePayoutRequestBuilderTest extends TestCase
             [Random::int(-100, -1)],
             [Random::int(7, 100)],
         ];
-    }
-
-    /**
-     * @dataProvider invalidSelfEmployedProvider
-     *
-     * @param mixed $value
-     */
-    public function testSetInvalidSelfEmployed(mixed $value): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $builder = new CreatePayoutRequestBuilder();
-        $builder->setSelfEmployed($value);
     }
 
     /**

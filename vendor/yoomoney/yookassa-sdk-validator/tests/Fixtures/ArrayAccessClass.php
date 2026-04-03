@@ -4,14 +4,15 @@ namespace Tests\YooKassa\Validator\Fixtures;
 
 use ArrayAccess;
 
-class ArrayAccessClass implements ArrayAccess {
+class ArrayAccessClass implements ArrayAccess
+{
     private array $container = [];
 
     public function __construct()
     {
         $this->container = [
-            "one"   => 1,
-            "two"   => 2,
+            "one" => 1,
+            "two" => 2,
             "three" => 3,
         ];
     }

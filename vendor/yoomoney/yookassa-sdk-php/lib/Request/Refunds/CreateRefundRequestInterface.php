@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,7 @@ namespace YooKassa\Request\Refunds;
 use YooKassa\Common\ListObjectInterface;
 use YooKassa\Model\AmountInterface;
 use YooKassa\Model\Deal\RefundDealData;
+use YooKassa\Model\Metadata;
 use YooKassa\Model\Receipt\ReceiptInterface;
 use YooKassa\Model\Refund\SourceInterface;
 
@@ -149,4 +150,28 @@ interface CreateRefundRequestInterface
      * Проверяет наличие информации о сделке.
      */
     public function hasDeal(): bool;
+
+    /**
+     * Возвращает метаданные возврата.
+     *
+     * @return Metadata|null
+     */
+    public function getMetadata(): ?Metadata;
+
+    /**
+     * Проверяет, были ли установлены метаданные возврата.
+     *
+     * @return bool True если метаданные были установлены, false если нет
+     */
+    public function hasMetadata(): bool;
+
+    /**
+     * Устанавливает метаданные возврата.
+     *
+     * @param Metadata|array|null $metadata Любые дополнительные данные, которые нужны вам для работы (например, ваш внутренний идентификатор заказа). Передаются в виде набора пар «ключ-значение» и возвращаются в ответе от ЮKassa. Ограничения: максимум 16 ключей, имя ключа не больше 32 символов, значение ключа не больше 512 символов, тип данных — строка в формате UTF-8.
+     *
+     * @return self
+     */
+    public function setMetadata(mixed $metadata = null): self;
+
 }

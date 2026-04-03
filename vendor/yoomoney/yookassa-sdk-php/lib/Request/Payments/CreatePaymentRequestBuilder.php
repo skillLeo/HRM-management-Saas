@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,7 @@ use YooKassa\Common\AbstractRequestInterface;
 use YooKassa\Common\Exceptions\EmptyPropertyValueException;
 use YooKassa\Common\Exceptions\InvalidPropertyValueException;
 use YooKassa\Common\Exceptions\InvalidPropertyValueTypeException;
+use YooKassa\Common\ListObject;
 use YooKassa\Model\Deal\PaymentDealInfo;
 use YooKassa\Model\Metadata;
 use YooKassa\Model\Receipt\IndustryDetails;
@@ -38,7 +39,9 @@ use YooKassa\Request\Payments\ConfirmationAttributes\AbstractConfirmationAttribu
 use YooKassa\Request\Payments\ConfirmationAttributes\ConfirmationAttributesFactory;
 use YooKassa\Request\Payments\PaymentData\AbstractPaymentData;
 use YooKassa\Request\Payments\PaymentData\PaymentDataFactory;
+use YooKassa\Request\Payments\PaymentOrderData\AbstractPaymentOrder;
 use YooKassa\Request\Payments\ReceiverData\AbstractReceiver;
+use YooKassa\Request\Payments\StatementData\AbstractStatement;
 
 /**
  * Класс, представляющий модель CreatePaymentRequestBuilder.
@@ -385,6 +388,38 @@ class CreatePaymentRequestBuilder extends AbstractPaymentRequestBuilder
     public function setReceiver(mixed $value): CreatePaymentRequestBuilder
     {
         $this->currentObject->setReceiver($value);
+
+        return $this;
+    }
+
+    /**
+     * Устанавливает платежное поручение.
+     *
+     * @param null|array|AbstractPaymentOrder $value Платежное поручение
+     *
+     * @return CreatePaymentRequestBuilder Инстанс билдера запросов
+     *
+     * @throws InvalidPropertyValueTypeException
+     */
+    public function setPaymentOrder(mixed $value): CreatePaymentRequestBuilder
+    {
+        $this->currentObject->setPaymentOrder($value);
+
+        return $this;
+    }
+
+    /**
+     * Добавляет данные для получения справки.
+     *
+     * @param null|array|AbstractStatement $value Данные для получения справки
+     *
+     * @return CreatePaymentRequestBuilder Инстанс билдера запросов
+     *
+     * @throws InvalidPropertyValueTypeException
+     */
+    public function addStatement(mixed $value): CreatePaymentRequestBuilder
+    {
+        $this->currentObject->getStatements()->add($value);
 
         return $this;
     }

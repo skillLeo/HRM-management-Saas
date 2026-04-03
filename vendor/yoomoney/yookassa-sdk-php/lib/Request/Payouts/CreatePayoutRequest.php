@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,10 +57,6 @@ use YooKassa\Validator\Constraints as Assert;
  * @property string $paymentMethodId Идентификатор сохраненного способа оплаты, данные которого нужно использовать для проведения выплаты
  * @property PayoutDealInfo $deal Сделка, в рамках которой нужно провести выплату. Необходимо передавать, если вы проводите Безопасную сделку
  * @property string $description Описание транзакции (не более 128 символов). Например: «Выплата по договору N»
- * @property PayoutSelfEmployedInfo $self_employed Данные самозанятого, который получит выплату. Необходимо передавать, если вы делаете выплату [самозанятому](https://yookassa.ru/developers/payouts/scenario-extensions/self-employed). Только для обычных выплат.
- * @property PayoutSelfEmployedInfo $selfEmployed Данные самозанятого, который получит выплату. Необходимо передавать, если вы делаете выплату [самозанятому](https://yookassa.ru/developers/payouts/scenario-extensions/self-employed). Только для обычных выплат.
- * @property IncomeReceiptData $receipt_data Данные для формирования чека в сервисе Мой налог. Необходимо передавать, если вы делаете выплату [самозанятому](https://yookassa.ru/developers/payouts/scenario-extensions/self-employed). Только для обычных выплат.
- * @property IncomeReceiptData $receiptData Данные для формирования чека в сервисе Мой налог. Необходимо передавать, если вы делаете выплату [самозанятому](https://yookassa.ru/developers/payouts/scenario-extensions/self-employed). Только для обычных выплат.
  * @property ListObjectInterface|PayoutPersonalData[] $personal_data Персональные данные получателя выплаты. Только для обычных выплат. Необходимо передавать в этих сценариях: - [выплаты с проверкой получателя](https://yookassa.ru/developers/payouts/scenario-extensions/recipient-check) (только для выплат через СБП); - [выплаты с передачей данных получателя для выписок из реестра](https://yookassa.ru/developers/payouts/scenario-extensions/recipient-data-send). В массиве можно одновременно передать несколько идентификаторов, но только для разных типов данных.
  * @property ListObjectInterface|PayoutPersonalData[] $personalData Персональные данные получателя выплаты. Только для обычных выплат. Необходимо передавать в этих сценариях: - [выплаты с проверкой получателя](https://yookassa.ru/developers/payouts/scenario-extensions/recipient-check) (только для выплат через СБП); - [выплаты с передачей данных получателя для выписок из реестра](https://yookassa.ru/developers/payouts/scenario-extensions/recipient-data-send). В массиве можно одновременно передать несколько идентификаторов, но только для разных типов данных.
  * @property Metadata $metadata Метаданные привязанные к выплате
@@ -131,26 +127,6 @@ class CreatePayoutRequest extends AbstractRequest implements CreatePayoutRequest
     #[Assert\Type('string')]
     #[Assert\Length(max: self::MAX_LENGTH_DESCRIPTION)]
     private ?string $_description = null;
-
-    /**
-     * Данные самозанятого, который получит выплату. Необходимо передавать,
-     * если вы делаете выплату [самозанятому](https://yookassa.ru/developers/payouts/scenario-extensions/self-employed). Только для обычных выплат.
-     *
-     * @var PayoutSelfEmployedInfo|null
-     */
-    #[Assert\Valid]
-    #[Assert\Type(PayoutSelfEmployedInfo::class)]
-    private ?PayoutSelfEmployedInfo $_self_employed = null;
-
-    /**
-     * Данные для формирования чека в сервисе Мой налог. Необходимо передавать,
-     * если вы делаете выплату [самозанятому](https://yookassa.ru/developers/payouts/scenario-extensions/self-employed). Только для обычных выплат.
-     *
-     * @var IncomeReceiptData|null
-     */
-    #[Assert\Valid]
-    #[Assert\Type(IncomeReceiptData::class)]
-    private ?IncomeReceiptData $_receipt_data = null;
 
     /**
      * Персональные данные получателя выплаты. Только для обычных выплат.
@@ -343,72 +319,6 @@ class CreatePayoutRequest extends AbstractRequest implements CreatePayoutRequest
     public function setDeal(mixed $deal): self
     {
         $this->_deal = $this->validatePropertyValue('_deal', $deal);
-        return $this;
-    }
-
-    /**
-     * Возвращает данные самозанятого, который получит выплату.
-     *
-     * @return null|PayoutSelfEmployedInfo Данные самозанятого, который получит выплату
-     */
-    public function getSelfEmployed(): ?PayoutSelfEmployedInfo
-    {
-        return $this->_self_employed;
-    }
-
-    /**
-     * Проверяет наличие данных самозанятого в создаваемой выплате.
-     *
-     * @return bool True если данные самозанятого есть, false если нет
-     */
-    public function hasSelfEmployed(): bool
-    {
-        return !empty($this->_self_employed);
-    }
-
-    /**
-     * Устанавливает данные самозанятого, который получит выплату.
-     *
-     * @param PayoutSelfEmployedInfo|array|null $self_employed Данные самозанятого, который получит выплату
-     *
-     * @return self
-     */
-    public function setSelfEmployed(mixed $self_employed = null): self
-    {
-        $this->_self_employed = $this->validatePropertyValue('_self_employed', $self_employed);
-        return $this;
-    }
-
-    /**
-     * Возвращает данные для формирования чека в сервисе Мой налог.
-     *
-     * @return null|IncomeReceiptData Данные для формирования чека в сервисе Мой налог
-     */
-    public function getReceiptData(): ?IncomeReceiptData
-    {
-        return $this->_receipt_data;
-    }
-
-    /**
-     * Проверяет наличие данных для формирования чека в сервисе Мой налог.
-     *
-     * @return bool True если данные для формирования чека есть, false если нет
-     */
-    public function hasReceiptData(): bool
-    {
-        return !empty($this->_receipt_data);
-    }
-
-    /**
-     * Устанавливает данные для формирования чека в сервисе Мой налог.
-     *
-     * @param IncomeReceiptData|array|null $receipt_data Данные для формирования чека в сервисе Мой налог
-     *
-     * @return $this
-     */
-    public function setReceiptData(mixed $receipt_data = null): self
-    {
-        $this->_receipt_data = $this->validatePropertyValue('_receipt_data', $receipt_data);
         return $this;
     }
 

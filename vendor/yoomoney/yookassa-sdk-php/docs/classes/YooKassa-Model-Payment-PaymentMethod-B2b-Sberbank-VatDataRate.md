@@ -15,8 +15,8 @@
 - 5 - 5%
 - 7 - 7%
 - 10 - 10%
-- 18 - 18%
 - 20 - 20%
+- 22 - 22%
 
 ---
 ### Constants
@@ -25,8 +25,9 @@
 | public | [RATE_5](../classes/YooKassa-Model-Payment-PaymentMethod-B2b-Sberbank-VatDataRate.md#constant_RATE_5) |  | 5% |
 | public | [RATE_7](../classes/YooKassa-Model-Payment-PaymentMethod-B2b-Sberbank-VatDataRate.md#constant_RATE_7) |  | 7% |
 | public | [RATE_10](../classes/YooKassa-Model-Payment-PaymentMethod-B2b-Sberbank-VatDataRate.md#constant_RATE_10) |  | 10% |
-| public | [RATE_18](../classes/YooKassa-Model-Payment-PaymentMethod-B2b-Sberbank-VatDataRate.md#constant_RATE_18) |  | 18% |
-| public | [RATE_20](../classes/YooKassa-Model-Payment-PaymentMethod-B2b-Sberbank-VatDataRate.md#constant_RATE_20) |  | 20% |
+| public | [RATE_18](../classes/YooKassa-Model-Payment-PaymentMethod-B2b-Sberbank-VatDataRate.md#constant_RATE_18) | *deprecated* | 18% |
+| public | [RATE_20](../classes/YooKassa-Model-Payment-PaymentMethod-B2b-Sberbank-VatDataRate.md#constant_RATE_20) | *deprecated* | 20% |
+| public | [RATE_22](../classes/YooKassa-Model-Payment-PaymentMethod-B2b-Sberbank-VatDataRate.md#constant_RATE_22) |  | 22% - С 1 января 2026 года ставка НДС 22% применяется вместо ставки 20%. |
 
 ---
 ### Properties
@@ -90,20 +91,33 @@ RATE_10 = '10'
 
 
 <a name="constant_RATE_18" class="anchor"></a>
-###### RATE_18
+###### ~~RATE_18~~
 18%
 
 ```php
 RATE_18 = '18'
 ```
 
+**deprecated**
+Больше не применяется
 
 <a name="constant_RATE_20" class="anchor"></a>
-###### RATE_20
+###### ~~RATE_20~~
 20%
 
 ```php
 RATE_20 = '20'
+```
+
+**deprecated**
+Больше не применяется
+
+<a name="constant_RATE_22" class="anchor"></a>
+###### RATE_22
+22% - С 1 января 2026 года ставка НДС 22% применяется вместо ставки 20%.
+
+```php
+RATE_22 = '22'
 ```
 
 
@@ -189,10 +203,10 @@ Static public valueExists(mixed $value) : bool
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 33](../reports/deprecated.md)
+* [Deprecated - 43](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2025-07-01 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2026-03-13 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2025 YooMoney
+&copy; 2026 YooMoney

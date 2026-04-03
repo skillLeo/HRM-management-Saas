@@ -84,7 +84,8 @@ var_dump($response);
 | public | [$additional_user_props](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#property_additional_user_props) |  | Дополнительный реквизит пользователя. |
 | public | [$additionalUserProps](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#property_additionalUserProps) |  | Дополнительный реквизит пользователя. |
 | public | [$customer](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#property_customer) |  | Информация о плательщике |
-| public | [$items](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#property_items) |  | Список товаров в заказе. Для чеков по 54-ФЗ можно передать не более 100 товаров, для чеков самозанятых — не более шести. |
+| public | [$internet](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#property_internet) |  | Признак проведения платежа в интернете (тег в 54 ФЗ — 1125) — указывает на оплату через интернет. |
+| public | [$items](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#property_items) |  | Список товаров в заказе: для [Чеков от ЮKassa](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/yoomoney/basics) — не более 80 товаров, для [сторонних онлайн-касс](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) — не более 100 товаров. |
 | public | [$object_id](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#property_object_id) |  | Идентификатор объекта оплаты |
 | public | [$object_type](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#property_object_type) |  | Тип объекта: приход "payment" или возврат "refund". |
 | public | [$objectId](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#property_objectId) |  | Идентификатор объекта оплаты |
@@ -99,6 +100,7 @@ var_dump($response);
 | public | [$settlements](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#property_settlements) |  | Список платежей |
 | public | [$tax_system_code](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#property_tax_system_code) |  | Система налогообложения магазина (тег в 54 ФЗ — 1055). |
 | public | [$taxSystemCode](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#property_taxSystemCode) |  | Система налогообложения магазина (тег в 54 ФЗ — 1055). |
+| public | [$timezone](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#property_timezone) |  | Номер часовой зоны для адреса, по которому вы принимаете платежи (тег в 54 ФЗ — 1011). |
 | public | [$type](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#property_type) |  | Тип чека в онлайн-кассе: приход "payment" или возврат "refund". |
 
 ---
@@ -115,6 +117,7 @@ var_dump($response);
 | public | [fromArray()](../classes/YooKassa-Common-AbstractObject.md#method_fromArray) |  | Устанавливает значения свойств текущего объекта из массива. |
 | public | [getAdditionalUserProps()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_getAdditionalUserProps) |  | Возвращает дополнительный реквизит пользователя. |
 | public | [getCustomer()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_getCustomer) |  | Возвращает информацию о плательщике. |
+| public | [getInternet()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_getInternet) |  | Возвращает признак проведения платежа в интернете. |
 | public | [getItems()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_getItems) |  | Возвращает список позиций в текущем чеке. |
 | public | [getLastValidationError()](../classes/YooKassa-Common-AbstractRequest.md#method_getLastValidationError) |  | Возвращает последнюю ошибку валидации. |
 | public | [getObjectId()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_getObjectId) |  | Возвращает Id объекта чека. |
@@ -125,6 +128,7 @@ var_dump($response);
 | public | [getSend()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_getSend) |  | Возвращает признак отложенной отправки чека. |
 | public | [getSettlements()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_getSettlements) |  | Возвращает массив оплат, обеспечивающих выдачу товара. |
 | public | [getTaxSystemCode()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_getTaxSystemCode) |  | Возвращает код системы налогообложения. |
+| public | [getTimezone()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_getTimezone) |  | Возвращает номер часовой зоны. |
 | public | [getType()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_getType) |  | Возвращает тип чека в онлайн-кассе. |
 | public | [getValidator()](../classes/YooKassa-Common-AbstractObject.md#method_getValidator) |  |  |
 | public | [hasCustomer()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_hasCustomer) |  | Проверяет наличие данных о плательщике. |
@@ -136,6 +140,7 @@ var_dump($response);
 | public | [offsetUnset()](../classes/YooKassa-Common-AbstractObject.md#method_offsetUnset) |  | Удаляет свойство. |
 | public | [setAdditionalUserProps()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_setAdditionalUserProps) |  | Устанавливает дополнительный реквизит пользователя. |
 | public | [setCustomer()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_setCustomer) |  | Устанавливает информацию о плательщике. |
+| public | [setInternet()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_setInternet) |  | Устанавливает признак проведения платежа в интернете. |
 | public | [setItems()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_setItems) |  | Устанавливает список позиций в чеке. |
 | public | [setObjectId()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_setObjectId) |  | Устанавливает Id объекта чека. |
 | public | [setObjectType()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_setObjectType) |  | Устанавливает тип объекта чека. |
@@ -145,6 +150,7 @@ var_dump($response);
 | public | [setSend()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_setSend) |  | Устанавливает признак отложенной отправки чека. |
 | public | [setSettlements()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_setSettlements) |  | Устанавливает массив оплат, обеспечивающих выдачу товара. |
 | public | [setTaxSystemCode()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_setTaxSystemCode) |  | Устанавливает код системы налогообложения. |
+| public | [setTimezone()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_setTimezone) |  | Устанавливает номер часовой зоны. |
 | public | [setType()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_setType) |  | Устанавливает тип чека в онлайн-кассе. |
 | public | [toArray()](../classes/YooKassa-Common-AbstractObject.md#method_toArray) |  | Возвращает ассоциативный массив со свойствами текущего объекта для его дальнейшей JSON сериализации Является алиасом метода AbstractObject::jsonSerialize(). |
 | public | [validate()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md#method_validate) |  | Валидирует текущий запрос, проверяет все ли нужные свойства установлены. |
@@ -211,14 +217,26 @@ var_dump($response);
 **Details:**
 
 
-<a name="property_items"></a>
-#### public $items : array
+<a name="property_internet"></a>
+#### public $internet : bool
 ---
 ***Description***
 
-Список товаров в заказе. Для чеков по 54-ФЗ можно передать не более 100 товаров, для чеков самозанятых — не более шести.
+Признак проведения платежа в интернете (тег в 54 ФЗ — 1125) — указывает на оплату через интернет.
 
-**Type:** <a href="../array"><abbr title="array">array</abbr></a>
+**Type:** <a href="../bool"><abbr title="bool">bool</abbr></a>
+
+**Details:**
+
+
+<a name="property_items"></a>
+#### public $items : \YooKassa\Model\Receipt\ReceiptItemInterface[]|\YooKassa\Common\ListObjectInterface
+---
+***Description***
+
+Список товаров в заказе: для [Чеков от ЮKassa](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/yoomoney/basics) — не более 80 товаров, для [сторонних онлайн-касс](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) — не более 100 товаров.
+
+**Type:** <a href="../\YooKassa\Model\Receipt\ReceiptItemInterface[]|\YooKassa\Common\ListObjectInterface"><abbr title="\YooKassa\Model\Receipt\ReceiptItemInterface[]|\YooKassa\Common\ListObjectInterface">ListObjectInterface</abbr></a>
 
 **Details:**
 
@@ -296,13 +314,13 @@ var_dump($response);
 
 
 <a name="property_receipt_industry_details"></a>
-#### public $receipt_industry_details : array
+#### public $receipt_industry_details : \YooKassa\Model\Receipt\IndustryDetails[]|\YooKassa\Common\ListObjectInterface
 ---
 ***Description***
 
 Отраслевой реквизит предмета расчета.
 
-**Type:** <a href="../array"><abbr title="array">array</abbr></a>
+**Type:** <a href="../\YooKassa\Model\Receipt\IndustryDetails[]|\YooKassa\Common\ListObjectInterface"><abbr title="\YooKassa\Model\Receipt\IndustryDetails[]|\YooKassa\Common\ListObjectInterface">ListObjectInterface</abbr></a>
 
 **Details:**
 
@@ -320,13 +338,13 @@ var_dump($response);
 
 
 <a name="property_receiptIndustryDetails"></a>
-#### public $receiptIndustryDetails : array
+#### public $receiptIndustryDetails : \YooKassa\Model\Receipt\IndustryDetails[]|\YooKassa\Common\ListObjectInterface
 ---
 ***Description***
 
 Отраслевой реквизит предмета расчета.
 
-**Type:** <a href="../array"><abbr title="array">array</abbr></a>
+**Type:** <a href="../\YooKassa\Model\Receipt\IndustryDetails[]|\YooKassa\Common\ListObjectInterface"><abbr title="\YooKassa\Model\Receipt\IndustryDetails[]|\YooKassa\Common\ListObjectInterface">ListObjectInterface</abbr></a>
 
 **Details:**
 
@@ -356,13 +374,13 @@ var_dump($response);
 
 
 <a name="property_settlements"></a>
-#### public $settlements : array
+#### public $settlements : \YooKassa\Model\Receipt\SettlementInterface[]|\YooKassa\Common\ListObjectInterface
 ---
 ***Description***
 
 Список платежей
 
-**Type:** <a href="../array"><abbr title="array">array</abbr></a>
+**Type:** <a href="../\YooKassa\Model\Receipt\SettlementInterface[]|\YooKassa\Common\ListObjectInterface"><abbr title="\YooKassa\Model\Receipt\SettlementInterface[]|\YooKassa\Common\ListObjectInterface">ListObjectInterface</abbr></a>
 
 **Details:**
 
@@ -385,6 +403,18 @@ var_dump($response);
 ***Description***
 
 Система налогообложения магазина (тег в 54 ФЗ — 1055).
+
+**Type:** <a href="../int"><abbr title="int">int</abbr></a>
+
+**Details:**
+
+
+<a name="property_timezone"></a>
+#### public $timezone : int
+---
+***Description***
+
+Номер часовой зоны для адреса, по которому вы принимаете платежи (тег в 54 ФЗ — 1011).
 
 **Type:** <a href="../int"><abbr title="int">int</abbr></a>
 
@@ -607,6 +637,23 @@ public getCustomer() : \YooKassa\Model\Receipt\ReceiptCustomerInterface|null
 **Returns:** \YooKassa\Model\Receipt\ReceiptCustomerInterface|null - Информация о плательщике
 
 
+<a name="method_getInternet" class="anchor"></a>
+#### public getInternet() : bool|null
+
+```php
+public getInternet() : bool|null
+```
+
+**Summary**
+
+Возвращает признак проведения платежа в интернете.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Receipts\CreatePostReceiptRequest](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md)
+
+**Returns:** bool|null - Признак проведения платежа в интернете
+
+
 <a name="method_getItems" class="anchor"></a>
 #### public getItems() : \YooKassa\Model\Receipt\ReceiptItemInterface[]|\YooKassa\Common\ListObjectInterface
 
@@ -780,6 +827,23 @@ public getTaxSystemCode() : int|null
 * Inherited From: [\YooKassa\Request\Receipts\CreatePostReceiptRequest](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md)
 
 **Returns:** int|null - Код системы налогообложения. Число 1-6.
+
+
+<a name="method_getTimezone" class="anchor"></a>
+#### public getTimezone() : int|null
+
+```php
+public getTimezone() : int|null
+```
+
+**Summary**
+
+Возвращает номер часовой зоны.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Receipts\CreatePostReceiptRequest](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md)
+
+**Returns:** int|null - Номер часовой зоны
 
 
 <a name="method_getType" class="anchor"></a>
@@ -996,6 +1060,28 @@ public setCustomer(array|\YooKassa\Model\Receipt\ReceiptCustomerInterface $custo
 **Returns:** self - 
 
 
+<a name="method_setInternet" class="anchor"></a>
+#### public setInternet() : self
+
+```php
+public setInternet(bool|null $internet = null) : self
+```
+
+**Summary**
+
+Устанавливает признак проведения платежа в интернете.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Receipts\CreatePostReceiptRequest](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">bool OR null</code> | internet  | Признак проведения платежа в интернете (тег в 54 ФЗ — 1125) — указывает на оплату через интернет. |
+
+**Returns:** self - 
+
+
 <a name="method_setItems" class="anchor"></a>
 #### public setItems() : self
 
@@ -1019,7 +1105,7 @@ ReceiptItemInterface, в противном случае будет выброш
 ##### Parameters:
 | Type | Name | Description |
 | ---- | ---- | ----------- |
-| <code lang="php">array OR \YooKassa\Common\ListObjectInterface</code> | items  | Список товаров в заказе |
+| <code lang="php">array OR \YooKassa\Common\ListObjectInterface</code> | items  | Список товаров в заказе: для [Чеков от ЮKassa](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/yoomoney/basics) — не более 80 товаров, для [сторонних онлайн-касс](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) — не более 100 товаров. |
 
 **Returns:** self - 
 
@@ -1205,6 +1291,28 @@ public setTaxSystemCode(int|null $tax_system_code = null) : self
 **Returns:** self - 
 
 
+<a name="method_setTimezone" class="anchor"></a>
+#### public setTimezone() : self
+
+```php
+public setTimezone(int|null $timezone = null) : self
+```
+
+**Summary**
+
+Устанавливает номер часовой зоны.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Receipts\CreatePostReceiptRequest](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequest.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">int OR null</code> | timezone  | Номер часовой зоны для адреса, по которому вы принимаете платежи (тег в 54 ФЗ — 1011). |
+
+**Returns:** self - 
+
+
 <a name="method_setType" class="anchor"></a>
 #### public setType() : self
 
@@ -1332,10 +1440,10 @@ protected validatePropertyValue(string $propertyName, mixed $propertyValue) : mi
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 33](../reports/deprecated.md)
+* [Deprecated - 43](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2025-07-01 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2026-03-13 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2025 YooMoney
+&copy; 2026 YooMoney

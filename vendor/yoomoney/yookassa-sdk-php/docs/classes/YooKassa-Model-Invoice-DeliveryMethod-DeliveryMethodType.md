@@ -12,7 +12,9 @@
 Код способа доставки счета пользователю.
 
 Возможные значения:
-- `self` — Самостоятельно.
+- `self` — Самостоятельно
+- `email` — По электронной почте
+- `sms` — В смс
 
 Подробнее про [жизненный цикл счета](https://yookassa.ru/developers/payment-acceptance/scenario-extensions/invoices/basics)
 
@@ -21,6 +23,8 @@
 | Visibility | Name | Flag | Summary |
 | ----------:| ---- | ---- | ------- |
 | public | [SELF](../classes/YooKassa-Model-Invoice-DeliveryMethod-DeliveryMethodType.md#constant_SELF) |  | Самостоятельно |
+| public | [EMAIL](../classes/YooKassa-Model-Invoice-DeliveryMethod-DeliveryMethodType.md#constant_EMAIL) |  | По электронной почте |
+| public | [SMS](../classes/YooKassa-Model-Invoice-DeliveryMethod-DeliveryMethodType.md#constant_SMS) |  | В смс |
 | public | [UNKNOWN](../classes/YooKassa-Model-Invoice-DeliveryMethod-DeliveryMethodType.md#constant_UNKNOWN) | *deprecated* | Для неизвестных методов доставки счета пользователю |
 
 ---
@@ -63,6 +67,24 @@
 
 ```php
 SELF = 'self'
+```
+
+
+<a name="constant_EMAIL" class="anchor"></a>
+###### EMAIL
+По электронной почте
+
+```php
+EMAIL = 'email'
+```
+
+
+<a name="constant_SMS" class="anchor"></a>
+###### SMS
+В смс
+
+```php
+SMS = 'sms'
 ```
 
 
@@ -168,10 +190,10 @@ Static public valueExists(mixed $value) : bool
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 33](../reports/deprecated.md)
+* [Deprecated - 43](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2025-07-01 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2026-03-13 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2025 YooMoney
+&copy; 2026 YooMoney

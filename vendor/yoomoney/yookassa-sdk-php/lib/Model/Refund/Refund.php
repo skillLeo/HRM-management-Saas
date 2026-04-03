@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,7 @@ use YooKassa\Common\ListObjectInterface;
 use YooKassa\Model\AmountInterface;
 use YooKassa\Model\CancellationDetailsInterface;
 use YooKassa\Model\Deal\RefundDealInfo;
+use YooKassa\Model\Metadata;
 use YooKassa\Model\MonetaryAmount;
 use YooKassa\Model\Payment\ReceiptRegistrationStatus;
 use YooKassa\Model\Refund\RefundMethod\AbstractRefundMethod;
@@ -42,7 +43,7 @@ use YooKassa\Validator\Constraints as Assert;
 /**
  * Класс, представляющий модель Refund.
  *
- * Данные о возврате платежа.
+ * Объект возврата (Refund) — актуальная информация о возврате платежа.
  *
  * @category Class
  * @package  YooKassa\Model
@@ -65,6 +66,9 @@ use YooKassa\Validator\Constraints as Assert;
  * @property RefundDealInfo $deal Данные о сделке, в составе которой проходит возврат
  * @property AbstractRefundMethod|null $refundMethod Детали возврата. Зависят от способа оплаты, который использовался при проведении платежа
  * @property AbstractRefundMethod|null $refund_method Детали возврата. Зависят от способа оплаты, который использовался при проведении платежа
+ * @property RefundAuthorizationDetails|null $refund_authorization_details Данные об авторизации возврата. Присутствуют только для возвратов платежей, совершенных этими способами оплаты: банковская карта, Mir Pay
+ * @property RefundAuthorizationDetails|null $refundAuthorizationDetails Данные об авторизации возврата. Присутствуют только для возвратов платежей, совершенных этими способами оплаты: банковская карта, Mir Pay
+ * @property Metadata|null $metadata Метаданные возврата указанные мерчантом
  */
 class Refund extends AbstractObject implements RefundInterface
 {
@@ -153,7 +157,21 @@ class Refund extends AbstractObject implements RefundInterface
      * @var AbstractRefundMethod|null Детали возврата. Зависят от способа оплаты, который использовался при проведении платежа.
      */
     #[Assert\Type(AbstractRefundMethod::class)]
-    private ?AbstractRefundMethod $_refund_method = null;
+    protected ?AbstractRefundMethod $_refund_method = null;
+
+    /**
+     * @var RefundAuthorizationDetails|null Данные об авторизации возврата
+     */
+    #[Assert\Valid]
+    #[Assert\Type(RefundAuthorizationDetails::class)]
+    protected ?RefundAuthorizationDetails $_refund_authorization_details = null;
+
+    /**
+     * @var Metadata|null Любые дополнительные данные, которые нужны вам для работы (например, ваш внутренний идентификатор заказа). Передаются в виде набора пар «ключ-значение» и возвращаются в ответе от ЮKassa. Ограничения: максимум 16 ключей, имя ключа не больше 32 символов, значение ключа не больше 512 символов, тип данных — строка в формате UTF-8.
+     */
+    #[Assert\AllType('string')]
+    #[Assert\Type(Metadata::class)]
+    protected ?Metadata $_metadata = null;
 
     /**
      * Возвращает идентификатор возврата платежа.
@@ -413,4 +431,51 @@ class Refund extends AbstractObject implements RefundInterface
         $this->_refund_method = $this->validatePropertyValue('_refund_method', $refund_method);
         return $this;
     }
+
+    /**
+     * Возвращает refund_authorization_details.
+     *
+     * @return RefundAuthorizationDetails|null
+     */
+    public function getRefundAuthorizationDetails(): ?RefundAuthorizationDetails
+    {
+        return $this->_refund_authorization_details;
+    }
+
+    /**
+     * Устанавливает refund_authorization_details.
+     *
+     * @param RefundAuthorizationDetails|array|null $refund_authorization_details Данные об авторизации возврата
+     *
+     * @return self
+     */
+    public function setRefundAuthorizationDetails(mixed $refund_authorization_details = null): self
+    {
+        $this->_refund_authorization_details = $this->validatePropertyValue('_refund_authorization_details', $refund_authorization_details);
+        return $this;
+    }
+
+    /**
+     * Возвращает метаданные возврата.
+     *
+     * @return Metadata|null
+     */
+    public function getMetadata(): ?Metadata
+    {
+        return $this->_metadata;
+    }
+
+    /**
+     * Устанавливает метаданные возврата.
+     *
+     * @param Metadata|null $metadata Любые дополнительные данные, которые нужны вам для работы (например, ваш внутренний идентификатор заказа). Передаются в виде набора пар «ключ-значение» и возвращаются в ответе от ЮKassa. Ограничения: максимум 16 ключей, имя ключа не больше 32 символов, значение ключа не больше 512 символов, тип данных — строка в формате UTF-8.
+     *
+     * @return self
+     */
+    public function setMetadata(mixed $metadata = null): self
+    {
+        $this->_metadata = $this->validatePropertyValue('_metadata', $metadata);
+        return $this;
+    }
+
 }

@@ -75,7 +75,16 @@ try {
                         ]
                     ],
                 ]
-            ]
+            ],
+            'statements' => [
+                [
+                    'type' => 'payment_overview',
+                    'delivery_method' => [
+                        'type' => 'email',
+                        'email' => 'john.doe@mail.ru',
+                    ],
+                ],
+            ],
         ],
         $idempotenceKey
     );
@@ -165,6 +174,15 @@ try {
         ]
     ]);
 
+    // Можно указать данные для отправки справки. Необходимо передавать, если вы хотите, чтобы после оплаты пользователь получил справку.
+    $builder->addStatement([
+        'type' => \YooKassa\Request\Payments\StatementData\StatementType::PAYMENT_OVERVIEW,
+        'delivery_method' => [
+            'type' => \YooKassa\Request\Payments\StatementData\DeliveryMethod\DeliveryMethodType::EMAIL,
+            'email' => 'john.doe@mail.ru',
+        ],
+    ]);
+    
     // Создаем объект запроса
     $request = $builder->build();
 

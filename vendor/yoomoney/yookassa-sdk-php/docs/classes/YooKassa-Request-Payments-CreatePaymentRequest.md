@@ -105,8 +105,8 @@ var_dump($response);
 | Visibility | Name | Flag | Summary |
 | ----------:| ---- | ---- | ------- |
 | public | [$airline](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md#property_airline) |  | Объект с данными для продажи авиабилетов |
-| public | [$amount](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md#property_amount) |  | Сумма |
 | public | [$amount](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_amount) |  | Сумма создаваемого платежа |
+| public | [$amount](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md#property_amount) |  | Сумма |
 | public | [$capture](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_capture) |  | Автоматически принять поступившую оплату |
 | public | [$client_ip](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_client_ip) |  | IPv4 или IPv6-адрес покупателя. Если не указан, используется IP-адрес TCP-подключения |
 | public | [$clientIp](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_clientIp) |  | IPv4 или IPv6-адрес покупателя. Если не указан, используется IP-адрес TCP-подключения |
@@ -118,6 +118,7 @@ var_dump($response);
 | public | [$metadata](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_metadata) |  | Метаданные привязанные к платежу |
 | public | [$payment_method_data](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_payment_method_data) |  | Данные используемые для создания метода оплаты |
 | public | [$payment_method_id](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_payment_method_id) |  | Идентификатор записи о сохраненных платежных данных покупателя |
+| public | [$payment_order](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_payment_order) |  | Платежное поручение — распоряжение на перевод банку для оплаты жилищно-коммунальных услуг (ЖКУ), сведения о платеже для регистрации в ГИС ЖКХ. Необходимо передавать при [оплате ЖКУ](/developers/payment-acceptance/scenario-extensions/utility-payments). |
 | public | [$payment_token](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_payment_token) |  | Одноразовый токен для проведения оплаты, сформированный YooKassa JS widget |
 | public | [$paymentMethodData](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_paymentMethodData) |  | Данные используемые для создания метода оплаты |
 | public | [$paymentMethodId](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_paymentMethodId) |  | Идентификатор записи о сохраненных платежных данных покупателя |
@@ -128,6 +129,7 @@ var_dump($response);
 | public | [$recipient](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_recipient) |  | Получатель платежа, если задан |
 | public | [$save_payment_method](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_save_payment_method) |  | Сохранить платежные данные для последующего использования. Значение true инициирует создание многоразового payment_method |
 | public | [$savePaymentMethod](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_savePaymentMethod) |  | Сохранить платежные данные для последующего использования. Значение true инициирует создание многоразового payment_method |
+| public | [$statements](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#property_statements) |  | Данные для отправки справки. Необходимо передавать, если вы хотите, чтобы после оплаты пользователь получил справку.  Сейчас доступен один тип справок — квитанция по платежу. Это информация об успешном платеже, которую ЮKassa отправляет на электронную почту пользователя.  Квитанцию можно отправить, если оплата прошла с банковской карты, через SberPay или СБП. Отправка квитанции доступна во всех сценариях интеграции. |
 | public | [$transfers](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md#property_transfers) |  | Данные о распределении платежа между магазинами |
 | protected | [$_airline](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md#property__airline) |  |  |
 | protected | [$_amount](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md#property__amount) |  |  |
@@ -159,11 +161,13 @@ var_dump($response);
 | public | [getMetadata()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_getMetadata) |  | Возвращает данные оплаты установленные мерчантом |
 | public | [getPaymentMethodData()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_getPaymentMethodData) |  | Возвращает данные для создания метода оплаты. |
 | public | [getPaymentMethodId()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_getPaymentMethodId) |  | Устанавливает идентификатор записи платёжных данных покупателя. |
+| public | [getPaymentOrder()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_getPaymentOrder) |  | Возвращает платежное поручение. |
 | public | [getPaymentToken()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_getPaymentToken) |  | Возвращает одноразовый токен для проведения оплаты. |
 | public | [getReceipt()](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md#method_getReceipt) |  | Возвращает чек, если он есть. |
 | public | [getReceiver()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_getReceiver) |  | Возвращает реквизиты получателя оплаты. |
 | public | [getRecipient()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_getRecipient) |  | Возвращает объект получателя платежа. |
 | public | [getSavePaymentMethod()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_getSavePaymentMethod) |  | Возвращает флаг сохранения платёжных данных. |
+| public | [getStatements()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_getStatements) |  | Возвращает данные для отправки справки. |
 | public | [getTransfers()](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md#method_getTransfers) |  | Возвращает данные о распределении денег — сколько и в какой магазин нужно перевести. |
 | public | [getValidator()](../classes/YooKassa-Common-AbstractObject.md#method_getValidator) |  |  |
 | public | [hasAirline()](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md#method_hasAirline) |  | Проверяет, были ли установлены данные авиабилетов. |
@@ -178,11 +182,13 @@ var_dump($response);
 | public | [hasMetadata()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_hasMetadata) |  | Проверяет, были ли установлены метаданные заказа. |
 | public | [hasPaymentMethodData()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_hasPaymentMethodData) |  | Проверяет установлен ли объект с методом оплаты. |
 | public | [hasPaymentMethodId()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_hasPaymentMethodId) |  | Проверяет наличие идентификатора записи о платёжных данных покупателя. |
+| public | [hasPaymentOrder()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_hasPaymentOrder) |  | Проверяет, было ли установлено платежное поручение. |
 | public | [hasPaymentToken()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_hasPaymentToken) |  | Проверяет наличие одноразового токена для проведения оплаты. |
 | public | [hasReceipt()](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md#method_hasReceipt) |  | Проверяет наличие чека. |
 | public | [hasReceiver()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_hasReceiver) |  | Проверяет, были ли установлены реквизиты получателя оплаты. |
 | public | [hasRecipient()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_hasRecipient) |  | Проверяет наличие получателя платежа в запросе. |
 | public | [hasSavePaymentMethod()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_hasSavePaymentMethod) |  | Проверяет, был ли установлен флаг сохранения платёжных данных. |
+| public | [hasStatements()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_hasStatements) |  | Проверяет, были ли установлены данные для отправки справки. |
 | public | [hasTransfers()](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md#method_hasTransfers) |  | Проверяет наличие данных о распределении денег. |
 | public | [jsonSerialize()](../classes/YooKassa-Common-AbstractObject.md#method_jsonSerialize) |  | Возвращает ассоциативный массив со свойствами текущего объекта для его дальнейшей JSON сериализации. |
 | public | [offsetExists()](../classes/YooKassa-Common-AbstractObject.md#method_offsetExists) |  | Проверяет наличие свойства. |
@@ -202,11 +208,13 @@ var_dump($response);
 | public | [setMetadata()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_setMetadata) |  | Устанавливает метаданные, привязанные к платежу. |
 | public | [setPaymentMethodData()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_setPaymentMethodData) |  | Устанавливает объект с информацией для создания метода оплаты. |
 | public | [setPaymentMethodId()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_setPaymentMethodId) |  | Устанавливает идентификатор записи о сохранённых данных покупателя. |
+| public | [setPaymentOrder()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_setPaymentOrder) |  | Устанавливает платежное поручение. |
 | public | [setPaymentToken()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_setPaymentToken) |  | Устанавливает одноразовый токен для проведения оплаты, сформированный YooKassa JS widget. |
 | public | [setReceipt()](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md#method_setReceipt) |  | Устанавливает чек. |
 | public | [setReceiver()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_setReceiver) |  | Устанавливает реквизиты получателя оплаты. |
 | public | [setRecipient()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_setRecipient) |  | Устанавливает объект с информацией о получателе платежа. |
 | public | [setSavePaymentMethod()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_setSavePaymentMethod) |  | Устанавливает флаг сохранения платёжных данных. Значение true инициирует создание многоразового payment_method. |
+| public | [setStatements()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_setStatements) |  | Устанавливает данные для отправки справки. |
 | public | [setTransfers()](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md#method_setTransfers) |  | Устанавливает transfers (массив распределения денег между магазинами). |
 | public | [toArray()](../classes/YooKassa-Common-AbstractObject.md#method_toArray) |  | Возвращает ассоциативный массив со свойствами текущего объекта для его дальнейшей JSON сериализации Является алиасом метода AbstractObject::jsonSerialize(). |
 | public | [validate()](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md#method_validate) |  | Проверяет на валидность текущий объект |
@@ -266,12 +274,11 @@ MAX_LENGTH_PAYMENT_TOKEN = 10240
 ---
 ***Description***
 
-Сумма
+Сумма создаваемого платежа
 
 **Type:** <a href="../classes/YooKassa-Model-AmountInterface.html"><abbr title="\YooKassa\Model\AmountInterface">AmountInterface</abbr></a>
 
 **Details:**
-* Inherited From: [\YooKassa\Request\Payments\AbstractPaymentRequest](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md)
 
 
 <a name="property_amount"></a>
@@ -279,11 +286,12 @@ MAX_LENGTH_PAYMENT_TOKEN = 10240
 ---
 ***Description***
 
-Сумма создаваемого платежа
+Сумма
 
 **Type:** <a href="../classes/YooKassa-Model-AmountInterface.html"><abbr title="\YooKassa\Model\AmountInterface">AmountInterface</abbr></a>
 
 **Details:**
+* Inherited From: [\YooKassa\Request\Payments\AbstractPaymentRequest](../classes/YooKassa-Request-Payments-AbstractPaymentRequest.md)
 
 
 <a name="property_capture"></a>
@@ -418,6 +426,18 @@ IPv4 или IPv6-адрес покупателя. Если не указан, и
 **Details:**
 
 
+<a name="property_payment_order"></a>
+#### public $payment_order : \YooKassa\Request\Payments\PaymentOrderData\AbstractPaymentOrder
+---
+***Description***
+
+Платежное поручение — распоряжение на перевод банку для оплаты жилищно-коммунальных услуг (ЖКУ), сведения о платеже для регистрации в ГИС ЖКХ. Необходимо передавать при [оплате ЖКУ](/developers/payment-acceptance/scenario-extensions/utility-payments).
+
+**Type:** <a href="../classes/YooKassa-Request-Payments-PaymentOrderData-AbstractPaymentOrder.html"><abbr title="\YooKassa\Request\Payments\PaymentOrderData\AbstractPaymentOrder">AbstractPaymentOrder</abbr></a>
+
+**Details:**
+
+
 <a name="property_payment_token"></a>
 #### public $payment_token : string
 ---
@@ -535,6 +555,18 @@ IPv4 или IPv6-адрес покупателя. Если не указан, и
 Сохранить платежные данные для последующего использования. Значение true инициирует создание многоразового payment_method
 
 **Type:** <a href="../bool|null"><abbr title="bool|null">bool|null</abbr></a>
+
+**Details:**
+
+
+<a name="property_statements"></a>
+#### public $statements : \YooKassa\Request\Payments\StatementData\AbstractStatement[]|\YooKassa\Common\ListObjectInterface
+---
+***Description***
+
+Данные для отправки справки. Необходимо передавать, если вы хотите, чтобы после оплаты пользователь получил справку.  Сейчас доступен один тип справок — квитанция по платежу. Это информация об успешном платеже, которую ЮKassa отправляет на электронную почту пользователя.  Квитанцию можно отправить, если оплата прошла с банковской карты, через SberPay или СБП. Отправка квитанции доступна во всех сценариях интеграции.
+
+**Type:** <a href="../\YooKassa\Request\Payments\StatementData\AbstractStatement[]|\YooKassa\Common\ListObjectInterface"><abbr title="\YooKassa\Request\Payments\StatementData\AbstractStatement[]|\YooKassa\Common\ListObjectInterface">ListObjectInterface</abbr></a>
 
 **Details:**
 
@@ -981,6 +1013,23 @@ public getPaymentMethodId() : string|null
 **Returns:** string|null - Идентификатор записи о сохраненных платежных данных покупателя
 
 
+<a name="method_getPaymentOrder" class="anchor"></a>
+#### public getPaymentOrder() : \YooKassa\Request\Payments\PaymentOrderData\AbstractPaymentOrder|null
+
+```php
+public getPaymentOrder() : \YooKassa\Request\Payments\PaymentOrderData\AbstractPaymentOrder|null
+```
+
+**Summary**
+
+Возвращает платежное поручение.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Payments\CreatePaymentRequest](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md)
+
+**Returns:** \YooKassa\Request\Payments\PaymentOrderData\AbstractPaymentOrder|null - 
+
+
 <a name="method_getPaymentToken" class="anchor"></a>
 #### public getPaymentToken() : string|null
 
@@ -1064,6 +1113,23 @@ public getSavePaymentMethod() : bool|null
 * Inherited From: [\YooKassa\Request\Payments\CreatePaymentRequest](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md)
 
 **Returns:** bool|null - Флаг сохранения платёжных данных
+
+
+<a name="method_getStatements" class="anchor"></a>
+#### public getStatements() : \YooKassa\Request\Payments\StatementData\AbstractStatement[]|\YooKassa\Common\ListObjectInterface
+
+```php
+public getStatements() : \YooKassa\Request\Payments\StatementData\AbstractStatement[]|\YooKassa\Common\ListObjectInterface
+```
+
+**Summary**
+
+Возвращает данные для отправки справки.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Payments\CreatePaymentRequest](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md)
+
+**Returns:** \YooKassa\Request\Payments\StatementData\AbstractStatement[]|\YooKassa\Common\ListObjectInterface - Данные для отправки справки
 
 
 <a name="method_getTransfers" class="anchor"></a>
@@ -1307,6 +1373,23 @@ public hasPaymentMethodId() : bool
 **Returns:** bool - True если идентификатор задан, false если нет
 
 
+<a name="method_hasPaymentOrder" class="anchor"></a>
+#### public hasPaymentOrder() : bool
+
+```php
+public hasPaymentOrder() : bool
+```
+
+**Summary**
+
+Проверяет, было ли установлено платежное поручение.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Payments\CreatePaymentRequest](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md)
+
+**Returns:** bool - True если платежное поручение было установлены, false если нет
+
+
 <a name="method_hasPaymentToken" class="anchor"></a>
 #### public hasPaymentToken() : bool
 
@@ -1390,6 +1473,23 @@ public hasSavePaymentMethod() : bool
 * Inherited From: [\YooKassa\Request\Payments\CreatePaymentRequest](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md)
 
 **Returns:** bool - True если флаг был установлен, false если нет
+
+
+<a name="method_hasStatements" class="anchor"></a>
+#### public hasStatements() : bool
+
+```php
+public hasStatements() : bool
+```
+
+**Summary**
+
+Проверяет, были ли установлены данные для отправки справки.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Payments\CreatePaymentRequest](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md)
+
+**Returns:** bool - True если данные для отправки справки были установлены, false если нет
 
 
 <a name="method_hasTransfers" class="anchor"></a>
@@ -1828,6 +1928,28 @@ public setPaymentMethodId(string|null $payment_method_id) : self
 **Returns:** self - 
 
 
+<a name="method_setPaymentOrder" class="anchor"></a>
+#### public setPaymentOrder() : self
+
+```php
+public setPaymentOrder(\YooKassa\Request\Payments\PaymentOrderData\AbstractPaymentOrder|array|null $payment_order = null) : self
+```
+
+**Summary**
+
+Устанавливает платежное поручение.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Payments\CreatePaymentRequest](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">\YooKassa\Request\Payments\PaymentOrderData\AbstractPaymentOrder OR array OR null</code> | payment_order  | Платежное поручение |
+
+**Returns:** self - 
+
+
 <a name="method_setPaymentToken" class="anchor"></a>
 #### public setPaymentToken() : self
 
@@ -1945,6 +2067,28 @@ public setSavePaymentMethod(bool|null $save_payment_method = null) : self
 | Type | Description |
 | ---- | ----------- |
 | \YooKassa\Common\Exceptions\InvalidPropertyValueTypeException | Генерируется если переданный аргумент не кастится в bool |
+
+**Returns:** self - 
+
+
+<a name="method_setStatements" class="anchor"></a>
+#### public setStatements() : self
+
+```php
+public setStatements(\YooKassa\Common\ListObjectInterface|array|null $statements = null) : self
+```
+
+**Summary**
+
+Устанавливает данные для отправки справки.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Payments\CreatePaymentRequest](../classes/YooKassa-Request-Payments-CreatePaymentRequest.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">\YooKassa\Common\ListObjectInterface OR array OR null</code> | statements  | Данные для отправки справки |
 
 **Returns:** self - 
 
@@ -2076,10 +2220,10 @@ protected validatePropertyValue(string $propertyName, mixed $propertyValue) : mi
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 33](../reports/deprecated.md)
+* [Deprecated - 43](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2025-07-01 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2026-03-13 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2025 YooMoney
+&copy; 2026 YooMoney

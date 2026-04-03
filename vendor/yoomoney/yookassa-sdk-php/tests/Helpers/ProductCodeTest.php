@@ -1,4 +1,27 @@
 <?php
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 namespace Tests\YooKassa\Helpers;
 
@@ -132,11 +155,15 @@ class ProductCodeTest extends TestCase
         $reflection = new ReflectionClass($instance::class);
 
         $method = $reflection->getMethod('strToHex');
-        $method->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $method->setAccessible(true);
+        }
         $result1 = $method->invokeArgs($instance, ['string' => $data]);
 
         $method = $reflection->getMethod('hexToStr');
-        $method->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $method->setAccessible(true);
+        }
         $result2 = $method->invokeArgs($instance, ['hex' => $result1]);
 
         self::assertEquals($data, $result2);
@@ -153,11 +180,15 @@ class ProductCodeTest extends TestCase
         $reflection = new ReflectionClass($instance::class);
 
         $method = $reflection->getMethod('baseConvert');
-        $method->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $method->setAccessible(true);
+        }
         $result1 = $method->invokeArgs($instance, ['numString' => $data]);
 
         $method2 = $reflection->getMethod('baseConvert');
-        $method2->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $method2->setAccessible(true);
+        }
         $result2 = $method2->invokeArgs($instance, ['numString' => $result1, 'fromBase' => 16, 'toBase' => 10]);
 
         self::assertEquals(

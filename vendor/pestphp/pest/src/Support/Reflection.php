@@ -8,6 +8,7 @@ use Closure;
 use InvalidArgumentException;
 use Pest\Exceptions\ShouldNotHappen;
 use Pest\TestSuite;
+use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
@@ -33,8 +34,6 @@ final class Reflection
 
         try {
             $reflectionMethod = $reflectionClass->getMethod($method);
-
-            $reflectionMethod->setAccessible(true);
 
             return $reflectionMethod->invoke($object, ...$args);
         } catch (ReflectionException $exception) {
@@ -68,7 +67,7 @@ final class Reflection
     {
         $test = TestSuite::getInstance()->test;
 
-        if (! $test instanceof \PHPUnit\Framework\TestCase) {
+        if (! $test instanceof TestCase) {
             return self::bindCallable($callable);
         }
 
@@ -113,8 +112,6 @@ final class Reflection
             }
         }
 
-        $reflectionProperty->setAccessible(true);
-
         return $reflectionProperty->getValue($object);
     }
 
@@ -144,8 +141,6 @@ final class Reflection
                 }
             }
         }
-
-        $reflectionProperty->setAccessible(true);
         $reflectionProperty->setValue($object, $value);
     }
 
@@ -227,7 +222,7 @@ final class Reflection
     {
         $getProperties = fn (ReflectionClass $reflectionClass): array => array_filter(
             array_map(
-                fn (ReflectionProperty $property): \ReflectionProperty => $property,
+                fn (ReflectionProperty $property): ReflectionProperty => $property,
                 $reflectionClass->getProperties(),
             ), fn (ReflectionProperty $property): bool => $property->getDeclaringClass()->getName() === $reflectionClass->getName(),
         );
@@ -262,7 +257,7 @@ final class Reflection
     {
         $getMethods = fn (ReflectionClass $reflectionClass): array => array_filter(
             array_map(
-                fn (ReflectionMethod $method): \ReflectionMethod => $method,
+                fn (ReflectionMethod $method): ReflectionMethod => $method,
                 $reflectionClass->getMethods($filter),
             ), fn (ReflectionMethod $method): bool => $method->getDeclaringClass()->getName() === $reflectionClass->getName(),
         );

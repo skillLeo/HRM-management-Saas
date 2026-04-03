@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,12 +40,12 @@ use YooKassa\Validator\Constraints as Assert;
  * @author   cms@yoomoney.ru
  * @link     https://yookassa.ru/developers/api
  *
- * @property string $type Способ расчёта НДС
+ * @property string $type Код способа расчета НДС
  */
 abstract class AbstractVatData extends AbstractObject
 {
     /**
-     * @var string|null Способ расчёта НДС
+     * @var string|null Код способа расчета НДС
      */
     #[Assert\NotBlank]
     #[Assert\Type('string')]
@@ -53,9 +53,9 @@ abstract class AbstractVatData extends AbstractObject
     protected ?string $_type = null;
 
     /**
-     * Возвращает способ расчёта НДС
+     * Возвращает код способа расчета НДС
      *
-     * @return string|null Способ расчёта НДС
+     * @return string|null Код способа расчета НДС
      */
     public function getType(): ?string
     {
@@ -63,8 +63,8 @@ abstract class AbstractVatData extends AbstractObject
     }
 
     /**
-     * Устанавливает способ расчёта НДС
-     * @param string|null $type Способ расчёта НДС
+     * Устанавливает код способа расчета НДС
+     * @param string|null $type Код способа расчета НДС
      */
     public function setType(?string $type): self
     {

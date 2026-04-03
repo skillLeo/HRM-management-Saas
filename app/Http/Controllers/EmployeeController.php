@@ -45,58 +45,50 @@ class EmployeeController extends Controller
                 })
                 ->where('type', 'employee');
 
-            // Handle search
-            if ($request->has('search') && ! empty($request->search)) {
+            if ($request->has('search') && !empty($request->search)) {
                 $query->where(function ($q) use ($request) {
-                    $q->where('name', 'like', '%'.$request->search.'%')
-                        ->orWhere('email', 'like', '%'.$request->search.'%')
+                    $q->where('name', 'like', '%' . $request->search . '%')
+                        ->orWhere('email', 'like', '%' . $request->search . '%')
                         ->orWhereHas('employee', function ($eq) use ($request) {
-                            $eq->where('employee_id', 'like', '%'.$request->search.'%')
-                                ->orWhere('phone', 'like', '%'.$request->search.'%');
+                            $eq->where('employee_id', 'like', '%' . $request->search . '%')
+                                ->orWhere('phone', 'like', '%' . $request->search . '%');
                         });
                 });
             }
 
-            // Handle department filter
-            if ($request->has('department') && ! empty($request->department) && $request->department !== 'all') {
+            if ($request->has('department') && !empty($request->department) && $request->department !== 'all') {
                 $query->whereHas('employee', function ($q) use ($request) {
                     $q->where('department_id', $request->department);
                 });
             }
 
-            // Handle branch filter
-            if ($request->has('branch') && ! empty($request->branch) && $request->branch !== 'all') {
+            if ($request->has('branch') && !empty($request->branch) && $request->branch !== 'all') {
                 $query->whereHas('employee', function ($q) use ($request) {
                     $q->where('branch_id', $request->branch);
                 });
             }
 
-            // Handle designation filter
-            if ($request->has('designation') && ! empty($request->designation) && $request->designation !== 'all') {
+            if ($request->has('designation') && !empty($request->designation) && $request->designation !== 'all') {
                 $query->whereHas('employee', function ($q) use ($request) {
                     $q->where('designation_id', $request->designation);
                 });
             }
 
-            // Handle status filter
-            if ($request->has('status') && ! empty($request->status) && $request->status !== 'all') {
+            if ($request->has('status') && !empty($request->status) && $request->status !== 'all') {
                 $query->whereHas('employee', function ($q) use ($request) {
                     $q->where('employee_status', $request->status);
                 });
             }
 
-            // Handle sorting
             $sortField = $request->get('sort_field', 'created_at');
             $sortDirection = $request->get('sort_direction', 'desc');
 
-            // Validate sort field
             $allowedSortFields = ['name', 'created_at', 'id'];
-            if (! in_array($sortField, $allowedSortFields)) {
+            if (!in_array($sortField, $allowedSortFields)) {
                 $sortField = 'created_at';
             }
 
-            // Validate sort direction
-            if (! in_array($sortDirection, ['asc', 'desc'])) {
+            if (!in_array($sortDirection, ['asc', 'desc'])) {
                 $sortDirection = 'desc';
             }
 
@@ -109,7 +101,6 @@ class EmployeeController extends Controller
                 return $employee;
             });
 
-            // Get branches, departments, and designations for filters
             $branches = Branch::whereIn('created_by', getCompanyAndUsersId())
                 ->where('status', 'active')
                 ->get(['id', 'name']);
@@ -124,7 +115,6 @@ class EmployeeController extends Controller
                 ->where('status', 'active')
                 ->get(['id', 'name', 'department_id']);
 
-            // Get plan limits for company users and staff users (only in SaaS mode)
             $planLimits = null;
             if (isSaas()) {
                 if ($authUser->type === 'company' && $authUser->plan) {
@@ -134,9 +124,7 @@ class EmployeeController extends Controller
                         'max_users' => $authUser->plan->max_employees,
                         'can_create' => $currentUserCount < $authUser->plan->max_employees,
                     ];
-                }
-                // Check for staff users (created by company users)
-                elseif ($authUser->type !== 'superadmin' && $authUser->created_by) {
+                } elseif ($authUser->type !== 'superadmin' && $authUser->created_by) {
                     $companyUser = User::find($authUser->created_by);
                     if ($companyUser && $companyUser->type === 'company' && $companyUser->plan) {
                         $currentUserCount = User::where('type', 'employee')->whereIn('created_by', getCompanyAndUsersId())->count();
@@ -169,7 +157,6 @@ class EmployeeController extends Controller
     public function create()
     {
         if (Auth::user()->can('create-employees')) {
-            // Get branches, departments, designations, and document types for the form
             $branches = Branch::whereIn('created_by', getCompanyAndUsersId())
                 ->where('status', 'active')
                 ->get(['id', 'name']);
@@ -187,11 +174,11 @@ class EmployeeController extends Controller
             $documentTypes = DocumentType::whereIn('created_by', getCompanyAndUsersId())
                 ->get(['id', 'name', 'is_required']);
 
-            $shifts = \App\Models\Shift::whereIn('created_by', getCompanyAndUsersId())
+            $shifts = Shift::whereIn('created_by', getCompanyAndUsersId())
                 ->where('status', 'active')
                 ->get(['id', 'name', 'start_time', 'end_time']);
 
-            $attendancePolicies = \App\Models\AttendancePolicy::whereIn('created_by', getCompanyAndUsersId())
+            $attendancePolicies = AttendancePolicy::whereIn('created_by', getCompanyAndUsersId())
                 ->where('status', 'active')
                 ->get(['id', 'name']);
 
@@ -216,47 +203,55 @@ class EmployeeController extends Controller
     {
         if (Auth::user()->can('create-employees')) {
             try {
-                // Validate basic information
                 $validator = Validator::make($request->all(), [
-                    'name' => 'required|string|max:255',
+                    // Basic Information
+                    'title' => 'nullable|string|max:20',
+                    'first_name' => 'required|string|max:100',
+                    'middle_name' => 'nullable|string|max:100',
+                    'last_name' => 'required|string|max:100',
+                    'nationality' => 'nullable|string|max:100',
+                    'marital_status' => 'nullable|string|max:50',
+                    'nrc' => ['nullable', 'string', 'regex:/^\d{6}\/\d{2}\/\d{1}$/'],
+                    'tpin' => 'nullable|string|max:50',
                     'biometric_emp_id' => 'nullable|string|max:255|unique:employees,biometric_emp_id',
                     'email' => 'required|email|max:255|unique:users,email',
                     'password' => 'required|string|min:8',
                     'phone' => 'required|string|max:20',
-                    'date_of_birth' => 'required|date',
-                    'gender' => 'required|in:male,female,other',
-                    'profile_image' => 'required',
+                    'date_of_birth' => 'required|date|before:' . now()->subYears(18)->format('Y-m-d'),
+                    'gender' => 'required|in:male,female',
+                    'profile_image' => 'nullable',
                     'shift_id' => 'nullable|exists:shifts,id',
                     'attendance_policy_id' => 'nullable|exists:attendance_policies,id',
 
-                    // Employment details
-                    'branch_id' => 'required|exists:branches,id',
-                    'department_id' => 'required|exists:departments,id',
-                    'designation_id' => 'required|exists:designations,id',
-                    'date_of_joining' => 'required|date',
-                    'employment_type' => 'required|string|max:50',
-                    'employee_status' => 'required|string|max:50',
+                    // Employment Details
+                    'branch_id' => 'nullable|exists:branches,id',
+                    'department_id' => 'nullable|exists:departments,id',
+                    'designation_id' => 'nullable|exists:designations,id',
+                    'date_of_joining' => 'nullable|date',
+                    'employment_type' => 'nullable|string|max:50',
+                    'employee_status' => 'nullable|string|max:50',
+                    'napsa_number' => 'nullable|string|max:50',
+                    'nhima_number' => 'nullable|string|max:50',
+                    'salary' => 'nullable|numeric|min:0',
 
-                    // Contact information
+                    // Contact Information
                     'address_line_1' => 'required|string|max:255',
                     'city' => 'required|string|max:100',
                     'state' => 'required|string|max:100',
                     'country' => 'required|string|max:100',
-                    'postal_code' => 'required|string|max:20',
+                    'postal_code' => 'nullable|string|max:20',
                     'emergency_contact_name' => 'required|string|max:255',
                     'emergency_contact_relationship' => 'required|string|max:100',
                     'emergency_contact_number' => 'required|string|max:20',
 
-                    // Banking information
-                    'bank_name' => 'required|string|max:255',
+                    // Banking Information
+                    'payment_method' => 'nullable|string|in:Cash,Mobile Money,EFT',
+                    'bank_name' => 'nullable|string|max:255',
                     'account_holder_name' => 'nullable|string|max:255',
                     'account_number' => 'nullable|string|max:50',
                     'bank_identifier_code' => 'nullable|string|max:50',
                     'bank_branch' => 'nullable|string|max:255',
-                    'tax_payer_id' => 'nullable|string|max:50',
-                    'tpin'=>'nullable|string|max:50',
-                    'napsa_number'=>'nullable|string|max:50',
-                    'nhima_number'=>'nullable|string|max:50',
+
                     // Documents
                     'documents' => 'nullable|array',
                     'documents.*.document_type_id' => 'required|exists:document_types,id',
@@ -268,16 +263,22 @@ class EmployeeController extends Controller
                     return redirect()->back()->withErrors($validator)->withInput();
                 }
 
-                // Create User model object
+                // Build full name
+                $fullName = trim(
+                    ($request->first_name ?? '') . ' ' .
+                    ($request->middle_name ? $request->middle_name . ' ' : '') .
+                    ($request->last_name ?? '')
+                );
+
+                // Create User
                 $user = new User;
-                $user->name = $request->name;
+                $user->name = $fullName;
                 $user->email = $request->email;
                 $user->password = Hash::make($request->password);
                 $user->type = 'employee';
                 $user->lang = 'en';
                 $user->created_by = creatorId();
 
-                // Handle profile image upload for user
                 if ($request->has('profile_image')) {
                     $user->avatar = $request->profile_image;
                 }
@@ -286,30 +287,47 @@ class EmployeeController extends Controller
                 // Assign Employee role
                 if (isSaaS()) {
                     $employeeRole = Role::where('created_by', createdBy())->where('name', 'employee')->first();
-                    if ($employeeRole) {
-                        $user->assignRole($employeeRole);
-                    }
                 } else {
                     $employeeRole = Role::where('name', 'employee')->first();
-                    if ($employeeRole) {
-                        $user->assignRole($employeeRole);
-                    }
+                }
+                if ($employeeRole) {
+                    $user->assignRole($employeeRole);
                 }
 
-                // Create Employee model object
+                // Create Employee
                 $employee = new Employee;
                 $employee->user_id = $user->id;
                 $employee->employee_id = Employee::generateEmployeeId();
+                $employee->created_by = creatorId();
+
+                // Basic Info
                 $employee->biometric_emp_id = $request->biometric_emp_id;
+                $employee->title = $request->title;
+                $employee->first_name = $request->first_name;
+                $employee->middle_name = $request->middle_name;
+                $employee->last_name = $request->last_name;
+                $employee->nationality = $request->nationality;
+                $employee->marital_status = $request->marital_status;
+                $employee->nrc = $request->nrc;
+                $employee->tpin = $request->tpin;
                 $employee->phone = $request->phone;
                 $employee->date_of_birth = $request->date_of_birth;
                 $employee->gender = $request->gender;
+
+                // Employment Details
                 $employee->branch_id = $request->branch_id;
                 $employee->department_id = $request->department_id;
                 $employee->designation_id = $request->designation_id;
+                $employee->shift_id = $request->shift_id;
+                $employee->attendance_policy_id = $request->attendance_policy_id;
                 $employee->date_of_joining = $request->date_of_joining;
                 $employee->employment_type = $request->employment_type;
-                $employee->employee_status = $request->employee_status;
+                $employee->employee_status = $request->employee_status ?? 'active';
+                $employee->napsa_number = $request->napsa_number;
+                $employee->nhima_number = $request->nhima_number;
+                $employee->base_salary = $request->salary;
+
+                // Contact Information
                 $employee->address_line_1 = $request->address_line_1;
                 $employee->address_line_2 = $request->address_line_2;
                 $employee->city = $request->city;
@@ -319,27 +337,26 @@ class EmployeeController extends Controller
                 $employee->emergency_contact_name = $request->emergency_contact_name;
                 $employee->emergency_contact_relationship = $request->emergency_contact_relationship;
                 $employee->emergency_contact_number = $request->emergency_contact_number;
+
+                // Banking Information
+                $employee->payment_method = $request->payment_method;
                 $employee->bank_name = $request->bank_name;
                 $employee->account_holder_name = $request->account_holder_name;
                 $employee->account_number = $request->account_number;
                 $employee->bank_identifier_code = $request->bank_identifier_code;
                 $employee->bank_branch = $request->bank_branch;
-                $employee->tax_payer_id = $request->tax_payer_id;
-                $employee->tpin          = $request->tpin;
-               $employee->napsa_number  = $request->napsa_number;
-                $employee->nhima_number  = $request->nhima_number;
-                $employee->base_salary = $request->salary;
-                $employee->created_by = creatorId();
+
+                // Statutory Exemptions
+                $employee->exempt_from_napsa = $request->boolean('exempt_from_napsa');
+                $employee->exempt_from_nhima = $request->boolean('exempt_from_nhima');
+                $employee->exempt_from_sdl = $request->boolean('exempt_from_sdl');
+
                 $employee->save();
 
-                if (! $employee->save()) {
-                    throw new \Exception('Failed to save employee data');
-                }
-
-                // Handle document uploads
+                // Documents
                 if ($request->has('documents') && is_array($request->documents)) {
                     foreach ($request->documents as $document) {
-                        if (isset($document['file_path']) && ! empty($document['file_path'])) {
+                        if (isset($document['file_path']) && !empty($document['file_path'])) {
                             EmployeeDocument::create([
                                 'employee_id' => $employee->user_id,
                                 'document_type_id' => $document['document_type_id'],
@@ -352,21 +369,18 @@ class EmployeeController extends Controller
                     }
                 }
 
-                // Check if this is a candidate conversion
                 if ($request->has('candidate_id')) {
                     $candidate = Candidate::find($request->candidate_id);
                     if ($candidate) {
                         $candidate->update(['is_employee' => true]);
                     }
-
                     return redirect()->route('hr.recruitment.candidates.index')->with('success', __('Candidate converted to employee successfully'));
                 }
 
                 return redirect()->route('hr.employees.index')->with('success', __('Employee created successfully'));
             } catch (\Exception $e) {
-                \Log::error('Employee creation failed: '.$e->getMessage());
-                \Log::error('Stack trace: '.$e->getTraceAsString());
-
+                \Log::error('Employee creation failed: ' . $e->getMessage());
+                \Log::error('Stack trace: ' . $e->getTraceAsString());
                 return redirect()->back()->with('error', __('Failed to create employee: :message', ['message' => $e->getMessage()]))->withInput();
             }
         } else {
@@ -380,13 +394,11 @@ class EmployeeController extends Controller
     public function show(Employee $employee)
     {
         if (Auth::user()->can('view-employees')) {
-            // Check if employee belongs to current company
             $companyUserIds = getCompanyAndUsersId();
-            if (! in_array($employee->created_by, $companyUserIds)) {
+            if (!in_array($employee->created_by, $companyUserIds)) {
                 return redirect()->back()->with('error', __('You do not have permission to view this employee'));
             }
 
-            // Load user with employee relationships
             $user = User::with(['employee.branch', 'employee.department', 'employee.designation', 'employee.shift', 'employee.attendancePolicy', 'employee.documents.documentType'])
                 ->where('id', $employee->user_id)
                 ->first();
@@ -407,20 +419,17 @@ class EmployeeController extends Controller
     public function edit(Employee $employee)
     {
         if (Auth::user()->can('edit-employees')) {
-            // Check if employee belongs to current company
             $companyUserIds = getCompanyAndUsersId();
-            if (! in_array($employee->created_by, $companyUserIds)) {
+            if (!in_array($employee->created_by, $companyUserIds)) {
                 return redirect()->back()->with('error', __('You do not have permission to edit this employee'));
             }
 
-            // Load user with employee relationships
             $user = User::with(['employee.branch', 'employee.department', 'employee.designation', 'employee.documents.documentType'])
                 ->where('id', $employee->user_id)
                 ->first();
 
             $user->avatar = check_file($user->avatar) ? get_file($user->avatar) : get_file('avatars/avatar.png');
 
-            // Get branches, departments, designations, and document types for the form
             $branches = Branch::whereIn('created_by', getCompanyAndUsersId())
                 ->where('status', 'active')
                 ->get(['id', 'name']);
@@ -438,11 +447,11 @@ class EmployeeController extends Controller
             $documentTypes = DocumentType::whereIn('created_by', getCompanyAndUsersId())
                 ->get(['id', 'name', 'is_required']);
 
-            $shifts = \App\Models\Shift::whereIn('created_by', getCompanyAndUsersId())
+            $shifts = Shift::whereIn('created_by', getCompanyAndUsersId())
                 ->where('status', 'active')
                 ->get(['id', 'name', 'start_time', 'end_time']);
 
-            $attendancePolicies = \App\Models\AttendancePolicy::whereIn('created_by', getCompanyAndUsersId())
+            $attendancePolicies = AttendancePolicy::whereIn('created_by', getCompanyAndUsersId())
                 ->where('status', 'active')
                 ->get(['id', 'name']);
 
@@ -466,58 +475,65 @@ class EmployeeController extends Controller
     public function update(Request $request, Employee $employee)
     {
         if (Auth::user()->can('edit-employees')) {
-            // Check if employee belongs to current company
             $companyUserIds = getCompanyAndUsersId();
-            if (! in_array($employee->created_by, $companyUserIds)) {
+            if (!in_array($employee->created_by, $companyUserIds)) {
                 return redirect()->back()->with('error', __('You do not have permission to update this employee'));
             }
 
             try {
-                // Validate basic information
                 $validator = Validator::make($request->all(), [
-                    'name' => 'required|string|max:255',
-                    'biometric_emp_id' => 'nullable|string|max:255|unique:employees,biometric_emp_id,'.$employee->id,
-                    'email' => 'required|email|max:255|unique:users,email,'.$employee->user_id,
+                    // Basic Information
+                    'title' => 'nullable|string|max:20',
+                    'first_name' => 'required|string|max:100',
+                    'middle_name' => 'nullable|string|max:100',
+                    'last_name' => 'required|string|max:100',
+                    'nationality' => 'nullable|string|max:100',
+                    'marital_status' => 'nullable|string|max:50',
+                    'nrc' => ['nullable', 'string', 'regex:/^\d{6}\/\d{2}\/\d{1}$/'],
+                    'tpin' => 'nullable|string|max:50',
+                    'biometric_emp_id' => 'nullable|string|max:255|unique:employees,biometric_emp_id,' . $employee->id,
+                    'email' => 'required|email|max:255|unique:users,email,' . $employee->user_id,
                     'password' => 'nullable|string|min:8',
                     'phone' => 'required|string|max:20',
-                    'date_of_birth' => 'required|date',
-                    'gender' => 'required|in:male,female,other',
-                    'profile_image' => 'nullable|max:2048',
+                    'date_of_birth' => 'required|date|before:' . now()->subYears(18)->format('Y-m-d'),
+                    'gender' => 'required|in:male,female',
+                    'profile_image' => 'nullable',
                     'shift_id' => 'nullable|exists:shifts,id',
                     'attendance_policy_id' => 'nullable|exists:attendance_policies,id',
 
-                    // Employment details
-                    'branch_id' => 'required|exists:branches,id',
-                    'department_id' => 'required|exists:departments,id',
-                    'designation_id' => 'required|exists:designations,id',
-                    'date_of_joining' => 'required|date',
-                    'employment_type' => 'required|string|max:50',
-                    'employee_status' => 'required|string|max:50',
+                    // Employment Details
+                    'branch_id' => 'nullable|exists:branches,id',
+                    'department_id' => 'nullable|exists:departments,id',
+                    'designation_id' => 'nullable|exists:designations,id',
+                    'date_of_joining' => 'nullable|date',
+                    'employment_type' => 'nullable|string|max:50',
+                    'employee_status' => 'nullable|string|max:50',
+                    'napsa_number' => 'nullable|string|max:50',
+                    'nhima_number' => 'nullable|string|max:50',
+                    'salary' => 'nullable|numeric|min:0',
 
-                    // Contact information
+                    // Contact Information
                     'address_line_1' => 'required|string|max:255',
                     'city' => 'required|string|max:100',
                     'state' => 'required|string|max:100',
                     'country' => 'required|string|max:100',
-                    'postal_code' => 'required|string|max:20',
+                    'postal_code' => 'nullable|string|max:20',
                     'emergency_contact_name' => 'required|string|max:255',
                     'emergency_contact_relationship' => 'required|string|max:100',
                     'emergency_contact_number' => 'required|string|max:20',
 
-                    // Banking information
-                    'bank_name' => 'required|string|max:255',
-                    'account_holder_name' => 'required|string|max:255',
-                    'account_number' => 'required|string|max:50',
+                    // Banking Information
+                    'payment_method' => 'nullable|string|in:Cash,Mobile Money,EFT',
+                    'bank_name' => 'nullable|string|max:255',
+                    'account_holder_name' => 'nullable|string|max:255',
+                    'account_number' => 'nullable|string|max:50',
                     'bank_identifier_code' => 'nullable|string|max:50',
                     'bank_branch' => 'nullable|string|max:255',
-                    'tax_payer_id' => 'nullable|string|max:50',
-                        'tpin'=>'nullable|string|max:50',
-                    'napsa_number'=>'nullable|string|max:50',
-                    'nhima_number'=>'nullable|string|max:50',
+
                     // Documents
                     'documents' => 'nullable|array',
                     'documents.*.document_type_id' => 'required|exists:document_types,id',
-                    'documents.*.file' => 'nullable|max:5120',
+                    'documents.*.file_path' => 'nullable|string',
                     'documents.*.expiry_date' => 'nullable|date',
                 ]);
 
@@ -525,39 +541,55 @@ class EmployeeController extends Controller
                     return redirect()->back()->withErrors($validator)->withInput();
                 }
 
-                // Get the user
-                $user = $employee->user;
+                // Build full name
+                $fullName = trim(
+                    ($request->first_name ?? '') . ' ' .
+                    ($request->middle_name ? $request->middle_name . ' ' : '') .
+                    ($request->last_name ?? '')
+                );
 
-                // Update User model object
-                $user->name = $request->name;
+                // Update User
+                $user = $employee->user;
+                $user->name = $fullName;
                 $user->email = $request->email;
 
-                // Hash password if provided
-                if ($request->has('password') && ! empty($request->password)) {
+                if ($request->filled('password')) {
                     $user->password = Hash::make($request->password);
                 }
 
-                // Handle profile image upload for user
                 if ($request->has('profile_image')) {
                     $user->avatar = $request->profile_image;
                 }
-
                 $user->save();
 
-                // Update Employee model object
-                // Keep existing auto-generated employee_id, don't regenerate on update
+                // Update Employee - Basic Info
                 $employee->biometric_emp_id = $request->biometric_emp_id;
-                $employee->shift_id = $request->shift_id;
-                $employee->attendance_policy_id = $request->attendance_policy_id;
+                $employee->title = $request->title;
+                $employee->first_name = $request->first_name;
+                $employee->middle_name = $request->middle_name;
+                $employee->last_name = $request->last_name;
+                $employee->nationality = $request->nationality;
+                $employee->marital_status = $request->marital_status;
+                $employee->nrc = $request->nrc;
+                $employee->tpin = $request->tpin;
                 $employee->phone = $request->phone;
                 $employee->date_of_birth = $request->date_of_birth;
                 $employee->gender = $request->gender;
+
+                // Update Employee - Employment Details
                 $employee->branch_id = $request->branch_id;
                 $employee->department_id = $request->department_id;
                 $employee->designation_id = $request->designation_id;
+                $employee->shift_id = $request->shift_id;
+                $employee->attendance_policy_id = $request->attendance_policy_id;
                 $employee->date_of_joining = $request->date_of_joining;
                 $employee->employment_type = $request->employment_type;
                 $employee->employee_status = $request->employee_status;
+                $employee->napsa_number = $request->napsa_number;
+                $employee->nhima_number = $request->nhima_number;
+                $employee->base_salary = $request->salary;
+
+                // Update Employee - Contact Information
                 $employee->address_line_1 = $request->address_line_1;
                 $employee->address_line_2 = $request->address_line_2;
                 $employee->city = $request->city;
@@ -567,24 +599,26 @@ class EmployeeController extends Controller
                 $employee->emergency_contact_name = $request->emergency_contact_name;
                 $employee->emergency_contact_relationship = $request->emergency_contact_relationship;
                 $employee->emergency_contact_number = $request->emergency_contact_number;
+
+                // Update Employee - Banking Information
+                $employee->payment_method = $request->payment_method;
                 $employee->bank_name = $request->bank_name;
                 $employee->account_holder_name = $request->account_holder_name;
                 $employee->account_number = $request->account_number;
                 $employee->bank_identifier_code = $request->bank_identifier_code;
                 $employee->bank_branch = $request->bank_branch;
-                $employee->tax_payer_id = $request->tax_payer_id;
-                 $employee->tax_payer_id = $request->tax_payer_id;
-                $employee->tpin          = $request->tpin;
-               $employee->napsa_number  = $request->napsa_number;
-                $employee->nhima_number  = $request->nhima_number;
-                $employee->base_salary = $request->salary;
+
+                // Update Employee - Statutory Exemptions
+                $employee->exempt_from_napsa = $request->boolean('exempt_from_napsa');
+                $employee->exempt_from_nhima = $request->boolean('exempt_from_nhima');
+                $employee->exempt_from_sdl = $request->boolean('exempt_from_sdl');
 
                 $employee->save();
 
-                // Handle document uploads
+                // Documents
                 if ($request->has('documents') && is_array($request->documents)) {
                     foreach ($request->documents as $document) {
-                        if (isset($document['file_path']) && ! empty($document['file_path'])) {
+                        if (isset($document['file_path']) && !empty($document['file_path'])) {
                             EmployeeDocument::create([
                                 'employee_id' => $employee->user_id,
                                 'document_type_id' => $document['document_type_id'],
@@ -615,19 +649,15 @@ class EmployeeController extends Controller
             try {
                 $user = User::with('employee')->where('id', $userId)->whereIn('created_by', getCompanyAndUsersId())->first();
 
-                if (! $user || ! $user->employee) {
+                if (!$user || !$user->employee) {
                     return redirect()->back()->with('error', __('Employee not found'));
                 }
 
                 $employee = $user->employee;
 
-                // Delete documents first
                 EmployeeDocument::where('employee_id', $employee->id)->delete();
-
-                // Delete employee record
                 $employee->delete();
 
-                // Delete user record and avatar
                 if ($user->avatar) {
                     Storage::disk('public')->delete($user->avatar);
                 }
@@ -648,9 +678,8 @@ class EmployeeController extends Controller
     public function toggleStatus(Employee $employee)
     {
         if (Auth::user()->can('edit-employees')) {
-            // Check if employee belongs to current company
             $companyUserIds = getCompanyAndUsersId();
-            if (! in_array($employee->created_by, $companyUserIds)) {
+            if (!in_array($employee->created_by, $companyUserIds)) {
                 return redirect()->back()->with('error', __('You do not have permission to update this employee'));
             }
 
@@ -674,9 +703,8 @@ class EmployeeController extends Controller
     public function changePassword(Request $request, Employee $employee)
     {
         if (Auth::user()->can('edit-employees')) {
-            // Check if employee belongs to current company
             $companyUserIds = getCompanyAndUsersId();
-            if (! in_array($employee->created_by, $companyUserIds)) {
+            if (!in_array($employee->created_by, $companyUserIds)) {
                 return redirect()->back()->with('error', __('You do not have permission to change this employee password'));
             }
 
@@ -705,12 +733,12 @@ class EmployeeController extends Controller
     {
         $user = User::with('employee')->find($userId);
 
-        if (! $user || ! $user->employee) {
+        if (!$user || !$user->employee) {
             return redirect()->back()->with('error', __('Employee not found'));
         }
 
         $companyUserIds = getCompanyAndUsersId();
-        if (! in_array($user->created_by, $companyUserIds)) {
+        if (!in_array($user->created_by, $companyUserIds)) {
             return redirect()->back()->with('error', __('You do not have permission to access this employee'));
         }
 
@@ -718,13 +746,12 @@ class EmployeeController extends Controller
             ->where('employee_id', $userId)
             ->first();
 
-        if (! $document) {
+        if (!$document) {
             return redirect()->back()->with('error', __('Document not found'));
         }
 
         try {
             $document->delete();
-
             return redirect()->back()->with('success', __('Document deleted successfully'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to delete document'));
@@ -737,7 +764,7 @@ class EmployeeController extends Controller
     public function approveDocument($userId, $documentId)
     {
         $user = User::with('employee')->find($userId);
-        if (! $user || ! $user->employee) {
+        if (!$user || !$user->employee) {
             return redirect()->back()->with('error', __('Employee not found'));
         }
 
@@ -745,13 +772,12 @@ class EmployeeController extends Controller
             ->where('employee_id', $userId)
             ->first();
 
-        if (! $document) {
+        if (!$document) {
             return redirect()->back()->with('error', __('Document not found'));
         }
 
         try {
             $document->update(['verification_status' => 'verified']);
-
             return redirect()->back()->with('success', __('Document approved successfully'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to approve document'));
@@ -764,7 +790,7 @@ class EmployeeController extends Controller
     public function rejectDocument($userId, $documentId)
     {
         $user = User::with('employee')->find($userId);
-        if (! $user || ! $user->employee) {
+        if (!$user || !$user->employee) {
             return redirect()->back()->with('error', __('Employee not found'));
         }
 
@@ -772,13 +798,12 @@ class EmployeeController extends Controller
             ->where('employee_id', $userId)
             ->first();
 
-        if (! $document) {
+        if (!$document) {
             return redirect()->back()->with('error', __('Document not found'));
         }
 
         try {
             $document->update(['verification_status' => 'rejected']);
-
             return redirect()->back()->with('success', __('Document rejected successfully'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', __('Failed to reject document'));
@@ -790,14 +815,13 @@ class EmployeeController extends Controller
      */
     public function downloadDocument($userId, $documentId)
     {
-
         $user = User::with('employee')->find($userId);
-        if (! $user || ! $user->employee) {
+        if (!$user || !$user->employee) {
             return redirect()->back()->with('error', __('Employee not found'));
         }
 
         $companyUserIds = getCompanyAndUsersId();
-        if (! in_array($user->created_by, $companyUserIds)) {
+        if (!in_array($user->created_by, $companyUserIds)) {
             return redirect()->back()->with('error', __('You do not have permission to access this employee'));
         }
 
@@ -805,26 +829,29 @@ class EmployeeController extends Controller
             ->where('employee_id', $userId)
             ->first();
 
-        if (! $document) {
+        if (!$document) {
             return redirect()->back()->with('error', __('Document not found'));
         }
 
-        if (! $document->file_path) {
+        if (!$document->file_path) {
             return redirect()->back()->with('error', __('Document file not found'));
         }
 
         $filePath = getStorageFilePath($document->file_path);
 
-        if (! file_exists($filePath)) {
+        if (!file_exists($filePath)) {
             return redirect()->back()->with('error', __('Document file not found'));
         }
 
         return response()->download($filePath);
     }
 
+    /**
+     * Download joining letter.
+     */
     public function downloadJoiningLetter($employeeId, $format = 'pdf')
     {
-        if (! Auth::user()->can('download-joining-letter')) {
+        if (!Auth::user()->can('download-joining-letter')) {
             return redirect()->back()->with('error', __('Permission Denied.'));
         }
 
@@ -833,19 +860,18 @@ class EmployeeController extends Controller
             ->whereIn('created_by', getCompanyAndUsersId())
             ->first();
 
-        if (! $user || ! $user->employee) {
+        if (!$user || !$user->employee) {
             return redirect()->back()->with('error', __('Employee not found'));
         }
 
         $getCompanyId = getCompanyId(Auth::user()->id);
         $template = JoiningLetterTemplate::getTemplate(Auth::user()->lang ?? 'en', $getCompanyId);
-        if (! $template) {
+        if (!$template) {
             return redirect()->back()->with('error', __('Template not found'));
         }
 
         $employee = $user->employee;
         $companyName = Auth::user()->name ?? 'Company Name';
-        // Get variables from template or use defaults
         $variables = $template->variables ? json_decode($template->variables, true) : ['date', 'company_name', 'employee_name', 'designation', 'joining_date', 'salary', 'department'];
 
         $placeholders = [];
@@ -881,15 +907,17 @@ class EmployeeController extends Controller
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $template->content);
         $content = html_entity_decode($content, ENT_QUOTES, 'UTF-8');
         $content = str_replace('\\n', '<br>', $content);
-
         $type = 'joining_letter';
 
         return view('employees.certificates.joining-letter', compact('content', 'user', 'type', 'companyName', 'format'));
     }
 
+    /**
+     * Download experience certificate.
+     */
     public function downloadExperienceCertificate($employeeId, $format = 'pdf')
     {
-        if (! Auth::user()->can('download-experience-certificate')) {
+        if (!Auth::user()->can('download-experience-certificate')) {
             return redirect()->back()->with('error', __('Permission Denied.'));
         }
 
@@ -898,90 +926,90 @@ class EmployeeController extends Controller
             ->whereIn('created_by', getCompanyAndUsersId())
             ->first();
 
-        if (! $user || ! $user->employee) {
+        if (!$user || !$user->employee) {
             return redirect()->back()->with('error', __('Employee not found'));
         }
 
         $termination = Termination::where('employee_id', $user->id)->where('status', 'completed')->first();
-        if ($termination) {
-            $getCompanyId = getCompanyId(Auth::user()->id);
-            $template = ExperienceCertificateTemplate::getTemplate(Auth::user()->lang ?? 'en', $getCompanyId);
-            if (! $template) {
-                return redirect()->back()->with('error', __('Template not found'));
-            }
-
-            $employee = $user->employee;
-            $companyName = Auth::user()->name ?? 'Company Name';
-
-            $variables = $template->variables ? json_decode($template->variables, true) : ['date', 'company_name', 'employee_name', 'designation', 'joining_date', 'leaving_date'];
-
-            $placeholders = [];
-            foreach ($variables as $variable) {
-                switch ($variable) {
-                    case 'date':
-                        $placeholders['{date}'] = now()->format('F d, Y');
-                        break;
-                    case 'company_name':
-                        $placeholders['{company_name}'] = $companyName;
-                        break;
-                    case 'employee_name':
-                        $placeholders['{employee_name}'] = $user->name;
-                        break;
-                    case 'designation':
-                        $placeholders['{designation}'] = $employee->designation->name ?? '';
-                        break;
-                    case 'joining_date':
-                        $placeholders['{joining_date}'] = $employee->date_of_joining ? date('F d, Y', strtotime($employee->date_of_joining)) : '';
-                        break;
-                    case 'leaving_date':
-                        $placeholders['{leaving_date}'] = $termination->termination_date?->format('F d, Y') ?? now()->format('F d, Y');
-                        break;
-                    case 'salary':
-                        $placeholders['{salary}'] = $employee->base_salary ?? '';
-                        break;
-                    case 'department':
-                        $placeholders['{department}'] = $employee->department->name ?? '';
-                        break;
-                }
-            }
-
-            $content = str_replace(array_keys($placeholders), array_values($placeholders), $template->content);
-            $content = html_entity_decode($content, ENT_QUOTES, 'UTF-8');
-            $content = str_replace('\\n', '<br>', $content);
-
-            $type = 'experience_certificate';
-
-            return view('employees.certificates.experience-certificate', compact('content', 'user', 'type', 'companyName', 'format'));
-        } else {
+        if (!$termination) {
             return redirect()->back()->with('error', __('Experience certificate can only be generated for employees who have been terminated.'));
-        }
-    }
-
-    public function downloadNocCertificate($employeeId, $format = 'pdf')
-    {
-        if (! Auth::user()->can('download-noc-certificate')) {
-            return redirect()->back()->with('error', __('Permission Denied.'));
-        }
-
-        $user = User::with(['employee.branch', 'employee.department', 'employee.designation'])
-            ->where('id', $employeeId)
-            ->whereIn('created_by', getCompanyAndUsersId())
-            ->first();
-
-        if (! $user || ! $user->employee) {
-            return redirect()->back()->with('error', __('Employee not found'));
         }
 
         $getCompanyId = getCompanyId(Auth::user()->id);
-        $template = NocTemplate::getTemplate(Auth::user()->lang ?? 'en', $getCompanyId);
-        if (! $template) {
+        $template = ExperienceCertificateTemplate::getTemplate(Auth::user()->lang ?? 'en', $getCompanyId);
+        if (!$template) {
             return redirect()->back()->with('error', __('Template not found'));
         }
 
         $employee = $user->employee;
         $companyName = Auth::user()->name ?? 'Company Name';
+        $variables = $template->variables ? json_decode($template->variables, true) : ['date', 'company_name', 'employee_name', 'designation', 'joining_date', 'leaving_date'];
 
-        $variables = $template->variables ? json_decode($template->variables, true) : ['date', 'company_name', 'employee_name', 'designation', 'joining_date', 'department'];
+        $placeholders = [];
+        foreach ($variables as $variable) {
+            switch ($variable) {
+                case 'date':
+                    $placeholders['{date}'] = now()->format('F d, Y');
+                    break;
+                case 'company_name':
+                    $placeholders['{company_name}'] = $companyName;
+                    break;
+                case 'employee_name':
+                    $placeholders['{employee_name}'] = $user->name;
+                    break;
+                case 'designation':
+                    $placeholders['{designation}'] = $employee->designation->name ?? '';
+                    break;
+                case 'joining_date':
+                    $placeholders['{joining_date}'] = $employee->date_of_joining ? date('F d, Y', strtotime($employee->date_of_joining)) : '';
+                    break;
+                case 'leaving_date':
+                    $placeholders['{leaving_date}'] = $termination->termination_date?->format('F d, Y') ?? now()->format('F d, Y');
+                    break;
+                case 'salary':
+                    $placeholders['{salary}'] = $employee->base_salary ?? '';
+                    break;
+                case 'department':
+                    $placeholders['{department}'] = $employee->department->name ?? '';
+                    break;
+            }
+        }
+
+        $content = str_replace(array_keys($placeholders), array_values($placeholders), $template->content);
+        $content = html_entity_decode($content, ENT_QUOTES, 'UTF-8');
+        $content = str_replace('\\n', '<br>', $content);
+        $type = 'experience_certificate';
+
+        return view('employees.certificates.experience-certificate', compact('content', 'user', 'type', 'companyName', 'format'));
+    }
+
+    /**
+     * Download NOC certificate.
+     */
+    public function downloadNocCertificate($employeeId, $format = 'pdf')
+    {
+        if (!Auth::user()->can('download-noc-certificate')) {
+            return redirect()->back()->with('error', __('Permission Denied.'));
+        }
+
+        $user = User::with(['employee.branch', 'employee.department', 'employee.designation'])
+            ->where('id', $employeeId)
+            ->whereIn('created_by', getCompanyAndUsersId())
+            ->first();
+
+        if (!$user || !$user->employee) {
+            return redirect()->back()->with('error', __('Employee not found'));
+        }
+
+        $getCompanyId = getCompanyId(Auth::user()->id);
+        $template = NocTemplate::getTemplate(Auth::user()->lang ?? 'en', $getCompanyId);
+        if (!$template) {
+            return redirect()->back()->with('error', __('Template not found'));
+        }
+
+        $employee = $user->employee;
+        $companyName = Auth::user()->name ?? 'Company Name';
+        $variables = $template->variables ? json_decode($template->variables, true) : ['date', 'company_name', 'employee_name', 'designation'];
 
         $placeholders = [];
         foreach ($variables as $variable) {
@@ -1004,12 +1032,14 @@ class EmployeeController extends Controller
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $template->content);
         $content = html_entity_decode($content, ENT_QUOTES, 'UTF-8');
         $content = str_replace('\\n', '<br>', $content);
-
         $type = 'noc_certificate';
 
         return view('employees.certificates.noc-certificate', compact('content', 'user', 'type', 'companyName', 'format'));
     }
 
+    /**
+     * Export employees to CSV.
+     */
     public function export()
     {
         if (Auth::user()->can('export-employee')) {
@@ -1026,38 +1056,21 @@ class EmployeeController extends Controller
                         }
                     })->get();
 
-                $fileName = 'employees_'.date('Y-m-d_His').'.csv';
+                $fileName = 'employees_' . date('Y-m-d_His') . '.csv';
                 $headers = [
                     'Content-Type' => 'text/csv',
-                    'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+                    'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
                 ];
 
                 $callback = function () use ($employees) {
                     $file = fopen('php://output', 'w');
-                    fputcsv($file, ['Name',
-                        'Email',
-                        'Biometric Employee Id',
-                        'Phone',
-                        'Department',
-                        'Designation',
-                        'Branch',
-                        'Date of Joining',
-                        'Date of Birth',
-                        'Gender',
-                        'Shift',
-                        'Basic Salary',
-                        'Attedance Policy',
-                        'Employement Type',
-                        'Employement Status',
-                        'City',
-                        'State',
-                        'Country',
-                        'Postal Code',
-                        'Address',
-                        'Bank Name',
-                        'Account Number',
-                        'Bank Identifier Code',
-                        'Bank Branch',
+                    fputcsv($file, [
+                        'Name', 'Email', 'Biometric Employee Id', 'Phone',
+                        'Department', 'Designation', 'Branch', 'Date of Joining',
+                        'Date of Birth', 'Gender', 'Shift', 'Basic Salary',
+                        'Attendance Policy', 'Employment Type', 'Employment Status',
+                        'City', 'State', 'Country', 'Postal Code', 'Address',
+                        'Payment Method', 'Bank Name', 'Account Number', 'Bank Identifier Code', 'Bank Branch',
                     ]);
 
                     foreach ($employees as $user) {
@@ -1084,6 +1097,7 @@ class EmployeeController extends Controller
                                 $employee->country ?? '',
                                 $employee->postal_code ?? '',
                                 $employee->address_line_1 ?? '',
+                                $employee->payment_method ?? '',
                                 $employee->bank_name ?? '',
                                 $employee->account_number ?? '',
                                 $employee->bank_identifier_code ?? '',
@@ -1103,17 +1117,21 @@ class EmployeeController extends Controller
         }
     }
 
-    // download sample data
+    /**
+     * Download template for employee import.
+     */
     public function downloadTemplate()
     {
         $filePath = storage_path('uploads/sample/sample-employee.xlsx');
-        if (! file_exists($filePath)) {
+        if (!file_exists($filePath)) {
             return response()->json(['error' => __('Template file not available')], 404);
         }
-
         return response()->download($filePath, 'sample-employee.xlsx');
     }
 
+    /**
+     * Parse uploaded file for import preview.
+     */
     public function parseFile(Request $request)
     {
         if (Auth::user()->can('import-employee')) {
@@ -1133,7 +1151,7 @@ class EmployeeController extends Controller
                 $headers = [];
 
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    $value = $worksheet->getCell($col.'1')->getValue();
+                    $value = $worksheet->getCell($col . '1')->getValue();
                     if ($value) {
                         $headers[] = (string) $value;
                     }
@@ -1145,7 +1163,7 @@ class EmployeeController extends Controller
                     $colIndex = 0;
                     for ($col = 'A'; $col <= $highestColumn; $col++) {
                         if ($colIndex < count($headers)) {
-                            $rowData[$headers[$colIndex]] = (string) $worksheet->getCell($col.$row)->getValue();
+                            $rowData[$headers[$colIndex]] = (string) $worksheet->getCell($col . $row)->getValue();
                         }
                         $colIndex++;
                     }
@@ -1158,10 +1176,12 @@ class EmployeeController extends Controller
             }
         } else {
             return response()->json(['message' => __('Permission denied.')], 403);
-
         }
     }
 
+    /**
+     * Import employees from uploaded file.
+     */
     public function fileImport(Request $request)
     {
         if (Auth::user()->can('import-employee')) {
@@ -1181,85 +1201,80 @@ class EmployeeController extends Controller
                     try {
                         if (empty($row['name']) || empty($row['email'])) {
                             $skipped++;
-
                             continue;
                         }
 
                         if (User::where('email', $row['email'])->exists()) {
                             $skipped++;
-
                             continue;
                         }
 
                         $password = null;
-                        if (! empty($row['password'])) {
+                        if (!empty($row['password'])) {
                             $password = Hash::make($row['password']);
                         }
 
+                        // Find or get first branch
                         $branchId = null;
-                        if (! empty($row['branch'])) {
+                        if (!empty($row['branch'])) {
                             $branch = Branch::whereIn('created_by', getCompanyAndUsersId())->where('name', $row['branch'])->first();
-                            if (is_null($branch)) {
+                            if ($branch) {
+                                $branchId = $branch->id;
+                            } else {
                                 $firstBranch = Branch::whereIn('created_by', getCompanyAndUsersId())->first();
                                 $branchId = $firstBranch ? $firstBranch->id : null;
-                            } else {
-                                $branchId = $branch ? $branch->id : null;
                             }
                         }
 
+                        // Find or get first department
                         $departmentId = null;
-                        if (! empty($row['department'])) {
+                        if (!empty($row['department'])) {
                             $department = Department::whereIn('created_by', getCompanyAndUsersId())->where('name', $row['department'])->first();
-                            if (is_null($department)) {
-                                if (! is_null($branchId)) {
-                                    $department = Department::whereIn('created_by', getCompanyAndUsersId())->where('branch_id', $branchId)->first();
-                                    $departmentId = $department ? $department->id : null;
-                                } else {
-                                    $departmentId = null;
-                                }
-                            } else {
-                                $departmentId = $department ? $department->id : null;
+                            if ($department) {
+                                $departmentId = $department->id;
+                            } elseif ($branchId) {
+                                $firstDepartment = Department::whereIn('created_by', getCompanyAndUsersId())->where('branch_id', $branchId)->first();
+                                $departmentId = $firstDepartment ? $firstDepartment->id : null;
                             }
                         }
 
+                        // Find or get first designation
                         $designationId = null;
-                        if (! empty($row['designation'])) {
+                        if (!empty($row['designation'])) {
                             $designation = Designation::whereIn('created_by', getCompanyAndUsersId())->where('name', $row['designation'])->first();
-                            if (is_null($designation)) {
-                                if (! is_null($departmentId)) {
-                                    $designation = Designation::whereIn('created_by', getCompanyAndUsersId())->where('department_id', $departmentId)->first();
-                                    $designationId = $designation ? $designation->id : null;
-                                } else {
-                                    $designationId = null;
-                                }
-                            } else {
-                                $designationId = $designation ? $designation->id : null;
+                            if ($designation) {
+                                $designationId = $designation->id;
+                            } elseif ($departmentId) {
+                                $firstDesignation = Designation::whereIn('created_by', getCompanyAndUsersId())->where('department_id', $departmentId)->first();
+                                $designationId = $firstDesignation ? $firstDesignation->id : null;
                             }
-
                         }
 
+                        // Find or get first shift
                         $shiftId = null;
-                        if (! empty($row['shift'])) {
+                        if (!empty($row['shift'])) {
                             $shift = Shift::whereIn('created_by', getCompanyAndUsersId())->where('name', $row['shift'])->first();
-                            if (is_null($shift)) {
-                                $shift = Shift::whereIn('created_by', getCompanyAndUsersId())->first();
-                                $shiftId = $shift ? $shift->id : null;
+                            if ($shift) {
+                                $shiftId = $shift->id;
                             } else {
-                                $shiftId = $shift ? $shift->id : null;
+                                $firstShift = Shift::whereIn('created_by', getCompanyAndUsersId())->first();
+                                $shiftId = $firstShift ? $firstShift->id : null;
                             }
                         }
 
+                        // Find or get first attendance policy
                         $attendancePolicyId = null;
-                        if (! empty($row['attendance_policy'])) {
+                        if (!empty($row['attendance_policy'])) {
                             $attendancePolicy = AttendancePolicy::whereIn('created_by', getCompanyAndUsersId())->where('name', $row['attendance_policy'])->first();
-                            if (is_null($attendancePolicy)) {
-                                $attendancePolicy = AttendancePolicy::whereIn('created_by', getCompanyAndUsersId())->first();
-                                $attendancePolicyId = $attendancePolicy ? $attendancePolicy->id : null;
+                            if ($attendancePolicy) {
+                                $attendancePolicyId = $attendancePolicy->id;
                             } else {
-                                $attendancePolicyId = $attendancePolicy ? $attendancePolicy->id : null;
+                                $firstPolicy = AttendancePolicy::whereIn('created_by', getCompanyAndUsersId())->first();
+                                $attendancePolicyId = $firstPolicy ? $firstPolicy->id : null;
                             }
                         }
 
+                        // Create user
                         $user = User::create([
                             'name' => $row['name'],
                             'email' => $row['email'],
@@ -1269,6 +1284,7 @@ class EmployeeController extends Controller
                             'created_by' => creatorId(),
                         ]);
 
+                        // Assign role
                         if (isSaaS()) {
                             $employeeRole = Role::whereIn('created_by', getCompanyAndUsersId())->where('name', 'employee')->first();
                         } else {
@@ -1279,20 +1295,21 @@ class EmployeeController extends Controller
                             $user->assignRole($employeeRole);
                         }
 
+                        // Create employee record
                         Employee::create([
                             'user_id' => $user->id,
                             'employee_id' => Employee::generateEmployeeId(),
                             'biometric_emp_id' => $row['biometric_emp_id'] ?? null,
                             'phone' => $row['phone'] ?? '',
-                            'date_of_birth' => ! empty($row['date_of_birth']) ? $row['date_of_birth'] : null,
+                            'date_of_birth' => !empty($row['date_of_birth']) ? $row['date_of_birth'] : null,
                             'gender' => $row['gender'] ?? 'male',
                             'branch_id' => $branchId,
                             'department_id' => $departmentId,
                             'designation_id' => $designationId,
-                            'base_salary' => $row['base_salary'],
+                            'base_salary' => $row['base_salary'] ?? null,
                             'shift_id' => $shiftId,
                             'attendance_policy_id' => $attendancePolicyId,
-                            'date_of_joining' => ! empty($row['date_of_joining']) ? $row['date_of_joining'] : now(),
+                            'date_of_joining' => !empty($row['date_of_joining']) ? $row['date_of_joining'] : now(),
                             'employment_type' => $row['employment_type'] ?? 'full-time',
                             'employee_status' => $row['employee_status'] ?? 'active',
                             'city' => $row['city'] ?? '',
@@ -1300,6 +1317,7 @@ class EmployeeController extends Controller
                             'country' => $row['country'] ?? '',
                             'postal_code' => $row['postal_code'] ?? '',
                             'address_line_1' => $row['address'] ?? '',
+                            'payment_method' => $row['payment_method'] ?? null,
                             'bank_name' => $row['bank_name'] ?? '',
                             'account_number' => $row['account_number'] ?? '',
                             'bank_identifier_code' => $row['bank_identifier_code'] ?? '',
@@ -1309,6 +1327,7 @@ class EmployeeController extends Controller
 
                         $imported++;
                     } catch (\Exception $e) {
+                        \Log::error('Import row failed: ' . $e->getMessage());
                         $skipped++;
                     }
                 }

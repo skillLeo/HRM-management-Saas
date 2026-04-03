@@ -1,28 +1,28 @@
 <?php
 
 /*
-* The MIT License
-*
-* Copyright (c) 2024 "YooMoney", NBСO LLC
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*/
+ * The MIT License
+ *
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 namespace Tests\YooKassa\Model\Notification;
 
@@ -49,7 +49,9 @@ use YooKassa\Model\Payout\PayoutCancellationDetailsPartyCode;
 use YooKassa\Model\Payout\PayoutCancellationDetailsReasonCode;
 use YooKassa\Model\Payout\PayoutStatus;
 use YooKassa\Model\Refund\RefundStatus;
+use YooKassa\Model\SavePaymentMethod\SavePaymentMethodStatus;
 use YooKassa\Request\Deals\DealResponse;
+use YooKassa\Request\PaymentMethods\PaymentMethodResponse;
 use YooKassa\Request\Payments\PaymentResponse;
 use YooKassa\Request\Payouts\PayoutResponse;
 use YooKassa\Request\Refunds\RefundResponse;
@@ -124,6 +126,11 @@ class NotificationFactoryTest extends TestCase
                 case NotificationEventType::PAYOUT_SUCCEEDED:
                 case NotificationEventType::PAYOUT_CANCELED:
                     $notification = $this->getPayoutNotification($eventType);
+
+                    break;
+
+                case NotificationEventType::PAYMENT_METHOD_ACTIVE:
+                    $notification = $this->getPaymentMethodActiveNotification($eventType);
 
                     break;
 
@@ -249,6 +256,44 @@ class NotificationFactoryTest extends TestCase
         ];
     }
 
+    private function getPaymentMethodActiveNotification($type): array
+    {
+        $statuses = SavePaymentMethodStatus::getValidValues();
+
+        $cardTypes = ['Mir', 'Visa', 'MasterCard', 'AmericanExpress', 'JCB', 'UnionPay'];
+
+        $paymentMethod = [
+            'type' => PaymentMethodType::BANK_CARD,
+            'id' => Random::str(36),
+            'saved' => Random::bool(),
+            'status' => Random::value($statuses),
+            'holder' => [
+                'account_id' => Random::str(1, 64, '0123456789'),
+            ],
+            'card' => [
+                'first6' => Random::str(6, 6, '0123456789'),
+                'last4' => Random::str(4, 4, '0123456789'),
+                'expiry_month' => str_pad((string)Random::int(1, 12), 2, '0', STR_PAD_LEFT),
+                'expiry_year' => (string)Random::int(2024, 2030),
+                'card_type' => Random::value($cardTypes),
+                'card_product' => [
+                    'code' => 'MCP',
+                    'name' => 'MIR Privilege',
+                ],
+                'issuer_country' => 'RU',
+                'issuer_name' => 'Sberbank',
+            ],
+        ];
+
+        return [
+            [
+                'type' => $this->getExpectedType(),
+                'event' => $type,
+                'object' => $paymentMethod,
+            ],
+        ];
+    }
+
     private function getPayoutNotification($type): array
     {
         $cancellationDetailsParties = PayoutCancellationDetailsPartyCode::getValidValues();
@@ -364,6 +409,12 @@ class NotificationFactoryTest extends TestCase
             case NotificationEventType::DEAL_CLOSED:
                 self::assertInstanceOf(DealResponse::class, $object);
                 self::assertEquals($object, new DealResponse($value));
+
+                break;
+
+            case NotificationEventType::PAYMENT_METHOD_ACTIVE:
+                self::assertInstanceOf(PaymentMethodResponse::class, $object);
+                self::assertEquals($object, new PaymentMethodResponse($value));
 
                 break;
         }

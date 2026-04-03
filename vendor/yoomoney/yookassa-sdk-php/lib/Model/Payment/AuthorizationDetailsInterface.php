@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@ namespace YooKassa\Model\Payment;
 /**
  * Interface AuthorizationDetailsInterface - Данные об авторизации платежа.
  *
- * @property string $rrn Retrieval Reference Number — уникальный идентификатор транзакции в системе эмитента
+ * @property string $rrn Retrieval Reference Number — идентификатор банковской транзакции
  * @property string $authCode Код авторизации банковской карты
  * @property string $auth_code Код авторизации банковской карты
  * @property ThreeDSecure $threeDSecure Данные о прохождении пользователем аутентификации по 3‑D Secure
@@ -38,7 +38,7 @@ namespace YooKassa\Model\Payment;
 interface AuthorizationDetailsInterface
 {
     /**
-     * Возвращает Retrieval Reference Number — уникальный идентификатор транзакции в системе эмитента.
+     * Возвращает Retrieval Reference Number — идентификатор банковской транзакции.
      *
      * @return null|string Уникальный идентификатор транзакции
      */

@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,9 @@ use YooKassa\Common\AbstractEnum;
  * Код способа доставки счета пользователю.
  *
  * Возможные значения:
- * - `self` — Самостоятельно.
+ * - `self` — Самостоятельно
+ * - `email` — По электронной почте
+ * - `sms` — В смс
  *
  * Подробнее про [жизненный цикл счета](https://yookassa.ru/developers/payment-acceptance/scenario-extensions/invoices/basics)
  *
@@ -47,6 +49,10 @@ class DeliveryMethodType extends AbstractEnum
 {
     /** Самостоятельно */
     public const SELF = 'self';
+    /** По электронной почте */
+    public const EMAIL = 'email';
+    /** В смс */
+    public const SMS = 'sms';
     /**
      * Для неизвестных методов доставки счета пользователю
      *
@@ -60,6 +66,8 @@ class DeliveryMethodType extends AbstractEnum
      */
     protected static array $validValues = [
         self::SELF => true,
+        self::EMAIL => true,
+        self::SMS => true,
         self::UNKNOWN => false,
     ];
 }

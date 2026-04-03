@@ -1,6 +1,31 @@
 <?php
+/*
+ * The MIT License
+ *
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 namespace Tests\YooKassa\Common\Exceptions;
+
+use YooKassa\Common\Errors\ErrorCode;
 
 abstract class AbstractTestApiRequestException extends ApiExceptionTest
 {
@@ -12,13 +37,13 @@ abstract class AbstractTestApiRequestException extends ApiExceptionTest
         $instance = $this->getTestInstance('', 0, [], $body);
         $tmp = json_decode($body, true);
         if (empty($tmp['description'])) {
-            self::assertEquals('', $instance->getMessage());
+            self::assertNull($instance->getError()->getDescription());
         } else {
-            self::assertEquals($tmp['description'] . '.', $instance->getMessage());
+            self::assertEquals($tmp['description'], $instance->getError()->getDescription());
         }
     }
 
-    public static function descriptionDataProvider()
+    public static function descriptionDataProvider(): array
     {
         return [
             ['{}'],
@@ -34,19 +59,22 @@ abstract class AbstractTestApiRequestException extends ApiExceptionTest
     {
         $instance = $this->getTestInstance('', 0, [], $body);
         $tmp = json_decode($body, true);
-        if (empty($tmp['code'])) {
-            self::assertEquals('', $instance->getMessage());
+        if (empty($tmp['code']) || !in_array($tmp['code'], ErrorCode::getValidValues(), true)) {
+            self::assertEquals('unknown', $instance->getError()->getCode());
         } else {
-            self::assertEquals('Error code: ' . $tmp['code'] . '.', $instance->getMessage());
+            self::assertEquals($tmp['code'], $instance->getError()->getCode());
         }
     }
 
-    public static function codeDataProvider()
+    public static function codeDataProvider(): array
     {
         return [
             ['{}'],
             ['{"code":"123"}'],
             ['{"code":"server_error"}'],
+            ['{"code":"internal_server_error"}'],
+            ['{"code":"error"}'],
+            ['{"code":"invalid_credentials"}'],
         ];
     }
 
@@ -58,13 +86,13 @@ abstract class AbstractTestApiRequestException extends ApiExceptionTest
         $instance = $this->getTestInstance('', 0, [], $body);
         $tmp = json_decode($body, true);
         if (empty($tmp['parameter'])) {
-            self::assertEquals('', $instance->getMessage());
+            self::assertNull($instance->getError()->getParameter());
         } else {
-            self::assertEquals('Parameter name: ' . $tmp['parameter'] . '.', $instance->getMessage());
+            self::assertEquals($tmp['parameter'], $instance->getError()->getParameter());
         }
     }
 
-    public static function parameterDataProvider()
+    public static function parameterDataProvider(): array
     {
         return [
             ['{}'],
@@ -84,10 +112,11 @@ abstract class AbstractTestApiRequestException extends ApiExceptionTest
             self::assertNull($instance->retryAfter);
         } else {
             self::assertEquals($tmp['retry_after'], $instance->retryAfter);
+            self::assertEquals($tmp['retry_after'], $instance->getError()->getRetryAfter());
         }
     }
 
-    public static function retryAfterDataProvider()
+    public static function retryAfterDataProvider(): array
     {
         return [
             ['{}'],
@@ -105,12 +134,14 @@ abstract class AbstractTestApiRequestException extends ApiExceptionTest
         $tmp = json_decode($body, true);
         if (empty($tmp['type'])) {
             self::assertNull($instance->type);
+            self::assertNull($instance->getError()->getType());
         } else {
             self::assertEquals($tmp['type'], $instance->type);
+            self::assertEquals($tmp['type'], $instance->getError()->getType());
         }
     }
 
-    public static function typeDataProvider()
+    public static function typeDataProvider(): array
     {
         return [
             ['{}'],
@@ -133,27 +164,33 @@ abstract class AbstractTestApiRequestException extends ApiExceptionTest
         if (!empty($tmp['description'])) {
             $message = $tmp['description'] . '. ';
         }
-        if (!empty($tmp['code'])) {
+        if (empty($tmp['code']) || !in_array($tmp['code'], ErrorCode::getValidValues(), true)) {
+            $message .= 'Error code: unknown. ';
+        } else {
             $message .= 'Error code: ' . $tmp['code'] . '. ';
         }
         if (!empty($tmp['parameter'])) {
             $message .= 'Parameter name: ' . $tmp['parameter'] . '. ';
         }
-        self::assertEquals(trim($message), $instance->getMessage());
+        self::assertEquals(trim($message), trim($instance->getMessage()));
 
         if (empty($tmp['retry_after'])) {
             self::assertNull($instance->retryAfter);
+            self::assertNull($instance->getError()->getRetryAfter());
         } else {
             self::assertEquals($tmp['retry_after'], $instance->retryAfter);
+            self::assertEquals($tmp['retry_after'], $instance->getError()->getRetryAfter());
         }
         if (empty($tmp['type'])) {
             self::assertNull($instance->type);
+            self::assertNull($instance->getError()->getType());
         } else {
             self::assertEquals($tmp['type'], $instance->type);
+            self::assertEquals($tmp['type'], $instance->getError()->getType());
         }
     }
 
-    public static function messageDataProvider()
+    public static function messageDataProvider(): array
     {
         return [
             ['{}'],
@@ -177,7 +214,7 @@ abstract class AbstractTestApiRequestException extends ApiExceptionTest
         $message = 'Test message';
         $code = $this->expectedHttpCode();
         $responseHeaders = ['Content-Type' => 'application/json'];
-        $responseBody = '{"type": "error", "id": "test_id", "code": "test_code", "description": "Test description", "parameter": "test_parameter"}';
+        $responseBody = '{"type": "error", "id": "test_id", "code": "unknown", "description": "Test description", "parameter": "test_parameter"}';
 
         $exception = $this->getTestInstance($message, $code, $responseHeaders, $responseBody);
 
@@ -186,9 +223,13 @@ abstract class AbstractTestApiRequestException extends ApiExceptionTest
         $this->assertEquals($responseBody, $exception->getResponseBody());
 
         $this->assertEquals('test_id', $exception->getErrorId());
-        $this->assertEquals('Test description. Error code: test_code. Parameter name: test_parameter.', $exception->getMessage());
-        $this->assertEquals('test_code', $exception->getErrorCode());
+        $this->assertEquals('test_id', $exception->getError()->getId());
+        $this->assertEquals('Test description. Error code: unknown. Parameter name: test_parameter.', $exception->getMessage());
+        $this->assertEquals('unknown', $exception->getErrorCode());
+        $this->assertEquals('unknown', $exception->getError()->getCode());
         $this->assertEquals('Test description', $exception->getErrorDescription());
+        $this->assertEquals('Test description', $exception->getError()->getDescription());
         $this->assertEquals('test_parameter', $exception->getErrorParameter());
+        $this->assertEquals('test_parameter', $exception->getError()->getParameter());
     }
 }

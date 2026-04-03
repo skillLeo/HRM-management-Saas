@@ -10,7 +10,6 @@ class ZambiaPayrollService
 
     public function __construct(int $creatorId)
     {
-        // Load all zambia settings for this company once
         $this->settings = Setting::where('user_id', $creatorId)
             ->where('key', 'like', 'zambia_%')
             ->pluck('value', 'key')
@@ -61,13 +60,17 @@ class ZambiaPayrollService
 
     // ─── 2. NAPSA ───────────────────────────────────────────────────────────
 
-    public function calculateNAPSA(float $grossSalary): array
+    public function calculateNAPSA(float $grossSalary, bool $exempt = false): array
     {
+        // If employee is exempt, return zero contributions
+        if ($exempt) {
+            return ['employee' => 0.0, 'employer' => 0.0];
+        }
+
         $employeeRate = (float) ($this->settings['zambia_napsa_employee_rate'] ?? 5) / 100;
         $employerRate = (float) ($this->settings['zambia_napsa_employer_rate'] ?? 5) / 100;
         $cap          = (float) ($this->settings['zambia_napsa_monthly_cap']   ?? 1073.20);
 
-        // Apply cap: if gross exceeds cap ceiling (cap / rate), use cap directly
         $employeeContribution = min($grossSalary * $employeeRate, $cap);
         $employerContribution = min($grossSalary * $employerRate, $cap);
 
@@ -78,53 +81,66 @@ class ZambiaPayrollService
     }
 
     // ─── 3. NHIMA ───────────────────────────────────────────────────────────
+    // FIX: NHIMA must be calculated on BASIC SALARY only, not gross pay
 
-    public function calculateNHIMA(float $grossSalary): array
+    public function calculateNHIMA(float $basicSalary, bool $exempt = false): array
     {
+        // If employee is exempt, return zero contributions
+        if ($exempt) {
+            return ['employee' => 0.0, 'employer' => 0.0];
+        }
+
         $employeeRate = (float) ($this->settings['zambia_nhima_employee_rate'] ?? 1) / 100;
         $employerRate = (float) ($this->settings['zambia_nhima_employer_rate'] ?? 1) / 100;
 
         return [
-            'employee' => round($grossSalary * $employeeRate, 2),
-            'employer' => round($grossSalary * $employerRate, 2),
+            'employee' => round($basicSalary * $employeeRate, 2),
+            'employer' => round($basicSalary * $employerRate, 2),
         ];
     }
 
     // ─── 4. SDL ─────────────────────────────────────────────────────────────
 
-    public function calculateSDL(float $totalPayroll): float
+    public function calculateSDL(float $totalPayroll, bool $exempt = false): float
     {
+        if ($exempt) {
+            return 0.0;
+        }
+
         $rate = (float) ($this->settings['zambia_sdl_rate'] ?? 0.5) / 100;
 
         return round($totalPayroll * $rate, 2);
     }
 
     // ─── 5. Full payroll for one employee ───────────────────────────────────
+    // Now accepts basicSalary separately for NHIMA fix
+    // And exemption flags for NAPSA/NHIMA
 
-    public function calculateFullPayroll(float $grossPay): array
-    {
+    public function calculateFullPayroll(
+        float $grossPay,
+        float $basicSalary = 0,
+        bool $exemptNapsa = false,
+        bool $exemptNhima = false
+    ): array {
         $paye  = $this->calculatePAYE($grossPay);
-        $napsa = $this->calculateNAPSA($grossPay);
-        $nhima = $this->calculateNHIMA($grossPay);
+        $napsa = $this->calculateNAPSA($grossPay, $exemptNapsa);
+
+        // ── NHIMA fix: use basicSalary, fallback to grossPay if not provided ──
+        $nhimaBase = $basicSalary > 0 ? $basicSalary : $grossPay;
+        $nhima     = $this->calculateNHIMA($nhimaBase, $exemptNhima);
 
         $totalDeductions = $paye + $napsa['employee'] + $nhima['employee'];
         $netPay          = $grossPay - $totalDeductions;
 
         return [
-            // Employee-facing
-            'gross_pay'       => round($grossPay, 2),
-            'paye'            => $paye,
-            'napsa_employee'  => $napsa['employee'],
-            'nhima_employee'  => $nhima['employee'],
-            'total_deductions'=> round($totalDeductions, 2),
-            'net_pay'         => round($netPay, 2),
-
-            // Employer-facing (not deducted from employee)
-            'napsa_employer'  => $napsa['employer'],
-            'nhima_employer'  => $nhima['employer'],
-
-            // SDL is calculated at payroll-run level (all employees combined)
-            // call calculateSDL(totalPayroll) separately after processing all employees
+            'gross_pay'        => round($grossPay, 2),
+            'paye'             => $paye,
+            'napsa_employee'   => $napsa['employee'],
+            'nhima_employee'   => $nhima['employee'],
+            'total_deductions' => round($totalDeductions, 2),
+            'net_pay'          => round($netPay, 2),
+            'napsa_employer'   => $napsa['employer'],
+            'nhima_employer'   => $nhima['employer'],
         ];
     }
 }

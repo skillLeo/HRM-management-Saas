@@ -78,6 +78,7 @@ var_dump($response);
 | public | [setCurrency()](../classes/YooKassa-Request-Payments-AbstractPaymentRequestBuilder.md#method_setCurrency) |  | Устанавливает валюту в которой будет происходить подтверждение оплаты заказа. |
 | public | [setDeal()](../classes/YooKassa-Request-Refunds-CreateRefundRequestBuilder.md#method_setDeal) |  | Устанавливает сделку. |
 | public | [setDescription()](../classes/YooKassa-Request-Refunds-CreateRefundRequestBuilder.md#method_setDescription) |  | Устанавливает комментарий к возврату. |
+| public | [setMetadata()](../classes/YooKassa-Request-Refunds-CreateRefundRequestBuilder.md#method_setMetadata) |  | Устанавливает метаданные, привязанные к возврату. |
 | public | [setOptions()](../classes/YooKassa-Common-AbstractRequestBuilder.md#method_setOptions) |  | Устанавливает свойства запроса из массива. |
 | public | [setPaymentId()](../classes/YooKassa-Request-Refunds-CreateRefundRequestBuilder.md#method_setPaymentId) |  | Устанавливает айди платежа для которого создаётся возврат |
 | public | [setReceipt()](../classes/YooKassa-Request-Payments-AbstractPaymentRequestBuilder.md#method_setReceipt) |  | Устанавливает чек. |
@@ -397,6 +398,33 @@ public setDescription(string|null $value) : \YooKassa\Request\Refunds\CreateRefu
 **Returns:** \YooKassa\Request\Refunds\CreateRefundRequestBuilder - Инстанс текущего билдера
 
 
+<a name="method_setMetadata" class="anchor"></a>
+#### public setMetadata() : \YooKassa\Request\Refunds\CreateRefundRequestBuilder
+
+```php
+public setMetadata(null|array|\YooKassa\Model\Metadata $value) : \YooKassa\Request\Refunds\CreateRefundRequestBuilder
+```
+
+**Summary**
+
+Устанавливает метаданные, привязанные к возврату.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Refunds\CreateRefundRequestBuilder](../classes/YooKassa-Request-Refunds-CreateRefundRequestBuilder.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">null OR array OR \YooKassa\Model\Metadata</code> | value  | Метаданные возврата, устанавливаемые мерчантом |
+
+##### Throws:
+| Type | Description |
+| ---- | ----------- |
+| \YooKassa\Common\Exceptions\InvalidPropertyValueTypeException | Выбрасывается если переданные данные не удалось интерпретировать как метаданные возврата |
+
+**Returns:** \YooKassa\Request\Refunds\CreateRefundRequestBuilder - Инстанс текущего билдера
+
+
 <a name="method_setOptions" class="anchor"></a>
 #### public setOptions() : \YooKassa\Common\AbstractRequestBuilder
 
@@ -669,10 +697,10 @@ protected initCurrentObject() : \YooKassa\Request\Refunds\CreateRefundRequest
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 33](../reports/deprecated.md)
+* [Deprecated - 43](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2025-07-01 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2026-03-13 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2025 YooMoney
+&copy; 2026 YooMoney

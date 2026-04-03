@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,7 @@ use YooKassa\Model\Deal\DealInterface;
 use YooKassa\Model\Payment\PaymentInterface;
 use YooKassa\Model\Payout\PayoutInterface;
 use YooKassa\Model\Refund\RefundInterface;
+use YooKassa\Model\SavePaymentMethod\SavePaymentMethodInterface;
 use YooKassa\Validator\Constraints as Assert;
 
 /**
@@ -121,7 +122,7 @@ abstract class AbstractNotification extends AbstractObject implements Notificati
      * получена на сайте, то опираться на статус пришедшего платежа не стоит, лучше запросить текущую информацию о
      * платеже у API.
      *
-     * @return PaymentInterface|RefundInterface|PayoutInterface|DealInterface|null Объект с информацией о платеже
+     * @return PaymentInterface|RefundInterface|PayoutInterface|DealInterface|SavePaymentMethodInterface|null Объект с информацией о платеже
      */
-    abstract public function getObject(): PaymentInterface|RefundInterface|PayoutInterface|DealInterface|null;
+    abstract public function getObject(): PaymentInterface|RefundInterface|PayoutInterface|DealInterface|SavePaymentMethodInterface|null;
 }

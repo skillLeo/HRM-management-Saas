@@ -18,16 +18,19 @@ Interface CreateRefundRequestInterface
 | public | [getAmount()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_getAmount) |  | Возвращает сумму возвращаемых средств. |
 | public | [getDeal()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_getDeal) |  | Возвращает информацию о сделке. |
 | public | [getDescription()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_getDescription) |  | Возвращает комментарий к возврату или null, если комментарий не задан |
+| public | [getMetadata()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_getMetadata) |  | Возвращает метаданные возврата. |
 | public | [getPaymentId()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_getPaymentId) |  | Возвращает айди платежа для которого создаётся возврат средств. |
 | public | [getReceipt()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_getReceipt) |  | Возвращает инстанс чека или null, если чек не задан. |
 | public | [getSources()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_getSources) |  | Возвращает информацию о распределении денег — сколько и в какой магазин нужно перевести. |
 | public | [hasDeal()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_hasDeal) |  | Проверяет наличие информации о сделке. |
 | public | [hasDescription()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_hasDescription) |  | Проверяет задан ли комментарий к создаваемому возврату. |
+| public | [hasMetadata()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_hasMetadata) |  | Проверяет, были ли установлены метаданные возврата. |
 | public | [hasPaymentId()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_hasPaymentId) |  | Проверяет, был ли установлена идентификатор платежа. |
 | public | [hasReceipt()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_hasReceipt) |  | Проверяет задан ли чек. |
 | public | [hasSources()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_hasSources) |  | Проверяет наличие информации о распределении денег. |
 | public | [setDeal()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_setDeal) |  | Устанавливает информацию о сделке. |
 | public | [setDescription()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_setDescription) |  | Устанавливает комментарий к возврату. |
+| public | [setMetadata()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_setMetadata) |  | Устанавливает метаданные возврата. |
 | public | [setReceipt()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_setReceipt) |  | Устанавливает чек. |
 | public | [setSources()](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md#method_setSources) |  | Устанавливает информацию о распределении денег — сколько и в какой магазин нужно перевести. |
 
@@ -328,6 +331,62 @@ public hasDeal() : bool
 **Returns:** bool - 
 
 
+<a name="method_getMetadata" class="anchor"></a>
+#### public getMetadata() : \YooKassa\Model\Metadata|null
+
+```php
+public getMetadata() : \YooKassa\Model\Metadata|null
+```
+
+**Summary**
+
+Возвращает метаданные возврата.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Refunds\CreateRefundRequestInterface](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md)
+
+**Returns:** \YooKassa\Model\Metadata|null - 
+
+
+<a name="method_hasMetadata" class="anchor"></a>
+#### public hasMetadata() : bool
+
+```php
+public hasMetadata() : bool
+```
+
+**Summary**
+
+Проверяет, были ли установлены метаданные возврата.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Refunds\CreateRefundRequestInterface](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md)
+
+**Returns:** bool - True если метаданные были установлены, false если нет
+
+
+<a name="method_setMetadata" class="anchor"></a>
+#### public setMetadata() : self
+
+```php
+public setMetadata(\YooKassa\Model\Metadata|array|null $metadata = null) : self
+```
+
+**Summary**
+
+Устанавливает метаданные возврата.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Refunds\CreateRefundRequestInterface](../classes/YooKassa-Request-Refunds-CreateRefundRequestInterface.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">\YooKassa\Model\Metadata OR array OR null</code> | metadata  | Любые дополнительные данные, которые нужны вам для работы (например, ваш внутренний идентификатор заказа). Передаются в виде набора пар «ключ-значение» и возвращаются в ответе от ЮKassa. Ограничения: максимум 16 ключей, имя ключа не больше 32 символов, значение ключа не больше 512 символов, тип данных — строка в формате UTF-8. |
+
+**Returns:** self - 
+
+
 
 
 ---
@@ -341,10 +400,10 @@ public hasDeal() : bool
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 33](../reports/deprecated.md)
+* [Deprecated - 43](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2025-07-01 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2026-03-13 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2025 YooMoney
+&copy; 2026 YooMoney

@@ -2,16 +2,24 @@
 
 namespace Inertia;
 
-use Illuminate\Support\Facades\App;
-
-class MergeProp implements Mergeable
+class MergeProp implements Mergeable, Onceable
 {
-    use MergesProps;
+    use MergesProps, ResolvesCallables, ResolvesOnce;
 
-    /** @var mixed */
+    /**
+     * The property value.
+     *
+     * Merged with existing client-side data during partial reloads.
+     *
+     * @var mixed
+     */
     protected $value;
 
     /**
+     * Create a new merge property instance. Merge properties are combined
+     * with existing client-side data during partial reloads instead of
+     * completely replacing the property value.
+     *
      * @param  mixed  $value
      */
     public function __construct($value)
@@ -20,8 +28,13 @@ class MergeProp implements Mergeable
         $this->merge = true;
     }
 
+    /**
+     * Resolve the property value.
+     *
+     * @return mixed
+     */
     public function __invoke()
     {
-        return is_callable($this->value) ? App::call($this->value) : $this->value;
+        return $this->resolveCallable($this->value);
     }
 }

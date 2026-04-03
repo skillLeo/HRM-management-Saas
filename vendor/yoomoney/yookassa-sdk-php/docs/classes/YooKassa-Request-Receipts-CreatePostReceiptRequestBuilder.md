@@ -95,6 +95,7 @@ var_dump($response);
 | public | [setAdditionalUserProps()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md#method_setAdditionalUserProps) |  | Устанавливает дополнительный реквизит пользователя. |
 | public | [setCurrency()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md#method_setCurrency) |  | Устанавливает валюту в которой будет происходить подтверждение оплаты заказа. |
 | public | [setCustomer()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md#method_setCustomer) |  | Устанавливает информацию о пользователе. |
+| public | [setInternet()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md#method_setInternet) |  | Устанавливает признак проведения платежа в интернете. |
 | public | [setItems()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md#method_setItems) |  | Устанавливает список товаров чека. |
 | public | [setObjectId()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md#method_setObjectId) |  | Устанавливает Id объекта чека. |
 | public | [setObjectType()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md#method_setObjectType) |  | Устанавливает тип объекта чека. |
@@ -105,6 +106,7 @@ var_dump($response);
 | public | [setSend()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md#method_setSend) |  | Устанавливает признак отложенной отправки чека. |
 | public | [setSettlements()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md#method_setSettlements) |  | Устанавливает массив оплат, обеспечивающих выдачу товара. |
 | public | [setTaxSystemCode()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md#method_setTaxSystemCode) |  | Устанавливает код системы налогообложения. |
+| public | [setTimezone()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md#method_setTimezone) |  | Устанавливает номер часовой зоны. |
 | public | [setType()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md#method_setType) |  | Устанавливает тип чека в онлайн-кассе. |
 | protected | [initCurrentObject()](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md#method_initCurrentObject) |  | Инициализирует объект запроса, который в дальнейшем будет собираться билдером |
 
@@ -305,6 +307,28 @@ public setCustomer(array|\YooKassa\Model\Receipt\ReceiptCustomerInterface $value
 | Type | Name | Description |
 | ---- | ---- | ----------- |
 | <code lang="php">array OR \YooKassa\Model\Receipt\ReceiptCustomerInterface</code> | value  | Информация о плательщике |
+
+**Returns:** self - Инстанс билдера запросов
+
+
+<a name="method_setInternet" class="anchor"></a>
+#### public setInternet() : self
+
+```php
+public setInternet(bool|null $value = null) : self
+```
+
+**Summary**
+
+Устанавливает признак проведения платежа в интернете.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Receipts\CreatePostReceiptRequestBuilder](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">bool OR null</code> | value  | Признак проведения платежа в интернете (тег в 54 ФЗ — 1125) — указывает на оплату через интернет. |
 
 **Returns:** self - Инстанс билдера запросов
 
@@ -541,6 +565,28 @@ public setTaxSystemCode(int|null $value) : self
 **Returns:** self - Инстанс билдера запросов
 
 
+<a name="method_setTimezone" class="anchor"></a>
+#### public setTimezone() : self
+
+```php
+public setTimezone(int|null $value) : self
+```
+
+**Summary**
+
+Устанавливает номер часовой зоны.
+
+**Details:**
+* Inherited From: [\YooKassa\Request\Receipts\CreatePostReceiptRequestBuilder](../classes/YooKassa-Request-Receipts-CreatePostReceiptRequestBuilder.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">int OR null</code> | value  | Номер часовой зоны для адреса, по которому вы принимаете платежи (тег в 54 ФЗ — 1011). |
+
+**Returns:** self - Инстанс билдера запросов
+
+
 <a name="method_setType" class="anchor"></a>
 #### public setType() : self
 
@@ -592,10 +638,10 @@ protected initCurrentObject() : \YooKassa\Request\Receipts\CreatePostReceiptRequ
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 33](../reports/deprecated.md)
+* [Deprecated - 43](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2025-07-01 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2026-03-13 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2025 YooMoney
+&copy; 2026 YooMoney

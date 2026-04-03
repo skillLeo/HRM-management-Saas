@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,7 +53,7 @@ class SbpPayerBankDetails extends AbstractObject
     #[Assert\NotBlank]
     #[Assert\Type('string')]
     #[Assert\Length(max: 12)]
-    #[Assert\Regex("/\\d{12}/")]
+    #[Assert\Regex("/[a-zA-Z0-9]{12}/")]
     private ?string $_bank_id = null;
 
     /**

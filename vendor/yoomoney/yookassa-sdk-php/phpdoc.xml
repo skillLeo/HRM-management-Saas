@@ -9,7 +9,7 @@
     <paths>
         <output>.phpdoc</output>
     </paths>
-    <version number="3.5.0">
+    <version number="3.13.1">
         <folder>latest</folder>
         <api>
             <source dsn=".">

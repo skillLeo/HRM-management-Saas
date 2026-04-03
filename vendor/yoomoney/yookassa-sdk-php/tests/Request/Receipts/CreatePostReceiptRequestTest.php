@@ -1,28 +1,28 @@
 <?php
 
 /*
-* The MIT License
-*
-* Copyright (c) 2024 "YooMoney", NBСO LLC
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*/
+ * The MIT License
+ *
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 namespace Tests\YooKassa\Request\Receipts;
 
@@ -81,8 +81,8 @@ class CreatePostReceiptRequestTest extends AbstractTestCase
         $instance->setType($value);
         self::assertNotNull($instance->getType());
         self::assertNotNull($instance->type);
-        self::assertEquals($value, is_array($value) ? $instance->getType()->toArray() : $instance->getType());
-        self::assertEquals($value, is_array($value) ? $instance->type->toArray() : $instance->type);
+        self::assertEquals($value, $instance->getType());
+        self::assertEquals($value, $instance->type);
     }
 
     /**
@@ -264,8 +264,8 @@ class CreatePostReceiptRequestTest extends AbstractTestCase
         $instance->setSend($value);
         self::assertNotNull($instance->getSend());
         self::assertNotNull($instance->send);
-        self::assertEquals($value, is_array($value) ? $instance->getSend()->toArray() : $instance->getSend());
-        self::assertEquals($value, is_array($value) ? $instance->send->toArray() : $instance->send);
+        self::assertEquals($value, $instance->getSend());
+        self::assertEquals($value, $instance->send);
         self::assertIsBool($instance->getSend());
         self::assertIsBool($instance->send);
     }
@@ -320,8 +320,8 @@ class CreatePostReceiptRequestTest extends AbstractTestCase
         self::assertEmpty($instance->getTaxSystemCode());
         self::assertEmpty($instance->tax_system_code);
         $instance->setTaxSystemCode($value);
-        self::assertEquals($value, is_array($value) ? $instance->getTaxSystemCode()->toArray() : $instance->getTaxSystemCode());
-        self::assertEquals($value, is_array($value) ? $instance->tax_system_code->toArray() : $instance->tax_system_code);
+        self::assertEquals($value, $instance->getTaxSystemCode());
+        self::assertEquals($value, $instance->tax_system_code);
         if (!empty($value)) {
             self::assertNotNull($instance->getTaxSystemCode());
             self::assertNotNull($instance->tax_system_code);
@@ -651,8 +651,8 @@ class CreatePostReceiptRequestTest extends AbstractTestCase
         self::assertEmpty($instance->getOnBehalfOf());
         self::assertEmpty($instance->on_behalf_of);
         $instance->setOnBehalfOf($value);
-        self::assertEquals($value, is_array($value) ? $instance->getOnBehalfOf()->toArray() : $instance->getOnBehalfOf());
-        self::assertEquals($value, is_array($value) ? $instance->on_behalf_of->toArray() : $instance->on_behalf_of);
+        self::assertEquals($value, $instance->getOnBehalfOf());
+        self::assertEquals($value, $instance->on_behalf_of);
         if (!empty($value)) {
             self::assertNotNull($instance->getOnBehalfOf());
             self::assertNotNull($instance->on_behalf_of);
@@ -693,6 +693,130 @@ class CreatePostReceiptRequestTest extends AbstractTestCase
     {
         $instance = $this->getTestInstance();
         return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_on_behalf_of'));
+    }
+
+    /**
+     * Test property "internet"
+     * @dataProvider validInternetDataProvider
+     * @param mixed $value
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testInternet(mixed $value): void
+    {
+        $instance = $this->getTestInstance();
+        self::assertEmpty($instance->getInternet());
+        self::assertEmpty($instance->internet);
+        $instance->setInternet($value);
+        self::assertEquals($value, $instance->getInternet());
+        self::assertEquals($value, $instance->internet);
+        if (!empty($value)) {
+            self::assertNotNull($instance->getInternet());
+            self::assertNotNull($instance->internet);
+            self::assertIsBool($instance->getInternet());
+            self::assertIsBool($instance->internet);
+        }
+    }
+
+    /**
+     * Test invalid property "internet"
+     * @dataProvider invalidInternetDataProvider
+     * @param mixed $value
+     * @param string $exceptionClass
+     *
+     * @return void
+     */
+    public function testInvalidInternet(mixed $value, string $exceptionClass): void
+    {
+        $instance = $this->getTestInstance();
+
+        $this->expectException($exceptionClass);
+        $instance->setInternet($value);
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function validInternetDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_internet'));
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function invalidInternetDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_internet'));
+    }
+
+    /**
+     * Test property "timezone"
+     * @dataProvider validTimezoneDataProvider
+     * @param mixed $value
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testTimezone(mixed $value): void
+    {
+        $instance = $this->getTestInstance();
+        self::assertEmpty($instance->getTimezone());
+        self::assertEmpty($instance->timezone);
+        $instance->setTimezone($value);
+        self::assertEquals($value, $instance->getTimezone());
+        self::assertEquals($value, $instance->timezone);
+        if (!empty($value)) {
+            self::assertNotNull($instance->getTimezone());
+            self::assertNotNull($instance->timezone);
+            self::assertLessThanOrEqual(11, is_string($instance->getTimezone()) ? mb_strlen($instance->getTimezone()) : $instance->getTimezone());
+            self::assertLessThanOrEqual(11, is_string($instance->timezone) ? mb_strlen($instance->timezone) : $instance->timezone);
+            self::assertGreaterThanOrEqual(1, is_string($instance->getTimezone()) ? mb_strlen($instance->getTimezone()) : $instance->getTimezone());
+            self::assertGreaterThanOrEqual(1, is_string($instance->timezone) ? mb_strlen($instance->timezone) : $instance->timezone);
+            self::assertIsNumeric($instance->getTimezone());
+            self::assertIsNumeric($instance->timezone);
+        }
+    }
+
+    /**
+     * Test invalid property "timezone"
+     * @dataProvider invalidTimezoneDataProvider
+     * @param mixed $value
+     * @param string $exceptionClass
+     *
+     * @return void
+     */
+    public function testInvalidTimezone(mixed $value, string $exceptionClass): void
+    {
+        $instance = $this->getTestInstance();
+
+        $this->expectException($exceptionClass);
+        $instance->setTimezone($value);
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function validTimezoneDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_timezone'));
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function invalidTimezoneDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_timezone'));
     }
 
     /**

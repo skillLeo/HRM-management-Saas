@@ -1,9 +1,9 @@
 <?php
 
-/**
+/*
  * The MIT License
  *
- * Copyright (c) 2024 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,7 @@ class Validator
     /**
      * @param string $propertyName
      * @param mixed $propertyValue
-     * @throws \InvalidArgumentException
+     * @param array|null $filter
      * @return void
      */
     public function validatePropertyValue(string $propertyName, mixed $propertyValue, ?array $filter = []): void
@@ -52,7 +52,7 @@ class Validator
         }
 
         foreach ($this->propRules[$propertyName] as $constraint) {
-            if (!empty($filter) && in_array($constraint::class, $filter)) {
+            if (!empty($filter) && in_array($constraint::class, $filter, true)) {
                 continue;
             }
             $validator = $constraint->validatedBy();
@@ -88,7 +88,9 @@ class Validator
     {
         $reflector = new \ReflectionObject($this->object);
         foreach ($reflector->getProperties() as $property) {
-            $property->setAccessible(true);
+            if (PHP_VERSION_ID < 80100) {
+                $property->setAccessible(true);
+            }
             if ($property->isInitialized($this->object)) {
                 $this->propValues[$property->getName()] = $property->getValue($this->object);
             }

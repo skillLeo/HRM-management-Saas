@@ -4,28 +4,96 @@
     <meta charset="utf-8">
     <title>Payslip - {{ $payrollEntry->employee->name }}</title>
     <style>
-        body { font-family: "DejaVu Sans", sans-serif; font-size: 11px; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; border: 1px solid #333; padding: 0; }
-        .header { position: relative; text-align: center; padding: 15px; border-bottom: 1px solid #333; }
-        .header-qr { position: absolute; top: 10px; right: 10px; }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif; 
+            font-size: 11px; 
+            margin: 0; 
+            padding: 15px;
+            background: white;
+        }
+        .container { 
+            width: 750px; 
+            margin: 0 auto; 
+            border: 1px solid #333; 
+            padding: 0;
+            background: white;
+        }
+        .header { 
+            position: relative; 
+            text-align: center; 
+            padding: 15px; 
+            border-bottom: 1px solid #333; 
+        }
+        .header-qr { 
+            position: absolute; 
+            top: 10px; 
+            right: 10px; 
+        }
         .header-qr img { width: 70px; height: 70px; }
-        .header-qr-label { font-size: 8px; color: #555; text-align: center; margin-top: 2px; }
-        .company-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
-        .payslip-title { font-size: 14px; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { font-weight: bold; background-color: #fafafa; }
-        .section-header { background-color: #f5f5f5; font-weight: bold; text-align: center; }
+        .header-qr-label { 
+            font-size: 8px; 
+            color: #555; 
+            text-align: center; 
+            margin-top: 2px; 
+        }
+        .company-name { 
+            font-size: 20px; 
+            font-weight: bold; 
+            margin-bottom: 5px; 
+        }
+        .payslip-title { 
+            font-size: 14px; 
+            font-weight: bold; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 0;
+        }
+        th, td { 
+            border: 1px solid #ccc; 
+            padding: 7px 8px; 
+            text-align: left; 
+        }
+        th { 
+            font-weight: bold; 
+            background-color: #fafafa; 
+        }
+        .section-header { 
+            background-color: #f0f0f0; 
+            font-weight: bold; 
+            text-align: center; 
+            font-size: 12px;
+        }
         .amount { text-align: right; }
-        .total-row { font-weight: bold; background-color: #f9f9f9; }
-        .net-salary-row { font-weight: bold; font-size: 13px; background-color: #e8f5e9; }
+        .total-row { 
+            font-weight: bold; 
+            background-color: #f9f9f9; 
+        }
+        .net-salary-row { 
+            font-weight: bold; 
+            font-size: 13px; 
+            background-color: #e8f5e9; 
+        }
         .employer-row { background-color: #fff8e1; }
-        .zambia-label { color: #555; font-size: 10px; }
-        .footer { padding: 10px; font-size: 10px; border-top: 1px solid #ccc; }
-        .footer-inner { display: flex; justify-content: space-between; align-items: center; }
+        .footer { 
+            padding: 10px; 
+            font-size: 10px; 
+            border-top: 1px solid #ccc; 
+        }
+        .footer-inner { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
         .footer-center { text-align: center; flex: 1; }
         .footer-tagline { text-align: right; font-size: 10px; }
-        .footer-tagline a { color: #1a73e8; text-decoration: none; font-weight: bold; }
+        .footer-tagline a { 
+            color: #1a73e8; 
+            text-decoration: none; 
+            font-weight: bold; 
+        }
     </style>
 </head>
 <body>
@@ -33,13 +101,10 @@
 
     {{-- ── HEADER ─────────────────────────────────────────────────────────── --}}
     <div class="header">
-
-        {{-- QR Code — top right --}}
         <div class="header-qr">
             {!! QrCode::size(70)->generate('https://www.afripay-hr.co.zm') !!}
             <div class="header-qr-label">ESS Portal</div>
         </div>
-
         <div class="company-name">
             {{ $companySettings['titleText'] ?? config('app.name', 'HRMGo SaaS') }}
         </div>
@@ -114,8 +179,8 @@
 
     {{-- ── EARNINGS & DEDUCTIONS ───────────────────────────────────────────── --}}
     @php
-        $rawEarnings    = $payrollEntry->earnings_breakdown ?? [];
-        $rawDeductions  = $payrollEntry->deductions_breakdown ?? [];
+        $rawEarnings   = $payrollEntry->earnings_breakdown ?? [];
+        $rawDeductions = $payrollEntry->deductions_breakdown ?? [];
 
         $earningsList = [];
         foreach ($rawEarnings as $k => $v) {
@@ -164,7 +229,6 @@
             <th width="35%">Deductions</th>
             <th width="15%" class="amount">Amount (ZMW)</th>
         </tr>
-
         @for ($i = 0; $i < $maxRows; $i++)
         <tr>
             <td>{{ $earningsList[$i]['name'] ?? '' }}</td>
@@ -173,7 +237,6 @@
             <td class="amount">{{ isset($deductionsList[$i]) ? formatCurrency($deductionsList[$i]['amount']) : '' }}</td>
         </tr>
         @endfor
-
         <tr class="total-row">
             <td><strong>Total Earnings</strong></td>
             <td class="amount"><strong>{{ formatCurrency($totalEarnings) }}</strong></td>
@@ -188,7 +251,7 @@
 
     {{-- ── EMPLOYER CONTRIBUTIONS ──────────────────────────────────────────── --}}
     @if (count($employerItems) > 0)
-    <table style="margin-top:8px;">
+    <table style="margin-top:4px;">
         <tr><th colspan="2" class="section-header">Employer Contributions (HR Record — Not Deducted from Employee)</th></tr>
         @foreach ($employerItems as $item)
         <tr class="employer-row">
@@ -214,24 +277,93 @@
     </div>
 
 </div>
-</body>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-    window.addEventListener('load', function () {
-        var element  = document.querySelector('.container');
-        var filename = 'payslip-{{ $payrollEntry->employee->name }}-{{ $payrollEntry->payrollRun->pay_period_start->format("M-Y") }}.pdf';
-        var opt = {
-            margin:     0.3,
-            filename:   filename,
-            image:      { type: 'jpeg', quality: 1 },
-            html2canvas:{ scale: 2, dpi: 192, letterRendering: true },
-            jsPDF:      { unit: 'in', format: 'a4', orientation: 'portrait' }
-        };
-        html2pdf().set(opt).from(element).save().then(function () {
+window.addEventListener('load', function () {
+    var element  = document.getElementById('payslip-content');
+    var filename = 'payslip-{{ $payrollEntry->employee->name }}-{{ $payrollEntry->payrollRun->pay_period_start->format("M-Y") }}.pdf';
+
+    // Small delay to ensure everything is rendered
+    setTimeout(function () {
+        html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            scrollX: 0,
+            scrollY: 0,
+            width: element.offsetWidth,
+            height: element.offsetHeight,
+            windowWidth: element.offsetWidth,
+            windowHeight: element.offsetHeight
+        }).then(function (canvas) {
+            var { jsPDF } = window.jspdf;
+
+            // A4 dimensions in mm
+            var pageWidth  = 210;
+            var pageHeight = 297;
+            var margin     = 10;
+            var contentWidth  = pageWidth - (margin * 2);
+
+            // Calculate the image dimensions to fit A4 width
+            var imgWidth  = contentWidth;
+            var imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            var pdf = new jsPDF('p', 'mm', 'a4');
+
+            // If content fits in one page
+            if (imgHeight <= (pageHeight - margin * 2)) {
+                pdf.addImage(
+                    canvas.toDataURL('image/jpeg', 0.98),
+                    'JPEG',
+                    margin,
+                    margin,
+                    imgWidth,
+                    imgHeight
+                );
+            } else {
+                // Content is taller than one page — split across pages
+                var pageContentHeight = pageHeight - (margin * 2);
+                var totalPages = Math.ceil(imgHeight / pageContentHeight);
+                var sourcePageHeight = Math.floor((canvas.height / imgHeight) * pageContentHeight);
+
+                for (var page = 0; page < totalPages; page++) {
+                    if (page > 0) pdf.addPage();
+
+                    var sourceY = page * sourcePageHeight;
+                    var remainingHeight = canvas.height - sourceY;
+                    var sliceHeight = Math.min(sourcePageHeight, remainingHeight);
+
+                    // Create a canvas slice for this page
+                    var pageCanvas = document.createElement('canvas');
+                    pageCanvas.width  = canvas.width;
+                    pageCanvas.height = sliceHeight;
+
+                    var ctx = pageCanvas.getContext('2d');
+                    ctx.drawImage(canvas, 0, sourceY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+
+                    var sliceImgHeight = (sliceHeight * imgWidth) / canvas.width;
+
+                    pdf.addImage(
+                        pageCanvas.toDataURL('image/jpeg', 0.98),
+                        'JPEG',
+                        margin,
+                        margin,
+                        imgWidth,
+                        sliceImgHeight
+                    );
+                }
+            }
+
+            pdf.save(filename);
+
             setTimeout(function () {
                 window.location.href = '{{ route('hr.payslips.index') }}';
-            }, 1000);
+            }, 2000);
         });
-    });
+    }, 500);
+});
 </script>
+</body>
 </html>

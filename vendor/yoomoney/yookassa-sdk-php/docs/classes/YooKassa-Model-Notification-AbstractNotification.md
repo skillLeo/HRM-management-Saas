@@ -347,10 +347,10 @@ public getEvent() : string|null
 
 
 <a name="method_getObject" class="anchor"></a>
-#### public getObject() : \YooKassa\Model\Payment\PaymentInterface|\YooKassa\Model\Refund\RefundInterface|\YooKassa\Model\Payout\PayoutInterface|\YooKassa\Model\Deal\DealInterface|null
+#### public getObject() : \YooKassa\Model\Payment\PaymentInterface|\YooKassa\Model\Refund\RefundInterface|\YooKassa\Model\Payout\PayoutInterface|\YooKassa\Model\Deal\DealInterface|\YooKassa\Model\SavePaymentMethod\SavePaymentMethodInterface|null
 
 ```php
-Abstract public getObject() : \YooKassa\Model\Payment\PaymentInterface|\YooKassa\Model\Refund\RefundInterface|\YooKassa\Model\Payout\PayoutInterface|\YooKassa\Model\Deal\DealInterface|null
+Abstract public getObject() : \YooKassa\Model\Payment\PaymentInterface|\YooKassa\Model\Refund\RefundInterface|\YooKassa\Model\Payout\PayoutInterface|\YooKassa\Model\Deal\DealInterface|\YooKassa\Model\SavePaymentMethod\SavePaymentMethodInterface|null
 ```
 
 **Summary**
@@ -366,7 +366,7 @@ Abstract public getObject() : \YooKassa\Model\Payment\PaymentInterface|\YooKassa
 **Details:**
 * Inherited From: [\YooKassa\Model\Notification\AbstractNotification](../classes/YooKassa-Model-Notification-AbstractNotification.md)
 
-**Returns:** \YooKassa\Model\Payment\PaymentInterface|\YooKassa\Model\Refund\RefundInterface|\YooKassa\Model\Payout\PayoutInterface|\YooKassa\Model\Deal\DealInterface|null - Объект с информацией о платеже
+**Returns:** \YooKassa\Model\Payment\PaymentInterface|\YooKassa\Model\Refund\RefundInterface|\YooKassa\Model\Payout\PayoutInterface|\YooKassa\Model\Deal\DealInterface|\YooKassa\Model\SavePaymentMethod\SavePaymentMethodInterface|null - Объект с информацией о платеже
 
 
 <a name="method_getType" class="anchor"></a>
@@ -619,10 +619,10 @@ protected validatePropertyValue(string $propertyName, mixed $propertyValue) : mi
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 33](../reports/deprecated.md)
+* [Deprecated - 43](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2025-07-01 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2026-03-13 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2025 YooMoney
+&copy; 2026 YooMoney

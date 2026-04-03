@@ -1,28 +1,28 @@
 <?php
 
 /*
-* The MIT License
-*
-* Copyright (c) 2025 "YooMoney", NBСO LLC
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*/
+ * The MIT License
+ *
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 namespace Tests\YooKassa\Model\Receipt;
 
@@ -570,6 +570,186 @@ class ReceiptTest extends AbstractTestCase
     }
 
     /**
+     * Test property "send"
+     * @dataProvider validSendDataProvider
+     * @param mixed $value
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testSend(mixed $value): void
+    {
+        $instance = $this->getTestInstance();
+        $instance->setSend($value);
+        self::assertNotNull($instance->getSend());
+        self::assertNotNull($instance->send);
+        self::assertEquals($value, $instance->getSend());
+        self::assertEquals($value, $instance->send);
+        self::assertIsBool($instance->getSend());
+        self::assertIsBool($instance->send);
+    }
+
+    /**
+     * Test invalid property "send"
+     * @dataProvider invalidSendDataProvider
+     * @param mixed $value
+     * @param string $exceptionClass
+     *
+     * @return void
+     */
+    public function testInvalidSend(mixed $value, string $exceptionClass): void
+    {
+        $instance = $this->getTestInstance();
+
+        $this->expectException($exceptionClass);
+        $instance->setSend($value);
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function validSendDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_send'));
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function invalidSendDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_send'));
+    }
+
+    /**
+     * Test property "internet"
+     * @dataProvider validInternetDataProvider
+     * @param mixed $value
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testInternet(mixed $value): void
+    {
+        $instance = $this->getTestInstance();
+        self::assertEmpty($instance->getInternet());
+        self::assertEmpty($instance->internet);
+        $instance->setInternet($value);
+        self::assertEquals($value, $instance->getInternet());
+        self::assertEquals($value, $instance->internet);
+        if (!empty($value)) {
+            self::assertNotNull($instance->getInternet());
+            self::assertNotNull($instance->internet);
+            self::assertIsBool($instance->getInternet());
+            self::assertIsBool($instance->internet);
+        }
+    }
+
+    /**
+     * Test invalid property "internet"
+     * @dataProvider invalidInternetDataProvider
+     * @param mixed $value
+     * @param string $exceptionClass
+     *
+     * @return void
+     */
+    public function testInvalidInternet(mixed $value, string $exceptionClass): void
+    {
+        $instance = $this->getTestInstance();
+
+        $this->expectException($exceptionClass);
+        $instance->setInternet($value);
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function validInternetDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_internet'));
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function invalidInternetDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_internet'));
+    }
+
+    /**
+     * Test property "timezone"
+     * @dataProvider validTimezoneDataProvider
+     * @param mixed $value
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testTimezone(mixed $value): void
+    {
+        $instance = $this->getTestInstance();
+        self::assertEmpty($instance->getTimezone());
+        self::assertEmpty($instance->timezone);
+        $instance->setTimezone($value);
+        self::assertEquals($value, $instance->getTimezone());
+        self::assertEquals($value, $instance->timezone);
+        if (!empty($value)) {
+            self::assertNotNull($instance->getTimezone());
+            self::assertNotNull($instance->timezone);
+            self::assertLessThanOrEqual(11, is_string($instance->getTimezone()) ? mb_strlen($instance->getTimezone()) : $instance->getTimezone());
+            self::assertLessThanOrEqual(11, is_string($instance->timezone) ? mb_strlen($instance->timezone) : $instance->timezone);
+            self::assertGreaterThanOrEqual(1, is_string($instance->getTimezone()) ? mb_strlen($instance->getTimezone()) : $instance->getTimezone());
+            self::assertGreaterThanOrEqual(1, is_string($instance->timezone) ? mb_strlen($instance->timezone) : $instance->timezone);
+            self::assertIsNumeric($instance->getTimezone());
+            self::assertIsNumeric($instance->timezone);
+        }
+    }
+
+    /**
+     * Test invalid property "timezone"
+     * @dataProvider invalidTimezoneDataProvider
+     * @param mixed $value
+     * @param string $exceptionClass
+     *
+     * @return void
+     */
+    public function testInvalidTimezone(mixed $value, string $exceptionClass): void
+    {
+        $instance = $this->getTestInstance();
+
+        $this->expectException($exceptionClass);
+        $instance->setTimezone($value);
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function validTimezoneDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_timezone'));
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function invalidTimezoneDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_timezone'));
+    }
+
+    /**
      * @dataProvider validNormalizationDataProvider
      *
      * @param mixed $withShipping
@@ -811,6 +991,7 @@ class ReceiptTest extends AbstractTestCase
         $receiptItem->setDescription('test');
         $receiptItem->setQuantity(322);
         $receiptItem->setVatCode(4);
+        $receiptItem->setPlannedStatus(6);
         $receiptItem->setPrice(new ReceiptItemAmount(5, 'USD'));
 
         $settlement = new Settlement();
@@ -840,6 +1021,7 @@ class ReceiptTest extends AbstractTestCase
                             ],
                             'quantity' => 322,
                             'vat_code' => 4,
+                            'planned_status' => 6,
                         ],
                     ],
                     'settlements' => [
@@ -883,12 +1065,14 @@ class ReceiptTest extends AbstractTestCase
                                 'currency' => 'USD',
                             ],
                             'vat_code' => 4,
+                            'planned_status' => 6,
                         ],
                         [
                             'description' => 'test',
                             'quantity' => 322,
                             'amount' => new ReceiptItemAmount(5, 'USD'),
                             'vat_code' => 4,
+                            'planned_status' => 6,
                         ],
                         [
                             'description' => 'test',
@@ -898,6 +1082,7 @@ class ReceiptTest extends AbstractTestCase
                                 'currency' => 'USD',
                             ]),
                             'vat_code' => 4,
+                            'planned_status' => 6,
                         ],
                     ],
                     'settlements' => [

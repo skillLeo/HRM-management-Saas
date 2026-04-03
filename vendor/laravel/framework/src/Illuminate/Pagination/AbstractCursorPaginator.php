@@ -403,8 +403,12 @@ abstract class AbstractCursorPaginator implements Htmlable, Stringable
     /**
      * Transform each item in the slice of items using a callback.
      *
-     * @param  callable  $callback
+     * @template TThroughValue
+     *
+     * @param  callable(TValue, TKey): TThroughValue  $callback
      * @return $this
+     *
+     * @phpstan-this-out static<TKey, TThroughValue>
      */
     public function through(callable $callback)
     {
@@ -494,6 +498,7 @@ abstract class AbstractCursorPaginator implements Htmlable, Stringable
      * Resolve the current cursor or return the default value.
      *
      * @param  string  $cursorName
+     * @param  \Illuminate\Pagination\Cursor|null  $default
      * @return \Illuminate\Pagination\Cursor|null
      */
     public static function resolveCurrentCursor($cursorName = 'cursor', $default = null)

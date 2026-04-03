@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -48,10 +48,6 @@ use YooKassa\Model\Payout\AbstractPayoutDestination;
  * @property string $paymentMethodId Идентификатор сохраненного способа оплаты, данные которого нужно использовать для проведения выплаты
  * @property PayoutDealInfo $deal Сделка, в рамках которой нужно провести выплату. Необходимо передавать, если вы проводите Безопасную сделку
  * @property string $description Описание транзакции (не более 128 символов). Например: «Выплата по договору N»
- * @property PayoutSelfEmployedInfo $self_employed Данные самозанятого, который получит выплату. Необходимо передавать, если вы делаете выплату [самозанятому](https://yookassa.ru/developers/payouts/scenario-extensions/self-employed). Только для обычных выплат.
- * @property PayoutSelfEmployedInfo $selfEmployed Данные самозанятого, который получит выплату. Необходимо передавать, если вы делаете выплату [самозанятому](https://yookassa.ru/developers/payouts/scenario-extensions/self-employed). Только для обычных выплат.
- * @property IncomeReceiptData $receipt_data Данные для формирования чека в сервисе Мой налог. Необходимо передавать, если вы делаете выплату [самозанятому](https://yookassa.ru/developers/payouts/scenario-extensions/self-employed). Только для обычных выплат.
- * @property IncomeReceiptData $receiptData Данные для формирования чека в сервисе Мой налог. Необходимо передавать, если вы делаете выплату [самозанятому](https://yookassa.ru/developers/payouts/scenario-extensions/self-employed). Только для обычных выплат.
  * @property PayoutPersonalData $personal_data Персональные данные получателя выплаты. Необходимо передавать, если вы делаете выплаты с [проверкой получателя](/developers/payouts/scenario-extensions/recipient-check) (только для выплат через СБП).
  * @property PayoutPersonalData $personalData Персональные данные получателя выплаты. Необходимо передавать, если вы делаете выплаты с [проверкой получателя](/developers/payouts/scenario-extensions/recipient-check) (только для выплат через СБП).
  * @property Metadata $metadata Метаданные привязанные к выплате
@@ -195,52 +191,6 @@ interface CreatePayoutRequestInterface
      * @return self
      */
     public function setDeal(mixed $deal): self;
-
-    /**
-     * Возвращает данные самозанятого, который получит выплату.
-     *
-     * @return null|PayoutSelfEmployedInfo Данные самозанятого, который получит выплату
-     */
-    public function getSelfEmployed(): ?PayoutSelfEmployedInfo;
-
-    /**
-     * Проверяет наличие данных самозанятого в создаваемой выплате.
-     *
-     * @return bool True если данные самозанятого есть, false если нет
-     */
-    public function hasSelfEmployed(): bool;
-
-    /**
-     * Устанавливает данные самозанятого, который получит выплату.
-     *
-     * @param null|array|PayoutSelfEmployedInfo $self_employed Данные самозанятого, который получит выплату
-     *
-     * @return self
-     */
-    public function setSelfEmployed(mixed $self_employed): self;
-
-    /**
-     * Возвращает данные для формирования чека в сервисе Мой налог.
-     *
-     * @return null|IncomeReceiptData Данные для формирования чека в сервисе Мой налог
-     */
-    public function getReceiptData(): ?IncomeReceiptData;
-
-    /**
-     * Проверяет наличие данных для формирования чека в сервисе Мой налог.
-     *
-     * @return bool True если данные для формирования чека есть, false если нет
-     */
-    public function hasReceiptData(): bool;
-
-    /**
-     * Устанавливает данные для формирования чека в сервисе Мой налог..
-     *
-     * @param null|array|IncomeReceiptData $receipt_data Данные для формирования чека в сервисе Мой налог
-     *
-     * @return self
-     */
-    public function setReceiptData(mixed $receipt_data): self;
 
     /**
      * Возвращает персональные данные получателя выплаты.

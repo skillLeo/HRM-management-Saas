@@ -11,7 +11,6 @@
 
 Решение ЮKassa, которое магазин использует для отправки чеков.
 Возможные значения:
-- [Чеки для самозанятых](https://yookassa.ru/developers/payment-acceptance/receipts/self-employed/basics) — `fns`
 - [54-ФЗ: Чеки от ЮKassa](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/yoomoney/basics) — `avanpost`
 - [54-ФЗ: сторонняя онлайн-касса](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) (наименование онлайн-кассы) — ~`a_qsi` (aQsi online), ~`atol` (АТОЛ Онлайн), ~`business_ru` (Бизнес.ру), ~`digital_kassa` (digitalkassa), ~`evotor` (Эвотор), ~`first_ofd` (Первый ОФД), ~`kit_invest` (Кит Инвест), ~`komtet` (КОМТЕТ Касса), ~`life_pay` (LIFE PAY), ~`mertrade` (Mertrade), ~`modul_kassa` (МодульКасса), ~`rocket` (RocketR), ~`shtrih_m` (Orange Data).
 
@@ -26,7 +25,6 @@
 | public | [EVOTOR](../classes/YooKassa-Model-Settings-FiscalizationProvider.md#constant_EVOTOR) |  | Эвотор |
 | public | [KIT_INVEST](../classes/YooKassa-Model-Settings-FiscalizationProvider.md#constant_KIT_INVEST) |  | Кит Инвест |
 | public | [A_QSI](../classes/YooKassa-Model-Settings-FiscalizationProvider.md#constant_A_QSI) |  | aQsi online |
-| public | [FNS](../classes/YooKassa-Model-Settings-FiscalizationProvider.md#constant_FNS) |  | Чеки для самозанятых |
 | public | [AVANPOST](../classes/YooKassa-Model-Settings-FiscalizationProvider.md#constant_AVANPOST) |  | 54-ФЗ: Чеки от ЮKassa |
 | public | [MERTRADE](../classes/YooKassa-Model-Settings-FiscalizationProvider.md#constant_MERTRADE) |  | Mertrade |
 | public | [FIRST_OFD](../classes/YooKassa-Model-Settings-FiscalizationProvider.md#constant_FIRST_OFD) |  | Первый ОФД |
@@ -129,15 +127,6 @@ aQsi online
 
 ```php
 A_QSI = 'a_qsi'
-```
-
-
-<a name="constant_FNS" class="anchor"></a>
-###### FNS
-Чеки для самозанятых
-
-```php
-FNS = 'fns'
 ```
 
 
@@ -295,10 +284,10 @@ Static public valueExists(mixed $value) : bool
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 33](../reports/deprecated.md)
+* [Deprecated - 43](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2025-07-01 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2026-03-13 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2025 YooMoney
+&copy; 2026 YooMoney

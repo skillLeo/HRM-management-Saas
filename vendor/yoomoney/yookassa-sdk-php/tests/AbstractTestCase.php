@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -586,12 +586,14 @@ class AbstractTestCase extends TestCase
         $result = [];
         $value = [];
         $max = Random::int(1, 10);
+        $reflection = new ReflectionClass($arrayProps['all_type']);
         for ($y = 0; $y < $max; $y++) {
             /** Проверяем, есть ли требование по минимальному и максимальному количеству объектов в коллекции, если да, берем эти значения, если нет, берем рандомно */
             $countMax = Random::int($arrayProps['count_min'] ?? 1, $arrayProps['count_max'] ?? 10);
             for ($i = 0; $i < $countMax; $i++) {
                 $isArray = Random::bool();
-                $value[] = $i % 2 ? new $arrayProps['all_type']($this->prepareArrayForObject($arrayProps['all_type'], $isArray)) : $this->prepareArrayForObject($arrayProps['all_type']);
+                $type = !$reflection->isAbstract() ? $reflection->getName() : $this->generateClassByFactory($reflection);
+                $value[] = $i % 2 ? new $type($this->prepareArrayForObject($type, $isArray)) : $this->prepareArrayForObject($type);
             }
             $result[] = [$value];
             unset($value);

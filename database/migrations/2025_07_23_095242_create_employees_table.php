@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('employee_id')->unique();
             $table->string('phone')->nullable();
             $table->date('date_of_birth')->nullable();
-            $table->enum('gender', ['male', 'female', 'other'])->nullable();
+            $table->enum('gender', ['male', 'female' ])->nullable();
             
             // Employment Details
             $table->foreignId('branch_id')->nullable()->constrained('branches')->onDelete('set null');

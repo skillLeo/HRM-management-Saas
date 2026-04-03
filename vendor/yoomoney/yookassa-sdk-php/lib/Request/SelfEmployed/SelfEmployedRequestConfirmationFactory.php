@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,7 +51,7 @@ class SelfEmployedRequestConfirmationFactory
     /**
      * Возвращает объект, соответствующий типу подтверждения платежа.
      *
-     * @param string $type Тип подтверждения платежа
+     * @param string $type Код сценария подтверждения
      */
     public function factory(string $type): SelfEmployedRequestConfirmation
     {
@@ -67,7 +67,7 @@ class SelfEmployedRequestConfirmationFactory
      * Возвращает объект, соответствующий типу подтверждения платежа, из массива данных.
      *
      * @param array $data Массив данных подтверждения платежа
-     * @param null|string $type Тип подтверждения платежа
+     * @param null|string $type Код сценария подтверждения
      *
      * @return SelfEmployedRequestConfirmation
      */

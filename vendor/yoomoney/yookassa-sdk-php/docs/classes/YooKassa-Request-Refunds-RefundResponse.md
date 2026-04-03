@@ -29,11 +29,14 @@
 | public | [$deal](../classes/YooKassa-Model-Refund-Refund.md#property_deal) |  | Данные о сделке, в составе которой проходит возврат |
 | public | [$description](../classes/YooKassa-Model-Refund-Refund.md#property_description) |  | Комментарий, основание для возврата средств покупателю |
 | public | [$id](../classes/YooKassa-Model-Refund-Refund.md#property_id) |  | Идентификатор возврата платежа |
+| public | [$metadata](../classes/YooKassa-Model-Refund-Refund.md#property_metadata) |  | Метаданные возврата указанные мерчантом |
 | public | [$payment_id](../classes/YooKassa-Model-Refund-Refund.md#property_payment_id) |  | Идентификатор платежа |
 | public | [$paymentId](../classes/YooKassa-Model-Refund-Refund.md#property_paymentId) |  | Идентификатор платежа |
 | public | [$receipt_registration](../classes/YooKassa-Model-Refund-Refund.md#property_receipt_registration) |  | Статус регистрации чека |
 | public | [$receiptRegistration](../classes/YooKassa-Model-Refund-Refund.md#property_receiptRegistration) |  | Статус регистрации чека |
+| public | [$refund_authorization_details](../classes/YooKassa-Model-Refund-Refund.md#property_refund_authorization_details) |  | Данные об авторизации возврата. Присутствуют только для возвратов платежей, совершенных этими способами оплаты: банковская карта, Mir Pay |
 | public | [$refund_method](../classes/YooKassa-Model-Refund-Refund.md#property_refund_method) |  | Детали возврата. Зависят от способа оплаты, который использовался при проведении платежа |
+| public | [$refundAuthorizationDetails](../classes/YooKassa-Model-Refund-Refund.md#property_refundAuthorizationDetails) |  | Данные об авторизации возврата. Присутствуют только для возвратов платежей, совершенных этими способами оплаты: банковская карта, Mir Pay |
 | public | [$refundMethod](../classes/YooKassa-Model-Refund-Refund.md#property_refundMethod) |  | Детали возврата. Зависят от способа оплаты, который использовался при проведении платежа |
 | public | [$sources](../classes/YooKassa-Model-Refund-Refund.md#property_sources) |  | Данные о том, с какого магазина и какую сумму нужно удержать для проведения возврата |
 | public | [$status](../classes/YooKassa-Model-Refund-Refund.md#property_status) |  | Статус возврата |
@@ -43,8 +46,11 @@
 | protected | [$_deal](../classes/YooKassa-Model-Refund-Refund.md#property__deal) |  |  |
 | protected | [$_description](../classes/YooKassa-Model-Refund-Refund.md#property__description) |  |  |
 | protected | [$_id](../classes/YooKassa-Model-Refund-Refund.md#property__id) |  |  |
+| protected | [$_metadata](../classes/YooKassa-Model-Refund-Refund.md#property__metadata) |  |  |
 | protected | [$_payment_id](../classes/YooKassa-Model-Refund-Refund.md#property__payment_id) |  |  |
 | protected | [$_receipt_registration](../classes/YooKassa-Model-Refund-Refund.md#property__receipt_registration) |  |  |
+| protected | [$_refund_authorization_details](../classes/YooKassa-Model-Refund-Refund.md#property__refund_authorization_details) |  |  |
+| protected | [$_refund_method](../classes/YooKassa-Model-Refund-Refund.md#property__refund_method) |  |  |
 | protected | [$_sources](../classes/YooKassa-Model-Refund-Refund.md#property__sources) |  |  |
 | protected | [$_status](../classes/YooKassa-Model-Refund-Refund.md#property__status) |  |  |
 
@@ -64,8 +70,10 @@
 | public | [getDeal()](../classes/YooKassa-Model-Refund-Refund.md#method_getDeal) |  | Возвращает данные о сделке, в составе которой проходит возврат |
 | public | [getDescription()](../classes/YooKassa-Model-Refund-Refund.md#method_getDescription) |  | Возвращает комментарий к возврату. |
 | public | [getId()](../classes/YooKassa-Model-Refund-Refund.md#method_getId) |  | Возвращает идентификатор возврата платежа. |
+| public | [getMetadata()](../classes/YooKassa-Model-Refund-Refund.md#method_getMetadata) |  | Возвращает метаданные возврата. |
 | public | [getPaymentId()](../classes/YooKassa-Model-Refund-Refund.md#method_getPaymentId) |  | Возвращает идентификатор платежа. |
 | public | [getReceiptRegistration()](../classes/YooKassa-Model-Refund-Refund.md#method_getReceiptRegistration) |  | Возвращает статус регистрации чека. |
+| public | [getRefundAuthorizationDetails()](../classes/YooKassa-Model-Refund-Refund.md#method_getRefundAuthorizationDetails) |  | Возвращает refund_authorization_details. |
 | public | [getRefundMethod()](../classes/YooKassa-Model-Refund-Refund.md#method_getRefundMethod) |  | Возвращает метод возврата. |
 | public | [getSources()](../classes/YooKassa-Model-Refund-Refund.md#method_getSources) |  | Возвращает информацию о распределении денег — сколько и в какой магазин нужно перевести. |
 | public | [getStatus()](../classes/YooKassa-Model-Refund-Refund.md#method_getStatus) |  | Возвращает статус текущего возврата. |
@@ -81,8 +89,10 @@
 | public | [setDeal()](../classes/YooKassa-Model-Refund-Refund.md#method_setDeal) |  | Устанавливает данные о сделке, в составе которой проходит возврат. |
 | public | [setDescription()](../classes/YooKassa-Model-Refund-Refund.md#method_setDescription) |  | Устанавливает комментарий к возврату. |
 | public | [setId()](../classes/YooKassa-Model-Refund-Refund.md#method_setId) |  | Устанавливает идентификатор возврата. |
+| public | [setMetadata()](../classes/YooKassa-Model-Refund-Refund.md#method_setMetadata) |  | Устанавливает метаданные возврата. |
 | public | [setPaymentId()](../classes/YooKassa-Model-Refund-Refund.md#method_setPaymentId) |  | Устанавливает идентификатор платежа. |
 | public | [setReceiptRegistration()](../classes/YooKassa-Model-Refund-Refund.md#method_setReceiptRegistration) |  | Устанавливает статус регистрации чека. |
+| public | [setRefundAuthorizationDetails()](../classes/YooKassa-Model-Refund-Refund.md#method_setRefundAuthorizationDetails) |  | Устанавливает refund_authorization_details. |
 | public | [setRefundMethod()](../classes/YooKassa-Model-Refund-Refund.md#method_setRefundMethod) |  | Устанавливает метод возврата. |
 | public | [setSources()](../classes/YooKassa-Model-Refund-Refund.md#method_setSources) |  | Устанавливает sources (массив распределения денег между магазинами). |
 | public | [setStatus()](../classes/YooKassa-Model-Refund-Refund.md#method_setStatus) |  | Устанавливает статус возврата платежа. |
@@ -230,6 +240,19 @@ MAX_LENGTH_DESCRIPTION = 250
 * Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
 
 
+<a name="property_metadata"></a>
+#### public $metadata : \YooKassa\Model\Metadata|null
+---
+***Description***
+
+Метаданные возврата указанные мерчантом
+
+**Type:** <a href="../\YooKassa\Model\Metadata|null"><abbr title="\YooKassa\Model\Metadata|null">Metadata|null</abbr></a>
+
+**Details:**
+* Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
+
+
 <a name="property_payment_id"></a>
 #### public $payment_id : string
 ---
@@ -282,6 +305,19 @@ MAX_LENGTH_DESCRIPTION = 250
 * Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
 
 
+<a name="property_refund_authorization_details"></a>
+#### public $refund_authorization_details : \YooKassa\Model\Refund\RefundAuthorizationDetails|null
+---
+***Description***
+
+Данные об авторизации возврата. Присутствуют только для возвратов платежей, совершенных этими способами оплаты: банковская карта, Mir Pay
+
+**Type:** <a href="../\YooKassa\Model\Refund\RefundAuthorizationDetails|null"><abbr title="\YooKassa\Model\Refund\RefundAuthorizationDetails|null">RefundAuthorizationDetails|null</abbr></a>
+
+**Details:**
+* Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
+
+
 <a name="property_refund_method"></a>
 #### public $refund_method : \YooKassa\Model\Refund\RefundMethod\AbstractRefundMethod|null
 ---
@@ -290,6 +326,19 @@ MAX_LENGTH_DESCRIPTION = 250
 Детали возврата. Зависят от способа оплаты, который использовался при проведении платежа
 
 **Type:** <a href="../\YooKassa\Model\Refund\RefundMethod\AbstractRefundMethod|null"><abbr title="\YooKassa\Model\Refund\RefundMethod\AbstractRefundMethod|null">AbstractRefundMethod|null</abbr></a>
+
+**Details:**
+* Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
+
+
+<a name="property_refundAuthorizationDetails"></a>
+#### public $refundAuthorizationDetails : \YooKassa\Model\Refund\RefundAuthorizationDetails|null
+---
+***Description***
+
+Данные об авторизации возврата. Присутствуют только для возвратов платежей, совершенных этими способами оплаты: банковская карта, Mir Pay
+
+**Type:** <a href="../\YooKassa\Model\Refund\RefundAuthorizationDetails|null"><abbr title="\YooKassa\Model\Refund\RefundAuthorizationDetails|null">RefundAuthorizationDetails|null</abbr></a>
 
 **Details:**
 * Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
@@ -388,6 +437,15 @@ MAX_LENGTH_DESCRIPTION = 250
 * Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
 
 
+<a name="property__metadata"></a>
+#### protected $_metadata : ?\YooKassa\Model\Metadata
+---
+**Type:** <a href="../?\YooKassa\Model\Metadata"><abbr title="?\YooKassa\Model\Metadata">Metadata</abbr></a>
+Любые дополнительные данные, которые нужны вам для работы (например, ваш внутренний идентификатор заказа). Передаются в виде набора пар «ключ-значение» и возвращаются в ответе от ЮKassa. Ограничения: максимум 16 ключей, имя ключа не больше 32 символов, значение ключа не больше 512 символов, тип данных — строка в формате UTF-8.
+**Details:**
+* Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
+
+
 <a name="property__payment_id"></a>
 #### protected $_payment_id : ?string
 ---
@@ -402,6 +460,24 @@ MAX_LENGTH_DESCRIPTION = 250
 ---
 **Type:** <a href="../?string"><abbr title="?string">?string</abbr></a>
 Статус регистрации чека
+**Details:**
+* Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
+
+
+<a name="property__refund_authorization_details"></a>
+#### protected $_refund_authorization_details : ?\YooKassa\Model\Refund\RefundAuthorizationDetails
+---
+**Type:** <a href="../?\YooKassa\Model\Refund\RefundAuthorizationDetails"><abbr title="?\YooKassa\Model\Refund\RefundAuthorizationDetails">RefundAuthorizationDetails</abbr></a>
+Данные об авторизации возврата
+**Details:**
+* Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
+
+
+<a name="property__refund_method"></a>
+#### protected $_refund_method : ?\YooKassa\Model\Refund\RefundMethod\AbstractRefundMethod
+---
+**Type:** <a href="../?\YooKassa\Model\Refund\RefundMethod\AbstractRefundMethod"><abbr title="?\YooKassa\Model\Refund\RefundMethod\AbstractRefundMethod">AbstractRefundMethod</abbr></a>
+Детали возврата. Зависят от способа оплаты, который использовался при проведении платежа.
 **Details:**
 * Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
 
@@ -662,6 +738,23 @@ public getId() : string|null
 **Returns:** string|null - Идентификатор возврата
 
 
+<a name="method_getMetadata" class="anchor"></a>
+#### public getMetadata() : \YooKassa\Model\Metadata|null
+
+```php
+public getMetadata() : \YooKassa\Model\Metadata|null
+```
+
+**Summary**
+
+Возвращает метаданные возврата.
+
+**Details:**
+* Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
+
+**Returns:** \YooKassa\Model\Metadata|null - 
+
+
 <a name="method_getPaymentId" class="anchor"></a>
 #### public getPaymentId() : string|null
 
@@ -694,6 +787,23 @@ public getReceiptRegistration() : string|null
 * Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
 
 **Returns:** string|null - Статус регистрации чека
+
+
+<a name="method_getRefundAuthorizationDetails" class="anchor"></a>
+#### public getRefundAuthorizationDetails() : \YooKassa\Model\Refund\RefundAuthorizationDetails|null
+
+```php
+public getRefundAuthorizationDetails() : \YooKassa\Model\Refund\RefundAuthorizationDetails|null
+```
+
+**Summary**
+
+Возвращает refund_authorization_details.
+
+**Details:**
+* Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
+
+**Returns:** \YooKassa\Model\Refund\RefundAuthorizationDetails|null - 
 
 
 <a name="method_getRefundMethod" class="anchor"></a>
@@ -998,6 +1108,28 @@ public setId(string|null $id = null) : self
 **Returns:** self - 
 
 
+<a name="method_setMetadata" class="anchor"></a>
+#### public setMetadata() : self
+
+```php
+public setMetadata(\YooKassa\Model\Metadata|null $metadata = null) : self
+```
+
+**Summary**
+
+Устанавливает метаданные возврата.
+
+**Details:**
+* Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">\YooKassa\Model\Metadata OR null</code> | metadata  | Любые дополнительные данные, которые нужны вам для работы (например, ваш внутренний идентификатор заказа). Передаются в виде набора пар «ключ-значение» и возвращаются в ответе от ЮKassa. Ограничения: максимум 16 ключей, имя ключа не больше 32 символов, значение ключа не больше 512 символов, тип данных — строка в формате UTF-8. |
+
+**Returns:** self - 
+
+
 <a name="method_setPaymentId" class="anchor"></a>
 #### public setPaymentId() : self
 
@@ -1038,6 +1170,28 @@ public setReceiptRegistration(string|null $receipt_registration = null) : self
 | Type | Name | Description |
 | ---- | ---- | ----------- |
 | <code lang="php">string OR null</code> | receipt_registration  | Статус регистрации чека |
+
+**Returns:** self - 
+
+
+<a name="method_setRefundAuthorizationDetails" class="anchor"></a>
+#### public setRefundAuthorizationDetails() : self
+
+```php
+public setRefundAuthorizationDetails(\YooKassa\Model\Refund\RefundAuthorizationDetails|array|null $refund_authorization_details = null) : self
+```
+
+**Summary**
+
+Устанавливает refund_authorization_details.
+
+**Details:**
+* Inherited From: [\YooKassa\Model\Refund\Refund](../classes/YooKassa-Model-Refund-Refund.md)
+
+##### Parameters:
+| Type | Name | Description |
+| ---- | ---- | ----------- |
+| <code lang="php">\YooKassa\Model\Refund\RefundAuthorizationDetails OR array OR null</code> | refund_authorization_details  | Данные об авторизации возврата |
 
 **Returns:** self - 
 
@@ -1174,10 +1328,10 @@ protected validatePropertyValue(string $propertyName, mixed $propertyValue) : mi
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 33](../reports/deprecated.md)
+* [Deprecated - 43](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2025-07-01 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2026-03-13 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2025 YooMoney
+&copy; 2026 YooMoney

@@ -22,15 +22,24 @@ class PayrollRun extends BaseModel
         'status',
         'notes',
         'created_by',
+        'unlocked_at',
+        'unlocked_by',
+        'submitted_for_final_at',
+        'submitted_by',
+        'approved_at',
+        'approved_by',
     ];
 
     protected $casts = [
-        'pay_period_start' => 'date',
-        'pay_period_end'   => 'date',
-        'pay_date'         => 'date',
-        'total_gross_pay'  => 'decimal:2',
-        'total_deductions' => 'decimal:2',
-        'total_net_pay'    => 'decimal:2',
+        'pay_period_start'       => 'date',
+        'pay_period_end'         => 'date',
+        'pay_date'               => 'date',
+        'total_gross_pay'        => 'decimal:2',
+        'total_deductions'       => 'decimal:2',
+        'total_net_pay'          => 'decimal:2',
+        'unlocked_at'            => 'datetime',
+        'submitted_for_final_at' => 'datetime',
+        'approved_at'            => 'datetime',
     ];
 
     // ─── Relationships ───────────────────────────────────────────────────────
@@ -66,40 +75,67 @@ class PayrollRun extends BaseModel
 
     // ─── Process Payroll ─────────────────────────────────────────────────────
 
-    public function processPayroll()
+    public function processPayroll(array $filters = [])
     {
-        if ($this->status !== 'draft') {
+        if (!in_array($this->status, ['draft', 'processing'])) {
             return false;
         }
 
-        $this->status = 'draft';
-        $this->save();
+        if ($this->status === 'draft') {
+            $this->status = 'processing';
+            $this->save();
+        }
 
         try {
-            // Boot Zambia service once for this company
             $zambiaService = new ZambiaPayrollService($this->created_by);
 
-            $employees = User::with('employee')
-                ->where('type', 'employee')
+            $query = Employee::with('user')
                 ->whereIn('created_by', getCompanyAndUsersId())
-                ->whereHas('employee', function ($q) {
-                    $q->whereIn('employee_status', ['active', 'probation']);
-                })
-                ->orderBy('id', 'desc')
-                ->get();
+                ->whereIn('employee_status', ['active', 'probation']);
 
-            foreach ($employees as $employee) {
-                $this->processEmployeePayroll($employee, $zambiaService);
+            if (!empty($filters['branch_id'])) {
+                $query->where('branch_id', (int) $filters['branch_id']);
+            }
+            if (!empty($filters['department_id'])) {
+                $query->where('department_id', (int) $filters['department_id']);
+            }
+            if (!empty($filters['designation_id'])) {
+                $query->where('designation_id', (int) $filters['designation_id']);
             }
 
-            // SDL is calculated on total payroll after all entries are created
-            $this->applySDL($zambiaService);
+            $employeeRecords = $query->get();
 
+            if ($employeeRecords->isEmpty()) {
+                throw new \Exception(__('No active employees found for the selected filters.'));
+            }
+
+            // ── Pass employee record for exemption flags ──────────────────────
+            foreach ($employeeRecords as $employeeRecord) {
+                if (!$employeeRecord->user) {
+                    continue;
+                }
+                $this->processEmployeePayroll($employeeRecord->user, $zambiaService, $employeeRecord);
+            }
+
+            $this->applySDL($zambiaService);
             $this->calculateTotals();
-            $this->status = 'completed';
+
+            $totalActiveEmployees = Employee::whereIn('created_by', getCompanyAndUsersId())
+                ->whereIn('employee_status', ['active', 'probation'])
+                ->count();
+
+            $processedEmployees = $this->payrollEntries()->count();
+
+            if ($processedEmployees >= $totalActiveEmployees) {
+                $this->status = 'completed';
+            } else {
+                $this->status = 'processing';
+            }
+
             $this->save();
 
             return true;
+
         } catch (\Exception $e) {
             $this->status = 'draft';
             $this->save();
@@ -108,8 +144,9 @@ class PayrollRun extends BaseModel
     }
 
     // ─── Process Single Employee ─────────────────────────────────────────────
+    // Now accepts $employeeRecord for exemption flags + passes basic_salary for NHIMA fix
 
-    private function processEmployeePayroll($employee, ZambiaPayrollService $zambiaService)
+    private function processEmployeePayroll($employee, ZambiaPayrollService $zambiaService, $employeeRecord = null)
     {
         $existingEntry = PayrollEntry::where('payroll_run_id', $this->id)
             ->where('employee_id', $employee->id)
@@ -119,8 +156,8 @@ class PayrollRun extends BaseModel
             return;
         }
 
-        $globalSettings      = settings();
-        $workingDaysIndices  = json_decode($globalSettings['working_days'] ?? '[]', true);
+        $globalSettings     = settings();
+        $workingDaysIndices = json_decode($globalSettings['working_days'] ?? '[]', true);
 
         if (empty($workingDaysIndices)) {
             throw new \Exception(__('Please configure working days first.'));
@@ -133,15 +170,13 @@ class PayrollRun extends BaseModel
 
         $salaryBreakdown = $employeeSalary->calculateAllComponents();
 
-        // Attendance
         $attendanceRecords = AttendanceRecord::where('employee_id', $employee->id)
             ->whereBetween('date', [$this->pay_period_start, $this->pay_period_end])
             ->orderBy('date')
             ->get();
 
-        // Working days in period
-        $startDate       = new \DateTime($this->pay_period_start);
-        $endDate         = new \DateTime($this->pay_period_end);
+        $startDate        = new \DateTime($this->pay_period_start);
+        $endDate          = new \DateTime($this->pay_period_end);
         $totalWorkingDays = 0;
 
         for ($date = clone $startDate; $date <= $endDate; $date->modify('+1 day')) {
@@ -157,114 +192,150 @@ class PayrollRun extends BaseModel
         $overtimeHours  = $attendanceRecords->sum('overtime_hours');
         $overtimeAmount = $attendanceRecords->sum('overtime_amount');
 
-        $leaveData          = $this->getEmployeeLeaveData($employee->id);
-        $unpaidLeaveDays    = $leaveData['unpaid_leave_days'] + $absentDays + ($halfDays * 0.5);
-        $perDaySalary       = $totalWorkingDays > 0 ? $employeeSalary->basic_salary / $totalWorkingDays : 0;
+        $leaveData            = $this->getEmployeeLeaveData($employee->id);
+        $unpaidLeaveDays      = $leaveData['unpaid_leave_days'] + $absentDays + ($halfDays * 0.5);
+        $perDaySalary         = $totalWorkingDays > 0 ? $employeeSalary->basic_salary / $totalWorkingDays : 0;
         $unpaidLeaveDeduction = $perDaySalary * $unpaidLeaveDays;
 
-        // Gross pay (before Zambia deductions)
-        $totalEarnings  = $salaryBreakdown['total_earnings'];
-        $grossPay       = $totalEarnings - $unpaidLeaveDeduction + $overtimeAmount;
+        $totalEarnings     = $salaryBreakdown['total_earnings'];
+        $grossPay          = $totalEarnings - $unpaidLeaveDeduction + $overtimeAmount;
+        $componentEarnings = $totalEarnings - $employeeSalary->basic_salary;
+
+        // ── Get exemption flags from employee record ──────────────────────────
+        $exemptNapsa = $employeeRecord?->exempt_from_napsa ?? false;
+        $exemptNhima = $employeeRecord?->exempt_from_nhima ?? false;
 
         // ── Zambia Calculations ──────────────────────────────────────────────
-        $zambia = $zambiaService->calculateFullPayroll($grossPay);
+        // NHIMA fix: pass basic_salary separately so NHIMA is on basic only
+        // Exemptions: pass flags so exempt employees get zero NAPSA/NHIMA
+        $zambia = $zambiaService->calculateFullPayroll(
+            $grossPay,
+            $employeeSalary->basic_salary,
+            $exemptNapsa,
+            $exemptNhima
+        );
 
         $totalDeductions = $zambia['total_deductions'];
         $netPay          = $zambia['net_pay'];
-        $componentEarnings = $totalEarnings - $employeeSalary->basic_salary;
 
-        // Build deductions breakdown — merge existing components + Zambia items
-        $deductionsBreakdown = array_merge(
-            $salaryBreakdown['deductions'] ?? [],
-            [
-                [
-                    'name'   => 'PAYE Tax',
-                    'amount' => $zambia['paye'],
-                    'type'   => 'zambia_paye',
-                ],
-                [
-                    'name'   => 'NAPSA Employee',
-                    'amount' => $zambia['napsa_employee'],
-                    'type'   => 'zambia_napsa_employee',
-                ],
-                [
-                    'name'   => 'NHIMA Employee',
-                    'amount' => $zambia['nhima_employee'],
-                    'type'   => 'zambia_nhima_employee',
-                ],
-            ]
-        );
+        // ── Build earnings breakdown ─────────────────────────────────────────
+        $earningsFromComponents = [];
+        foreach ($salaryBreakdown['earnings'] ?? [] as $k => $v) {
+            if (is_array($v) && isset($v['name'])) {
+                if (in_array($v['type'] ?? '', ['zambia_napsa_employer', 'zambia_nhima_employer', 'zambia_sdl'])) continue;
+                if (strtolower($v['name']) === 'basic salary') continue;
+                $earningsFromComponents[] = $v;
+            } else {
+                if (strtolower($k) === 'basic salary') continue;
+                $earningsFromComponents[] = ['name' => $k, 'amount' => $v];
+            }
+        }
 
-        // Store employer shares in earnings_breakdown (not deducted from employee)
+        // Only show NAPSA/NHIMA employer if not exempt
+        $employerContributions = [];
+        if (!$exemptNapsa) {
+            $employerContributions[] = ['name' => 'NAPSA Employer', 'amount' => $zambia['napsa_employer'], 'type' => 'zambia_napsa_employer'];
+        }
+        if (!$exemptNhima) {
+            $employerContributions[] = ['name' => 'NHIMA Employer', 'amount' => $zambia['nhima_employer'], 'type' => 'zambia_nhima_employer'];
+        }
+
         $earningsBreakdown = array_merge(
-            $salaryBreakdown['earnings'] ?? [],
-            [
-                [
-                    'name'   => 'NAPSA Employer',
-                    'amount' => $zambia['napsa_employer'],
-                    'type'   => 'zambia_napsa_employer',
-                ],
-                [
-                    'name'   => 'NHIMA Employer',
-                    'amount' => $zambia['nhima_employer'],
-                    'type'   => 'zambia_nhima_employer',
-                ],
-            ]
+            [['name' => 'Basic Salary', 'amount' => $employeeSalary->basic_salary, 'type' => 'basic_salary']],
+            $earningsFromComponents,
+            $employerContributions
         );
+
+        // ── Build deductions breakdown ───────────────────────────────────────
+        $zambiaDeductionNames     = ['paye tax', 'napsa employee', 'nhima employee'];
+        $deductionsFromComponents = [];
+
+        foreach ($salaryBreakdown['deductions'] ?? [] as $k => $v) {
+            if (is_array($v) && isset($v['name'])) {
+                if (in_array(strtolower($v['name']), $zambiaDeductionNames)) continue;
+                $deductionsFromComponents[] = $v;
+            } else {
+                if (in_array(strtolower($k), $zambiaDeductionNames)) continue;
+                $deductionsFromComponents[] = ['name' => $k, 'amount' => $v];
+            }
+        }
+
+        // Build statutory deductions — skip if exempt
+        $statutoryDeductions = [
+            ['name' => 'PAYE Tax', 'amount' => $zambia['paye'], 'type' => 'zambia_paye'],
+        ];
+        if (!$exemptNapsa) {
+            $statutoryDeductions[] = ['name' => 'NAPSA Employee', 'amount' => $zambia['napsa_employee'], 'type' => 'zambia_napsa_employee'];
+        }
+        if (!$exemptNhima) {
+            $statutoryDeductions[] = ['name' => 'NHIMA Employee', 'amount' => $zambia['nhima_employee'], 'type' => 'zambia_nhima_employee'];
+        }
+
+        $deductionsBreakdown = array_merge($deductionsFromComponents, $statutoryDeductions);
 
         PayrollEntry::create([
-            'payroll_run_id'        => $this->id,
-            'employee_id'           => $employee->id,
-            'basic_salary'          => $employeeSalary->basic_salary,
-            'component_earnings'    => $componentEarnings,
-            'total_earnings'        => $totalEarnings,
-            'total_deductions'      => $totalDeductions,
-            'gross_pay'             => $grossPay,
-            'net_pay'               => $netPay,
-            'working_days'          => $totalWorkingDays,
-            'present_days'          => $presentDays,
-            'half_days'             => $halfDays,
-            'holiday_days'          => $holidayDays,
-            'paid_leave_days'       => $leaveData['paid_leave_days'],
-            'unpaid_leave_days'     => $unpaidLeaveDays,
-            'absent_days'           => $absentDays,
-            'overtime_hours'        => $overtimeHours,
-            'overtime_amount'       => $overtimeAmount,
-            'per_day_salary'        => $perDaySalary,
-            'unpaid_leave_deduction'=> $unpaidLeaveDeduction,
-            'earnings_breakdown'    => $earningsBreakdown,
-            'deductions_breakdown'  => $deductionsBreakdown,
-            'created_by'            => $this->created_by,
+            'payroll_run_id'         => $this->id,
+            'employee_id'            => $employee->id,
+            'basic_salary'           => $employeeSalary->basic_salary,
+            'component_earnings'     => $componentEarnings,
+            'total_earnings'         => $totalEarnings,
+            'total_deductions'       => $totalDeductions,
+            'gross_pay'              => $grossPay,
+            'net_pay'                => $netPay,
+            'working_days'           => $totalWorkingDays,
+            'present_days'           => $presentDays,
+            'half_days'              => $halfDays,
+            'holiday_days'           => $holidayDays,
+            'paid_leave_days'        => $leaveData['paid_leave_days'],
+            'unpaid_leave_days'      => $unpaidLeaveDays,
+            'absent_days'            => $absentDays,
+            'overtime_hours'         => $overtimeHours,
+            'overtime_amount'        => $overtimeAmount,
+            'per_day_salary'         => $perDaySalary,
+            'unpaid_leave_deduction' => $unpaidLeaveDeduction,
+            'earnings_breakdown'     => $earningsBreakdown,
+            'deductions_breakdown'   => $deductionsBreakdown,
+            'created_by'             => $this->created_by,
         ]);
     }
 
-    // ─── SDL (applied after all entries exist) ───────────────────────────────
+    // ─── SDL ─────────────────────────────────────────────────────────────────
+    // SDL is optional per company (check if SDL component is active)
+    // SDL is also optional per employee (check exempt_from_sdl flag)
 
     private function applySDL(ZambiaPayrollService $zambiaService)
     {
-        $totalGross = $this->payrollEntries()->sum('gross_pay');
+        // Check if SDL is enabled for this company via the salary component
+        $sdlComponent = SalaryComponent::whereIn('created_by', getCompanyAndUsersId())
+            ->where('name', 'SDL - Skill Development Levy')
+            ->where('status', 'active')
+            ->first();
 
-        if ($totalGross <= 0) {
-            return;
-        }
+        // If SDL component doesn't exist or is inactive — skip SDL entirely
+        if (!$sdlComponent) return;
 
-        $sdlAmount     = $zambiaService->calculateSDL($totalGross);
-        $employeeCount = $this->payrollEntries()->count();
+        // Get all entries and filter out SDL-exempt employees
+        $allEntries = $this->payrollEntries()->get();
 
-        if ($employeeCount === 0) {
-            return;
-        }
+        $nonExemptEntries = $allEntries->filter(function ($entry) {
+            $empRecord = Employee::where('user_id', $entry->employee_id)->first();
+            return !($empRecord?->exempt_from_sdl ?? false);
+        });
 
-        // Distribute SDL evenly across all entries (stored for reporting)
+        if ($nonExemptEntries->isEmpty()) return;
+
+        $totalGross    = $nonExemptEntries->sum('gross_pay');
+        $employeeCount = $nonExemptEntries->count();
+
+        if ($totalGross <= 0 || $employeeCount === 0) return;
+
+        $sdlAmount      = $zambiaService->calculateSDL($totalGross);
         $sdlPerEmployee = round($sdlAmount / $employeeCount, 2);
 
-        foreach ($this->payrollEntries as $entry) {
+        // Only apply SDL to non-exempt employees
+        foreach ($nonExemptEntries as $entry) {
             $breakdown   = $entry->earnings_breakdown ?? [];
-            $breakdown[] = [
-                'name'   => 'SDL (Employer)',
-                'amount' => $sdlPerEmployee,
-                'type'   => 'zambia_sdl',
-            ];
+            $breakdown[] = ['name' => 'SDL (Employer)', 'amount' => $sdlPerEmployee, 'type' => 'zambia_sdl'];
             $entry->earnings_breakdown = $breakdown;
             $entry->save();
         }

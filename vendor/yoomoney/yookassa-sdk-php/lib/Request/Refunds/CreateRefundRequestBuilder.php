@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,7 @@ use YooKassa\Common\Exceptions\InvalidPropertyValueException;
 use YooKassa\Common\Exceptions\InvalidPropertyValueTypeException;
 use YooKassa\Common\ListObjectInterface;
 use YooKassa\Model\Deal\RefundDealData;
+use YooKassa\Model\Metadata;
 use YooKassa\Model\Refund\SourceInterface;
 use YooKassa\Request\Payments\AbstractPaymentRequestBuilder;
 use YooKassa\Request\Refunds\RefundMethodData\AbstractRefundMethodData;
@@ -146,6 +147,22 @@ class CreateRefundRequestBuilder extends AbstractPaymentRequestBuilder
     public function setRefundMethodData(mixed $value = null): self
     {
         $this->currentObject->setRefundMethodData($value);
+
+        return $this;
+    }
+
+    /**
+     * Устанавливает метаданные, привязанные к возврату.
+     *
+     * @param null|array|Metadata $value Метаданные возврата, устанавливаемые мерчантом
+     *
+     * @return CreateRefundRequestBuilder Инстанс текущего билдера
+     *
+     * @throws InvalidPropertyValueTypeException Выбрасывается если переданные данные не удалось интерпретировать как метаданные возврата
+     */
+    public function setMetadata(mixed $value): CreateRefundRequestBuilder
+    {
+        $this->currentObject->setMetadata($value);
 
         return $this;
     }

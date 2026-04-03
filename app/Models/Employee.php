@@ -9,43 +9,55 @@ class Employee extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'user_id',
-        'employee_id',
-        'biometric_emp_id',
-        'employee_code',
-        'phone',
-        'date_of_birth',
-        'gender',
-        'branch_id',
-        'department_id',
-        'designation_id',
-        'shift_id',
-        'attendance_policy_id',
-        'date_of_joining',
-        'employment_type',
-        'address_line_1',
-        'address_line_2',
-        'base_salary',
-        'city',
-        'state',
-        'country',
-        'postal_code',
-        'emergency_contact_name',
-        'emergency_contact_relationship',
-        'emergency_contact_number',
-        'bank_name',
-        'account_holder_name',
-        'account_number',
-        'bank_identifier_code',
-        'bank_branch',
-        'tax_payer_id',
-        'tpin',           // ADD THIS
-        'napsa_number',   // ADD THIS
-        'nhima_number',   // ADD THIS
-        'employee_status',
-        'created_by'
-    ];
+   protected $fillable = [
+    'user_id',
+    'employee_id',
+    'biometric_emp_id',
+    'employee_code',
+    'phone',
+    'date_of_birth',
+    'gender',
+    'branch_id',
+    'department_id',
+    'designation_id',
+    'shift_id',
+    'attendance_policy_id',
+    'date_of_joining',
+    'employment_type',
+    'address_line_1',
+    'address_line_2',
+    'base_salary',
+    'city',
+    'state',
+    'country',
+    'postal_code',
+    'emergency_contact_name',
+    'emergency_contact_relationship',
+    'emergency_contact_relationship_other', // FIX #3
+    'emergency_contact_number',
+    'payment_method',                       // FIX #2
+    'bank_name',
+    'account_holder_name',
+    'account_number',
+    'bank_identifier_code',
+    'bank_branch',
+    'tax_payer_id',
+    'tpin',
+    'napsa_number',
+    'nhima_number',
+    'employee_status',
+    'created_by',
+    'exempt_from_napsa',
+    'exempt_from_nhima',
+    'exempt_from_sdl',
+    'title',
+    'first_name',
+    'middle_name',
+    'last_name',
+    'nationality',
+    'marital_status',
+    'nrc',
+];
 
     /**
      * Get the branch that the employee belongs to.
@@ -108,7 +120,7 @@ class Employee extends Model
      */
     public function documents()
     {
-        return $this->hasMany(EmployeeDocument::class,'employee_id','user_id');
+        return $this->hasMany(EmployeeDocument::class, 'employee_id', 'user_id');
     }
 
     /**
@@ -118,7 +130,7 @@ class Employee extends Model
     {
         $lastEmployee = self::orderBy('id', 'desc')->first();
         $nextId = $lastEmployee ? $lastEmployee->id + 1 : 1;
-        
+
         return 'EMP' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
     }
 }

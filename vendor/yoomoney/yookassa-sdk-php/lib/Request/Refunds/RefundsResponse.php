@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,12 +42,17 @@ use YooKassa\Validator\Constraints as Assert;
  * @author   cms@yoomoney.ru
  * @link     https://yookassa.ru/developers/api
  *
- * @property RefundInterface[]|ListObjectInterface|null $items Массив возвратов
+ * @property RefundInterface[]|ListObjectInterface|null $items Список возвратов, созданных за последние три года. Возвраты отсортированы по времени создания в порядке убывания (от новых к старым).
  */
 class RefundsResponse extends AbstractListResponse
 {
     /**
-     * @var RefundInterface[]|ListObjectInterface|null Массив возвратов
+     * Список возвратов.
+     * Возвраты отсортированы по времени создания в порядке убывания (от новых к старым).
+     * Если результатов больше, чем задано в limit, список будет выводиться фрагментами.
+     * В этом случае в ответе на запрос вернется фрагмент списка и параметр next_cursor с указателем на следующий фрагмент.
+     *
+     * @var RefundInterface[]|ListObjectInterface|null Список возвратов
      */
     #[Assert\Valid]
     #[Assert\AllType(RefundResponse::class)]

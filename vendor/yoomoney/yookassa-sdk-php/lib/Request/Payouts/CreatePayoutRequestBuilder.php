@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,6 @@ namespace YooKassa\Request\Payouts;
 
 use YooKassa\Common\AbstractRequestBuilder;
 use YooKassa\Common\AbstractRequestInterface;
-use YooKassa\Common\Exceptions\InvalidPropertyValueException;
-use YooKassa\Common\Exceptions\InvalidPropertyValueTypeException;
 use YooKassa\Model\AmountInterface;
 use YooKassa\Model\Deal\PayoutDealInfo;
 use YooKassa\Model\Metadata;
@@ -123,24 +121,22 @@ class CreatePayoutRequestBuilder extends AbstractRequestBuilder
     /**
      * Устанавливает данные самозанятого, который получит выплату.
      *
-     * @param null|array|PayoutSelfEmployedInfo $value Данные самозанятого, который получит выплату
+     * @param null|array $value Данные самозанятого, который получит выплату
+     * @deprecated Будет удален в следующих версиях
      */
     public function setSelfEmployed(mixed $value): CreatePayoutRequestBuilder
     {
-        $this->currentObject->setSelfEmployed($value);
-
         return $this;
     }
 
     /**
      * Устанавливает данные для формирования чека в сервисе Мой налог.
      *
-     * @param null|array|IncomeReceiptData $value Данные для формирования чека в сервисе Мой налог
+     * @param null|array $value Данные для формирования чека в сервисе Мой налог
+     * @deprecated Будет удален в следующих версиях
      */
     public function setReceiptData(mixed $value): CreatePayoutRequestBuilder
     {
-        $this->currentObject->setReceiptData($value);
-
         return $this;
     }
 

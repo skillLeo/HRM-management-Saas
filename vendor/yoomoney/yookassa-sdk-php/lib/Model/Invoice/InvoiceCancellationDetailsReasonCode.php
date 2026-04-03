@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,7 +41,7 @@ use YooKassa\Common\AbstractEnum;
 class InvoiceCancellationDetailsReasonCode extends AbstractEnum
 {
     /**
-     * [Счет отменен вручную](https://yookassa.ru/docs/support/merchant/payments/invoicing#invoicing__cancel) из личного кабинета ЮKassa.
+     * [Счет отменен вручную](https://yookassa.ru/docs/support/merchant/invoices-to-clients/invoicing#invoicing__cancel) из личного кабинета ЮKassa.
      */
     public const INVOICE_CANCELED = 'invoice_canceled';
 

@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,6 +63,9 @@ class NotificationEventType extends AbstractEnum
     /** Выплата перешла в статус succeeded */
     public const PAYOUT_SUCCEEDED = 'payout.succeeded';
 
+    /** Способ оплаты сохранен */
+    public const PAYMENT_METHOD_ACTIVE = 'payment_method.active';
+
     protected static array $validValues = [
         self::PAYMENT_WAITING_FOR_CAPTURE => true,
         self::PAYMENT_SUCCEEDED => true,
@@ -71,5 +74,6 @@ class NotificationEventType extends AbstractEnum
         self::DEAL_CLOSED => true,
         self::PAYOUT_CANCELED => true,
         self::PAYOUT_SUCCEEDED => true,
+        self::PAYMENT_METHOD_ACTIVE => true,
     ];
 }

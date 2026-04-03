@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@ use YooKassa\Validator\Constraints as Assert;
 /**
  * Класс, представляющий модель Me.
  *
- * Информация о настройках магазина или шлюза.
+ * Объект настроек магазина или шлюза (Me) — актуальная информация о настройках магазина или шлюза.
  *
  * @category Class
  * @package  YooKassa\Model

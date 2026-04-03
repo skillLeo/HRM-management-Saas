@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,7 +58,7 @@ class PayoutDestinationFactory
      */
     public function factory(?string $type): AbstractPayoutDestination
     {
-        if (!array_key_exists($type, $this->typeClassMap)) {
+        if ($type === null || !array_key_exists($type, $this->typeClassMap)) {
             throw new InvalidArgumentException('Invalid payment data type "' . $type . '"');
         }
         $className = __NAMESPACE__ . '\\' . $this->typeClassMap[$type];

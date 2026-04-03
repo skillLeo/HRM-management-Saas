@@ -3,7 +3,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2025 "YooMoney", NBСO LLC
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,8 +44,10 @@ use YooKassa\Model\Receipt\SettlementInterface;
  * @property string $status Статус доставки данных для чека в онлайн-кассу ("pending", "succeeded" или "canceled").
  * @property int $taxSystemCode Код системы налогообложения. Число 1-6.
  * @property int $tax_system_code Код системы налогообложения. Число 1-6.
- * @property ReceiptResponseItemInterface[] $items Список товаров в заказе
- * @property SettlementInterface[] $settlements Список товаров в заказе
+ * @property bool $internet Признак проведения платежа в интернете (тег в 54 ФЗ — 1125) — указывает на оплату через интернет.
+ * @property int $timezone Номер часовой зоны для адреса, по которому вы принимаете платежи (тег в 54 ФЗ — 1011).
+ * @property ReceiptResponseItemInterface[] $items Список товаров в заказе: для [Чеков от ЮKassa](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/yoomoney/basics) — не более 80 товаров, для [сторонних онлайн-касс](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) — не более 100 товаров.
+ * @property SettlementInterface[] $settlements Перечень совершенных расчетов.
  */
 interface ReceiptResponseInterface
 {
@@ -78,7 +80,7 @@ interface ReceiptResponseInterface
     public function getTaxSystemCode(): ?int;
 
     /**
-     * Возвращает список товаров в заказ.
+     * Возвращает Список товаров в заказе: для [Чеков от ЮKassa](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/yoomoney/basics) — не более 80 товаров, для [сторонних онлайн-касс](https://yookassa.ru/developers/payment-acceptance/receipts/54fz/other-services/basics) — не более 100 товаров.
      *
      *  @return ReceiptResponseItemInterface[]|ListObjectInterface
      */

@@ -1,28 +1,28 @@
 <?php
 
 /*
-* The MIT License
-*
-* Copyright (c) 2025 "YooMoney", NBСO LLC
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*/
+ * The MIT License
+ *
+ * Copyright (c) 2026 "YooMoney", NBСO LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 namespace Tests\YooKassa\Model\Receipt;
 
@@ -248,10 +248,10 @@ class ReceiptItemTest extends AbstractTestCase
         $instance->setVatCode($value);
         self::assertNotNull($instance->getVatCode());
         self::assertNotNull($instance->vat_code);
-        self::assertEquals($value, is_array($value) ? $instance->getVatCode()->toArray() : $instance->getVatCode());
-        self::assertEquals($value, is_array($value) ? $instance->vat_code->toArray() : $instance->vat_code);
-        self::assertLessThanOrEqual(10, is_string($instance->getVatCode()) ? mb_strlen($instance->getVatCode()) : $instance->getVatCode());
-        self::assertLessThanOrEqual(10, is_string($instance->vat_code) ? mb_strlen($instance->vat_code) : $instance->vat_code);
+        self::assertEquals($value, $instance->getVatCode());
+        self::assertEquals($value, $instance->vat_code);
+        self::assertLessThanOrEqual(12, is_string($instance->getVatCode()) ? mb_strlen($instance->getVatCode()) : $instance->getVatCode());
+        self::assertLessThanOrEqual(12, is_string($instance->vat_code) ? mb_strlen($instance->vat_code) : $instance->vat_code);
         self::assertGreaterThanOrEqual(1, is_string($instance->getVatCode()) ? mb_strlen($instance->getVatCode()) : $instance->getVatCode());
         self::assertGreaterThanOrEqual(1, is_string($instance->vat_code) ? mb_strlen($instance->vat_code) : $instance->vat_code);
         self::assertIsNumeric($instance->getVatCode());
@@ -1022,6 +1022,70 @@ class ReceiptItemTest extends AbstractTestCase
     }
 
     /**
+     * Test property "planned_status"
+     * @dataProvider validPlannedStatusDataProvider
+     * @param mixed $value
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function testPlannedStatus(mixed $value): void
+    {
+        $instance = $this->getTestInstance();
+        self::assertEmpty($instance->getPlannedStatus());
+        self::assertEmpty($instance->planned_status);
+        $instance->setPlannedStatus($value);
+        self::assertEquals($value, $instance->getPlannedStatus());
+        self::assertEquals($value, $instance->planned_status);
+        if (!empty($value)) {
+            self::assertNotNull($instance->getPlannedStatus());
+            self::assertNotNull($instance->planned_status);
+            self::assertLessThanOrEqual(6, $instance->getPlannedStatus());
+            self::assertLessThanOrEqual(6, $instance->planned_status);
+            self::assertGreaterThanOrEqual(1, $instance->getPlannedStatus());
+            self::assertGreaterThanOrEqual(1, $instance->planned_status);
+            self::assertIsNumeric($instance->getPlannedStatus());
+            self::assertIsNumeric($instance->planned_status);
+        }
+    }
+
+    /**
+     * Test invalid property "planned_status"
+     * @dataProvider invalidPlannedStatusDataProvider
+     * @param mixed $value
+     * @param string $exceptionClass
+     *
+     * @return void
+     */
+    public function testInvalidPlannedStatus(mixed $value, string $exceptionClass): void
+    {
+        $instance = $this->getTestInstance();
+
+        $this->expectException($exceptionClass);
+        $instance->setPlannedStatus($value);
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function validPlannedStatusDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getValidDataProviderByType($instance->getValidator()->getRulesByPropName('_planned_status'));
+    }
+
+    /**
+     * @return array[]
+     * @throws Exception
+     */
+    public function invalidPlannedStatusDataProvider(): array
+    {
+        $instance = $this->getTestInstance();
+        return $this->getInvalidDataProviderByType($instance->getValidator()->getRulesByPropName('_planned_status'));
+    }
+
+    /**
      * Test property "mark_mode"
      * @dataProvider validMarkModeDataProvider
      * @param mixed $value
@@ -1277,7 +1341,7 @@ class ReceiptItemTest extends AbstractTestCase
         $this->expectException(InvalidArgumentException::class);
         $instance = $this->getTestInstance();
 
-        $instance->setPrice(new ReceiptItemAmount(Random::int(100)));
+        $instance->setPrice(new ReceiptItemAmount(Random::int(1, 1000)));
         $instance->applyDiscountCoefficient($coefficient);
     }
 

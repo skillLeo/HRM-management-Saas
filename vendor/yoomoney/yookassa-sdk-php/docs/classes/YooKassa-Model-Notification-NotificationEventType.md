@@ -29,6 +29,7 @@ NotificationEventType - Тип уведомления.
 | public | [DEAL_CLOSED](../classes/YooKassa-Model-Notification-NotificationEventType.md#constant_DEAL_CLOSED) |  | Сделка перешла в статус closed |
 | public | [PAYOUT_CANCELED](../classes/YooKassa-Model-Notification-NotificationEventType.md#constant_PAYOUT_CANCELED) |  | Выплата перешла в статус canceled |
 | public | [PAYOUT_SUCCEEDED](../classes/YooKassa-Model-Notification-NotificationEventType.md#constant_PAYOUT_SUCCEEDED) |  | Выплата перешла в статус succeeded |
+| public | [PAYMENT_METHOD_ACTIVE](../classes/YooKassa-Model-Notification-NotificationEventType.md#constant_PAYMENT_METHOD_ACTIVE) |  | Способ оплаты сохранен |
 
 ---
 ### Properties
@@ -117,6 +118,15 @@ PAYOUT_SUCCEEDED = 'payout.succeeded'
 ```
 
 
+<a name="constant_PAYMENT_METHOD_ACTIVE" class="anchor"></a>
+###### PAYMENT_METHOD_ACTIVE
+Способ оплаты сохранен
+
+```php
+PAYMENT_METHOD_ACTIVE = 'payment_method.active'
+```
+
+
 
 ---
 ## Properties
@@ -199,10 +209,10 @@ Static public valueExists(mixed $value) : bool
 ### Reports
 * [Errors - 0](../reports/errors.md)
 * [Markers - 0](../reports/markers.md)
-* [Deprecated - 33](../reports/deprecated.md)
+* [Deprecated - 43](../reports/deprecated.md)
 
 ---
 
-This document was automatically generated from source code comments on 2025-07-01 using [phpDocumentor](http://www.phpdoc.org/)
+This document was automatically generated from source code comments on 2026-03-13 using [phpDocumentor](http://www.phpdoc.org/)
 
-&copy; 2025 YooMoney
+&copy; 2026 YooMoney
