@@ -109,7 +109,6 @@ class PayrollRun extends BaseModel
                 throw new \Exception(__('No active employees found for the selected filters.'));
             }
 
-            // ── Pass employee record for exemption flags ──────────────────────
             foreach ($employeeRecords as $employeeRecord) {
                 if (!$employeeRecord->user) {
                     continue;
@@ -144,7 +143,6 @@ class PayrollRun extends BaseModel
     }
 
     // ─── Process Single Employee ─────────────────────────────────────────────
-    // Now accepts $employeeRecord for exemption flags + passes basic_salary for NHIMA fix
 
     private function processEmployeePayroll($employee, ZambiaPayrollService $zambiaService, $employeeRecord = null)
     {
@@ -164,7 +162,7 @@ class PayrollRun extends BaseModel
         }
 
         $employeeSalary = EmployeeSalary::getActiveSalary($employee->id);
-        if (! $employeeSalary) {
+        if (!$employeeSalary) {
             return;
         }
 
@@ -205,9 +203,7 @@ class PayrollRun extends BaseModel
         $exemptNapsa = $employeeRecord?->exempt_from_napsa ?? false;
         $exemptNhima = $employeeRecord?->exempt_from_nhima ?? false;
 
-        // ── Zambia Calculations ──────────────────────────────────────────────
-        // NHIMA fix: pass basic_salary separately so NHIMA is on basic only
-        // Exemptions: pass flags so exempt employees get zero NAPSA/NHIMA
+        // ── Zambia statutory calculations ─────────────────────────────────────
         $zambia = $zambiaService->calculateFullPayroll(
             $grossPay,
             $employeeSalary->basic_salary,
@@ -215,29 +211,72 @@ class PayrollRun extends BaseModel
             $exemptNhima
         );
 
-        $totalDeductions = $zambia['total_deductions'];
-        $netPay          = $zambia['net_pay'];
+        // ────────────────────────────────────────────────────────────────────
+        // FIX: Build component deductions BEFORE calculating totals so that
+        //      additional (non-statutory) deductions are included in net pay.
+        // ────────────────────────────────────────────────────────────────────
 
-        // ── Build earnings breakdown ─────────────────────────────────────────
+        $zambiaDeductionNames = ['paye tax', 'napsa employee', 'nhima employee'];
+
+        // Collect any salary-component deductions that are NOT statutory
+        $deductionsFromComponents = [];
+        foreach ($salaryBreakdown['deductions'] ?? [] as $k => $v) {
+            if (is_array($v) && isset($v['name'])) {
+                if (in_array(strtolower($v['name']), $zambiaDeductionNames)) {
+                    continue;
+                }
+                $deductionsFromComponents[] = $v;
+            } else {
+                if (in_array(strtolower($k), $zambiaDeductionNames)) {
+                    continue;
+                }
+                $deductionsFromComponents[] = ['name' => $k, 'amount' => $v];
+            }
+        }
+
+        // Sum the additional component deductions
+        $additionalDeductionsTotal = collect($deductionsFromComponents)->sum('amount');
+
+        // ── FIXED: total deductions = statutory + component deductions ────────
+        $totalDeductions = $zambia['total_deductions'] + $additionalDeductionsTotal;
+
+        // ── FIXED: net pay correctly reflects all deductions ──────────────────
+        $netPay = $grossPay - $totalDeductions;
+
+        // ── Build earnings breakdown ──────────────────────────────────────────
         $earningsFromComponents = [];
         foreach ($salaryBreakdown['earnings'] ?? [] as $k => $v) {
             if (is_array($v) && isset($v['name'])) {
-                if (in_array($v['type'] ?? '', ['zambia_napsa_employer', 'zambia_nhima_employer', 'zambia_sdl'])) continue;
-                if (strtolower($v['name']) === 'basic salary') continue;
+                if (in_array($v['type'] ?? '', ['zambia_napsa_employer', 'zambia_nhima_employer', 'zambia_sdl'])) {
+                    continue;
+                }
+                if (strtolower($v['name']) === 'basic salary') {
+                    continue;
+                }
                 $earningsFromComponents[] = $v;
             } else {
-                if (strtolower($k) === 'basic salary') continue;
+                if (strtolower($k) === 'basic salary') {
+                    continue;
+                }
                 $earningsFromComponents[] = ['name' => $k, 'amount' => $v];
             }
         }
 
-        // Only show NAPSA/NHIMA employer if not exempt
+        // Only show NAPSA/NHIMA employer contributions if not exempt
         $employerContributions = [];
         if (!$exemptNapsa) {
-            $employerContributions[] = ['name' => 'NAPSA Employer', 'amount' => $zambia['napsa_employer'], 'type' => 'zambia_napsa_employer'];
+            $employerContributions[] = [
+                'name'   => 'NAPSA Employer',
+                'amount' => $zambia['napsa_employer'],
+                'type'   => 'zambia_napsa_employer',
+            ];
         }
         if (!$exemptNhima) {
-            $employerContributions[] = ['name' => 'NHIMA Employer', 'amount' => $zambia['nhima_employer'], 'type' => 'zambia_nhima_employer'];
+            $employerContributions[] = [
+                'name'   => 'NHIMA Employer',
+                'amount' => $zambia['nhima_employer'],
+                'type'   => 'zambia_nhima_employer',
+            ];
         }
 
         $earningsBreakdown = array_merge(
@@ -246,31 +285,28 @@ class PayrollRun extends BaseModel
             $employerContributions
         );
 
-        // ── Build deductions breakdown ───────────────────────────────────────
-        $zambiaDeductionNames     = ['paye tax', 'napsa employee', 'nhima employee'];
-        $deductionsFromComponents = [];
-
-        foreach ($salaryBreakdown['deductions'] ?? [] as $k => $v) {
-            if (is_array($v) && isset($v['name'])) {
-                if (in_array(strtolower($v['name']), $zambiaDeductionNames)) continue;
-                $deductionsFromComponents[] = $v;
-            } else {
-                if (in_array(strtolower($k), $zambiaDeductionNames)) continue;
-                $deductionsFromComponents[] = ['name' => $k, 'amount' => $v];
-            }
-        }
-
-        // Build statutory deductions — skip if exempt
+        // ── Build deductions breakdown ────────────────────────────────────────
+        // Statutory deductions (skip if exempt)
         $statutoryDeductions = [
             ['name' => 'PAYE Tax', 'amount' => $zambia['paye'], 'type' => 'zambia_paye'],
         ];
         if (!$exemptNapsa) {
-            $statutoryDeductions[] = ['name' => 'NAPSA Employee', 'amount' => $zambia['napsa_employee'], 'type' => 'zambia_napsa_employee'];
+            $statutoryDeductions[] = [
+                'name'   => 'NAPSA Employee',
+                'amount' => $zambia['napsa_employee'],
+                'type'   => 'zambia_napsa_employee',
+            ];
         }
         if (!$exemptNhima) {
-            $statutoryDeductions[] = ['name' => 'NHIMA Employee', 'amount' => $zambia['nhima_employee'], 'type' => 'zambia_nhima_employee'];
+            $statutoryDeductions[] = [
+                'name'   => 'NHIMA Employee',
+                'amount' => $zambia['nhima_employee'],
+                'type'   => 'zambia_nhima_employee',
+            ];
         }
 
+        // Component deductions come first, then statutory — so the payslip reads
+        // "additional deductions → then statutory deductions"
         $deductionsBreakdown = array_merge($deductionsFromComponents, $statutoryDeductions);
 
         PayrollEntry::create([
@@ -279,9 +315,9 @@ class PayrollRun extends BaseModel
             'basic_salary'           => $employeeSalary->basic_salary,
             'component_earnings'     => $componentEarnings,
             'total_earnings'         => $totalEarnings,
-            'total_deductions'       => $totalDeductions,
+            'total_deductions'       => $totalDeductions,   // ← now includes component deductions
             'gross_pay'              => $grossPay,
-            'net_pay'                => $netPay,
+            'net_pay'                => $netPay,            // ← now correctly reduced
             'working_days'           => $totalWorkingDays,
             'present_days'           => $presentDays,
             'half_days'              => $halfDays,
@@ -300,21 +336,16 @@ class PayrollRun extends BaseModel
     }
 
     // ─── SDL ─────────────────────────────────────────────────────────────────
-    // SDL is optional per company (check if SDL component is active)
-    // SDL is also optional per employee (check exempt_from_sdl flag)
 
     private function applySDL(ZambiaPayrollService $zambiaService)
     {
-        // Check if SDL is enabled for this company via the salary component
         $sdlComponent = SalaryComponent::whereIn('created_by', getCompanyAndUsersId())
             ->where('name', 'SDL - Skill Development Levy')
             ->where('status', 'active')
             ->first();
 
-        // If SDL component doesn't exist or is inactive — skip SDL entirely
         if (!$sdlComponent) return;
 
-        // Get all entries and filter out SDL-exempt employees
         $allEntries = $this->payrollEntries()->get();
 
         $nonExemptEntries = $allEntries->filter(function ($entry) {
@@ -332,7 +363,6 @@ class PayrollRun extends BaseModel
         $sdlAmount      = $zambiaService->calculateSDL($totalGross);
         $sdlPerEmployee = round($sdlAmount / $employeeCount, 2);
 
-        // Only apply SDL to non-exempt employees
         foreach ($nonExemptEntries as $entry) {
             $breakdown   = $entry->earnings_breakdown ?? [];
             $breakdown[] = ['name' => 'SDL (Employer)', 'amount' => $sdlPerEmployee, 'type' => 'zambia_sdl'];

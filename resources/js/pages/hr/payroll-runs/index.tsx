@@ -13,7 +13,9 @@ import { ImportModal } from '@/components/ImportModal';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 
-const MONTHS = [
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const ALL_MONTHS = [
   { value: '01', label: 'January' },  { value: '02', label: 'February' },
   { value: '03', label: 'March' },    { value: '04', label: 'April' },
   { value: '05', label: 'May' },      { value: '06', label: 'June' },
@@ -21,8 +23,11 @@ const MONTHS = [
   { value: '09', label: 'September' },{ value: '10', label: 'October' },
   { value: '11', label: 'November' }, { value: '12', label: 'December' },
 ];
+
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 7 }, (_, i) => currentYear - 3 + i);
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const getMonthRange = (year: string, month: string) => {
   const start = `${year}-${month}-01`;
@@ -46,6 +51,8 @@ const isWeekend = (dateStr: string): boolean => {
   return day === 0 || day === 6;
 };
 
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export default function PayrollRuns() {
   const { t } = useTranslation();
   const {
@@ -55,33 +62,87 @@ export default function PayrollRuns() {
   } = usePage().props as any;
   const permissions = auth?.permissions || [];
 
-  const [searchTerm, setSearchTerm] = useState(pageFilters.search || '');
+  // ── Filter state ────────────────────────────────────────────────────────────
+  const [searchTerm, setSearchTerm]       = useState(pageFilters.search || '');
   const [selectedStatus, setSelectedStatus] = useState(pageFilters.status || 'all');
-  const [dateFrom, setDateFrom] = useState(pageFilters.date_from || '');
-  const [dateTo, setDateTo] = useState(pageFilters.date_to || '');
-  const [showFilters, setShowFilters] = useState(false);
+  const [dateFrom, setDateFrom]           = useState(pageFilters.date_from || '');
+  const [dateTo, setDateTo]               = useState(pageFilters.date_to || '');
+  const [showFilters, setShowFilters]     = useState(false);
 
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  // ── Modal state ─────────────────────────────────────────────────────────────
+  const [isFormModalOpen, setIsFormModalOpen]       = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen]   = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen]   = useState(false);
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
-  const [currentItem, setCurrentItem] = useState<any>(null);
-  const [formMode, setFormMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [currentItem, setCurrentItem]               = useState<any>(null);
+  const [formMode, setFormMode]                     = useState<'create' | 'edit' | 'view'>('create');
 
-  const [formTitle, setFormTitle] = useState('');
-  const [formFrequency, setFormFrequency] = useState('monthly');
+  // ── Form fields ─────────────────────────────────────────────────────────────
+  const [formTitle, setFormTitle]           = useState('');
+  const [formFrequency, setFormFrequency]   = useState('monthly');
   const [formPeriodStart, setFormPeriodStart] = useState('');
-  const [formPeriodEnd, setFormPeriodEnd] = useState('');
-  const [formPayDate, setFormPayDate] = useState('');
-  const [formNotes, setFormNotes] = useState('');
-  const [payMonth, setPayMonth] = useState((new Date().getMonth() + 1).toString().padStart(2, '0'));
-  const [payYear, setPayYear] = useState(currentYear.toString());
+  const [formPeriodEnd, setFormPeriodEnd]   = useState('');
+  const [formPayDate, setFormPayDate]       = useState('');
+  const [formNotes, setFormNotes]           = useState('');
+  const [payMonth, setPayMonth]             = useState((new Date().getMonth() + 1).toString().padStart(2, '0'));
+  const [payYear, setPayYear]               = useState(currentYear.toString());
   const [payDateWarning, setPayDateWarning] = useState('');
 
-  const [processFilterBranch, setProcessFilterBranch] = useState('');
-  const [processFilterDepartment, setProcessFilterDepartment] = useState('');
+  // ── Process modal filters ───────────────────────────────────────────────────
+  const [processFilterBranch, setProcessFilterBranch]           = useState('');
+  const [processFilterDepartment, setProcessFilterDepartment]   = useState('');
   const [processFilterDesignation, setProcessFilterDesignation] = useState('');
 
+  // ── Month filtering logic ───────────────────────────────────────────────────
+
+  /**
+   * Build a Set of "YYYY-MM" strings for all existing monthly payroll runs
+   * so we can grey them out / hide them in the month picker.
+   */
+  const usedMonthKeys = new Set<string>(
+    (payrollRuns?.data || [])
+      .filter((r: any) => r.payroll_frequency === 'monthly')
+      .map((r: any) => {
+        const d = new Date(r.pay_period_start);
+        return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+      })
+  );
+
+  /**
+   * The earliest month that is still allowed to be created.
+   * If there is a lastCompleted run, nothing before (or equal to) its end
+   * month may be created — only the NEXT month onward.
+   */
+  const minAllowedMonthDate: Date | null = lastCompleted
+    ? (() => {
+        const d = new Date(lastCompleted.pay_period_end);
+        // First day of the month AFTER lastCompleted's pay_period_end month
+        return new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      })()
+    : null;
+
+  /**
+   * Returns only the months available for selection in a given year,
+   * filtering out:
+   *   1. Months before the minimum allowed date (already completed)
+   *   2. Months that already have a payroll run (even on the current page)
+   */
+  const getAvailableMonths = (year: string) => {
+    return ALL_MONTHS.filter(m => {
+      const monthDate = new Date(parseInt(year), parseInt(m.value) - 1, 1);
+
+      // Block months before the next-allowed month
+      if (minAllowedMonthDate && monthDate < minAllowedMonthDate) return false;
+
+      // Block months that already have a payroll run
+      const key = `${year}-${m.value}`;
+      if (usedMonthKeys.has(key)) return false;
+
+      return true;
+    });
+  };
+
+  // ── Next suggested period ───────────────────────────────────────────────────
   const getNextPeriod = () => {
     if (!lastCompleted) return null;
     const endDate = new Date(lastCompleted.pay_period_end);
@@ -108,6 +169,7 @@ export default function PayrollRuns() {
     };
   };
 
+  // ── Form modal open effect ──────────────────────────────────────────────────
   useEffect(() => {
     if (isFormModalOpen) {
       if (currentItem && formMode === 'edit') {
@@ -120,19 +182,29 @@ export default function PayrollRuns() {
         setFormNotes(currentItem.notes || '');
         setPayMonth(startDate ? (startDate.getMonth() + 1).toString().padStart(2, '0') : '01');
         setPayYear(startDate ? startDate.getFullYear().toString() : currentYear.toString());
+        setPayDateWarning('');
       } else {
+        // Create mode — auto-suggest next period
         setFormTitle(''); setFormNotes(''); setFormPayDate(''); setPayDateWarning('');
         const next = getNextPeriod();
         if (next) {
-          setFormFrequency(next.frequency); setFormPeriodStart(next.periodStart);
-          setFormPeriodEnd(next.periodEnd); setPayMonth(next.month); setPayYear(next.year);
+          setFormFrequency(next.frequency);
+          setFormPeriodStart(next.periodStart);
+          setFormPeriodEnd(next.periodEnd);
+          setPayMonth(next.month);
+          setPayYear(next.year);
         } else {
           setFormFrequency('monthly');
           const m = (new Date().getMonth() + 1).toString().padStart(2, '0');
           const y = currentYear.toString();
-          setPayMonth(m); setPayYear(y);
-          const { start, end } = getMonthRange(y, m);
-          setFormPeriodStart(start); setFormPeriodEnd(end);
+          // Find the first available month for the current year
+          const available = getAvailableMonths(y);
+          const selectedM = available.length > 0 ? available[0].value : m;
+          setPayMonth(selectedM);
+          setPayYear(y);
+          const { start, end } = getMonthRange(y, selectedM);
+          setFormPeriodStart(start);
+          setFormPeriodEnd(end);
         }
       }
     }
@@ -146,9 +218,12 @@ export default function PayrollRuns() {
     }
   }, [isProcessModalOpen]);
 
+  // ── Handlers ────────────────────────────────────────────────────────────────
+
   const handleMonthYearChange = (month: string, year: string) => {
     const { start, end } = getMonthRange(year, month);
-    setFormPeriodStart(start); setFormPeriodEnd(end);
+    setFormPeriodStart(start);
+    setFormPeriodEnd(end);
   };
 
   const handlePayDateChange = (val: string) => {
@@ -157,20 +232,50 @@ export default function PayrollRuns() {
       setFormPayDate(adjusted);
       setPayDateWarning(`Pay date fell on a weekend — automatically moved to ${adjusted} (Monday)`);
     } else {
-      setFormPayDate(val); setPayDateWarning('');
+      setFormPayDate(val);
+      setPayDateWarning('');
     }
   };
 
+  /**
+   * When the user changes the year in the monthly picker, we need to:
+   * 1. Update the year state
+   * 2. Check if the currently selected month is still available in the new year
+   * 3. If not, snap to the first available month (or keep if still valid)
+   */
+  const handleYearChange = (newYear: string) => {
+    setPayYear(newYear);
+    const available = getAvailableMonths(newYear);
+    const currentMonthStillValid = available.some(m => m.value === payMonth);
+    const selectedMonth = currentMonthStillValid
+      ? payMonth
+      : (available[0]?.value || payMonth);
+    setPayMonth(selectedMonth);
+    handleMonthYearChange(selectedMonth, newYear);
+  };
+
+  /**
+   * When the user changes the month in the monthly picker.
+   */
+  const handleMonthChange = (newMonth: string) => {
+    setPayMonth(newMonth);
+    handleMonthYearChange(newMonth, payYear);
+  };
+
   const hasActiveFilters = () => searchTerm !== '' || selectedStatus !== 'all' || dateFrom !== '' || dateTo !== '';
-  const activeFilterCount = () => (searchTerm ? 1 : 0) + (selectedStatus !== 'all' ? 1 : 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0);
+  const activeFilterCount = () =>
+    (searchTerm ? 1 : 0) + (selectedStatus !== 'all' ? 1 : 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0);
+
   const handleSearch = (e: React.FormEvent) => { e.preventDefault(); applyFilters(); };
 
   const applyFilters = () => {
     router.get(route('hr.payroll-runs.index'), {
-      page: 1, search: searchTerm || undefined,
+      page: 1,
+      search: searchTerm || undefined,
       status: selectedStatus !== 'all' ? selectedStatus : undefined,
-      date_from: dateFrom || undefined, date_to: dateTo || undefined,
-      per_page: pageFilters.per_page
+      date_from: dateFrom || undefined,
+      date_to: dateTo || undefined,
+      per_page: pageFilters.per_page,
     }, { preserveState: true, preserveScroll: true });
   };
 
@@ -180,21 +285,22 @@ export default function PayrollRuns() {
       sort_field: field, sort_direction: direction, page: 1,
       search: searchTerm || undefined,
       status: selectedStatus !== 'all' ? selectedStatus : undefined,
-      date_from: dateFrom || undefined, date_to: dateTo || undefined,
-      per_page: pageFilters.per_page
+      date_from: dateFrom || undefined,
+      date_to: dateTo || undefined,
+      per_page: pageFilters.per_page,
     }, { preserveState: true, preserveScroll: true });
   };
 
   const handleAction = (action: string, item: any) => {
     setCurrentItem(item);
     switch (action) {
-      case 'view':            router.get(route('hr.payroll-runs.show', item.id)); break;
-      case 'edit':            setFormMode('edit'); setIsFormModalOpen(true); break;
-      case 'delete':          setIsDeleteModalOpen(true); break;
-      case 'process':         setIsProcessModalOpen(true); break;
-      case 'unlock':          handleUnlock(item); break;
-      case 'submit-final':    handleSubmitFinal(item); break;
-      case 'approve-final':   handleApproveFinal(item); break;
+      case 'view':              router.get(route('hr.payroll-runs.show', item.id)); break;
+      case 'edit':              setFormMode('edit'); setIsFormModalOpen(true); break;
+      case 'delete':            setIsDeleteModalOpen(true); break;
+      case 'process':           setIsProcessModalOpen(true); break;
+      case 'unlock':            handleUnlock(item); break;
+      case 'submit-final':      handleSubmitFinal(item); break;
+      case 'approve-final':     handleApproveFinal(item); break;
       case 'generate-payslips': handleGeneratePayslips(item); break;
     }
   };
@@ -204,9 +310,12 @@ export default function PayrollRuns() {
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = {
-      title: formTitle, payroll_frequency: formFrequency,
-      pay_period_start: formPeriodStart, pay_period_end: formPeriodEnd,
-      pay_date: formPayDate, notes: formNotes,
+      title: formTitle,
+      payroll_frequency: formFrequency,
+      pay_period_start: formPeriodStart,
+      pay_period_end: formPeriodEnd,
+      pay_date: formPayDate,
+      notes: formNotes,
     };
 
     if (formMode === 'create') {
@@ -221,7 +330,7 @@ export default function PayrollRuns() {
         onError: (errors) => {
           if (!globalSettings?.is_demo) toast.dismiss();
           toast.error(typeof errors === 'string' ? errors : `Failed to create payroll run: ${Object.values(errors).join(', ')}`);
-        }
+        },
       });
     } else if (formMode === 'edit') {
       if (!globalSettings?.is_demo) toast.loading(t('Updating payroll run...'));
@@ -235,7 +344,7 @@ export default function PayrollRuns() {
         onError: (errors) => {
           if (!globalSettings?.is_demo) toast.dismiss();
           toast.error(typeof errors === 'string' ? errors : `Failed to update payroll run: ${Object.values(errors).join(', ')}`);
-        }
+        },
       });
     }
   };
@@ -252,7 +361,7 @@ export default function PayrollRuns() {
       onError: (errors) => {
         if (!globalSettings?.is_demo) toast.dismiss();
         toast.error(typeof errors === 'string' ? errors : `Failed to delete payroll run: ${Object.values(errors).join(', ')}`);
-      }
+      },
     });
   };
 
@@ -275,11 +384,10 @@ export default function PayrollRuns() {
       onError: (errors) => {
         if (!globalSettings?.is_demo) toast.dismiss();
         toast.error(typeof errors === 'string' ? errors : `Failed to process payroll: ${Object.values(errors).join(', ')}`);
-      }
+      },
     });
   };
 
-  // ── Unlock handler ────────────────────────────────────────────────────────
   const handleUnlock = (item: any) => {
     if (!globalSettings?.is_demo) toast.loading(t('Unlocking payroll run...'));
     router.put(route('hr.payroll-runs.unlock', item.id), {}, {
@@ -291,11 +399,10 @@ export default function PayrollRuns() {
       onError: () => {
         if (!globalSettings?.is_demo) toast.dismiss();
         toast.error(t('Failed to unlock payroll run'));
-      }
+      },
     });
   };
 
-  // ── Submit for final approval handler ─────────────────────────────────────
   const handleSubmitFinal = (item: any) => {
     if (!globalSettings?.is_demo) toast.loading(t('Submitting for approval...'));
     router.put(route('hr.payroll-runs.submit-final', item.id), {}, {
@@ -307,11 +414,10 @@ export default function PayrollRuns() {
       onError: () => {
         if (!globalSettings?.is_demo) toast.dismiss();
         toast.error(t('Failed to submit for approval'));
-      }
+      },
     });
   };
 
-  // ── Approve final handler ─────────────────────────────────────────────────
   const handleApproveFinal = (item: any) => {
     if (!globalSettings?.is_demo) toast.loading(t('Approving payroll run...'));
     router.put(route('hr.payroll-runs.approve-final', item.id), {}, {
@@ -323,7 +429,7 @@ export default function PayrollRuns() {
       onError: () => {
         if (!globalSettings?.is_demo) toast.dismiss();
         toast.error(t('Failed to approve payroll run'));
-      }
+      },
     });
   };
 
@@ -335,12 +441,14 @@ export default function PayrollRuns() {
         if (page.props.flash.success) {
           toast.success(t(page.props.flash.success));
           setTimeout(() => router.get(route('hr.payslips.index')), 1000);
-        } else if (page.props.flash.error) toast.error(t(page.props.flash.error));
+        } else if (page.props.flash.error) {
+          toast.error(t(page.props.flash.error));
+        }
       },
       onError: (errors) => {
         if (!globalSettings?.is_demo) toast.dismiss();
         toast.error(typeof errors === 'string' ? errors : 'Failed to generate payslips');
-      }
+      },
     });
   };
 
@@ -351,28 +459,45 @@ export default function PayrollRuns() {
 
   const handleExport = async () => {
     try {
-      const response = await fetch(route('hr.payroll-runs.export'), { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-      if (!response.ok) { const data = await response.json().catch(() => ({})); toast.error(t(data.message || 'Failed to export payroll runs')); return; }
+      const response = await fetch(route('hr.payroll-runs.export'), {
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        toast.error(t(data.message || 'Failed to export payroll runs'));
+        return;
+      }
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `payroll_runs_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(a); a.click();
-      window.URL.revokeObjectURL(url); document.body.removeChild(a);
-    } catch { toast.error(t('Failed to export payroll runs')); }
+      const url  = window.URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `payroll_runs_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch {
+      toast.error(t('Failed to export payroll runs'));
+    }
   };
 
+  // ── Page actions ────────────────────────────────────────────────────────────
   const pageActions: any[] = [];
-  if (hasPermission(permissions, 'export-payroll-runs')) pageActions.push({ label: t('Export'), icon: <FileDown className="h-4 w-4 mr-2" />, variant: 'outline', onClick: handleExport });
-  if (hasPermission(permissions, 'import-payroll-runs')) pageActions.push({ label: t('Import'), icon: <FileUp className="h-4 w-4 mr-2" />, variant: 'outline', onClick: () => setIsImportModalOpen(true) });
-  if (hasPermission(permissions, 'create-payroll-runs')) pageActions.push({ label: t('Add Payroll Run'), icon: <Plus className="h-4 w-4 mr-2" />, variant: 'default', onClick: () => handleAddNew() });
+  if (hasPermission(permissions, 'export-payroll-runs'))
+    pageActions.push({ label: t('Export'), icon: <FileDown className="h-4 w-4 mr-2" />, variant: 'outline', onClick: handleExport });
+  if (hasPermission(permissions, 'import-payroll-runs'))
+    pageActions.push({ label: t('Import'), icon: <FileUp className="h-4 w-4 mr-2" />, variant: 'outline', onClick: () => setIsImportModalOpen(true) });
+  if (hasPermission(permissions, 'create-payroll-runs'))
+    pageActions.push({ label: t('Add Payroll Run'), icon: <Plus className="h-4 w-4 mr-2" />, variant: 'default', onClick: () => handleAddNew() });
 
   const breadcrumbs = [
-    { title: t('Dashboard'), href: route('dashboard') },
+    { title: t('Dashboard'),          href: route('dashboard') },
     { title: t('Payroll Management'), href: route('hr.payroll-runs.index') },
-    { title: t('Payroll Runs') }
+    { title: t('Payroll Runs') },
   ];
 
+  // ── Table columns ───────────────────────────────────────────────────────────
   const columns = [
     { key: 'title', label: t('Title'), sortable: true },
     {
@@ -381,7 +506,7 @@ export default function PayrollRuns() {
         <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
           {value === 'weekly' ? t('Weekly') : value === 'biweekly' ? t('Bi-Weekly') : t('Monthly')}
         </span>
-      )
+      ),
     },
     {
       key: 'pay_period', label: t('Pay Period'),
@@ -390,12 +515,24 @@ export default function PayrollRuns() {
           <div>{window.appSettings?.formatDateTimeSimple(row.pay_period_start, false) || new Date(row.pay_period_start).toLocaleDateString()}</div>
           <div className="text-gray-500">to {window.appSettings?.formatDateTimeSimple(row.pay_period_end, false) || new Date(row.pay_period_end).toLocaleDateString()}</div>
         </div>
-      )
+      ),
     },
-    { key: 'pay_date', label: t('Pay Date'), sortable: true, render: (value: string) => window.appSettings?.formatDateTimeSimple(value, false) || new Date(value).toLocaleDateString() },
-    { key: 'employee_count', label: t('Employees'), render: (value: number) => <span className="font-mono">{value}</span> },
-    { key: 'total_gross_pay', label: t('Gross Pay'), render: (value: number) => <span className="font-mono text-green-600">{window.appSettings?.formatCurrency(value)}</span> },
-    { key: 'total_net_pay', label: t('Net Pay'), render: (value: number) => <span className="font-mono text-blue-600">{window.appSettings?.formatCurrency(value)}</span> },
+    {
+      key: 'pay_date', label: t('Pay Date'), sortable: true,
+      render: (value: string) => window.appSettings?.formatDateTimeSimple(value, false) || new Date(value).toLocaleDateString(),
+    },
+    {
+      key: 'employee_count', label: t('Employees'),
+      render: (value: number) => <span className="font-mono">{value}</span>,
+    },
+    {
+      key: 'total_gross_pay', label: t('Gross Pay'),
+      render: (value: number) => <span className="font-mono text-green-600">{window.appSettings?.formatCurrency(value)}</span>,
+    },
+    {
+      key: 'total_net_pay', label: t('Net Pay'),
+      render: (value: number) => <span className="font-mono text-blue-600">{window.appSettings?.formatCurrency(value)}</span>,
+    },
     {
       key: 'status', label: t('Status'),
       render: (value: string) => {
@@ -407,21 +544,28 @@ export default function PayrollRuns() {
           final:            'bg-blue-50 text-blue-700 ring-blue-600/20',
           cancelled:        'bg-red-50 text-red-700 ring-red-600/20',
         };
-        const label = value === 'pending_approval' ? 'Pending Approval' : value.charAt(0).toUpperCase() + value.slice(1);
-        return <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${statusColors[value] || statusColors.draft}`}>{t(label)}</span>;
-      }
-    }
+        const label = value === 'pending_approval'
+          ? 'Pending Approval'
+          : value.charAt(0).toUpperCase() + value.slice(1);
+        return (
+          <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${statusColors[value] || statusColors.draft}`}>
+            {t(label)}
+          </span>
+        );
+      },
+    },
   ];
 
+  // ── Row actions ─────────────────────────────────────────────────────────────
   const actions = [
-    { label: t('View Details'),        icon: 'Eye',         action: 'view',             className: 'text-blue-500',   requiredPermission: 'view-payroll-runs' },
-    { label: t('Edit'),                icon: 'Edit',        action: 'edit',             className: 'text-amber-500',  requiredPermission: 'edit-payroll-runs',     condition: (item: any) => item.status === 'draft' },
-    { label: t('Process'),             icon: 'Play',        action: 'process',          className: 'text-green-500',  requiredPermission: 'process-payroll-runs',  condition: (item: any) => item.status === 'draft' || item.status === 'processing' },
-    { label: t('Submit for Approval'), icon: 'Send',        action: 'submit-final',     className: 'text-orange-500', requiredPermission: 'process-payroll-runs',  condition: (item: any) => item.status === 'completed' },
-    { label: t('Approve Final'),       icon: 'CheckCircle', action: 'approve-final',    className: 'text-blue-600',   requiredPermission: 'approve-payroll-runs',  condition: (item: any) => item.status === 'pending_approval' },
-    { label: t('Unlock'),              icon: 'Unlock',      action: 'unlock',           className: 'text-purple-500', requiredPermission: 'edit-payroll-runs',     condition: (item: any) => ['completed', 'pending_approval', 'final'].includes(item.status) },
-    { label: t('Generate Payslips'),   icon: 'FileText',    action: 'generate-payslips',className: 'text-purple-500', requiredPermission: 'create-payslips',       condition: (item: any) => item.status === 'completed' || item.status === 'final' },
-    { label: t('Delete'),              icon: 'Trash2',      action: 'delete',           className: 'text-red-500',    requiredPermission: 'delete-payroll-runs',   condition: (item: any) => item.status === 'draft' },
+    { label: t('View Details'),        icon: 'Eye',         action: 'view',              className: 'text-blue-500',   requiredPermission: 'view-payroll-runs' },
+    { label: t('Edit'),                icon: 'Edit',        action: 'edit',              className: 'text-amber-500',  requiredPermission: 'edit-payroll-runs',     condition: (item: any) => item.status === 'draft' },
+    { label: t('Process'),             icon: 'Play',        action: 'process',           className: 'text-green-500',  requiredPermission: 'process-payroll-runs',  condition: (item: any) => item.status === 'draft' || item.status === 'processing' },
+    { label: t('Submit for Approval'), icon: 'Send',        action: 'submit-final',      className: 'text-orange-500', requiredPermission: 'process-payroll-runs',  condition: (item: any) => item.status === 'completed' },
+    { label: t('Approve Final'),       icon: 'CheckCircle', action: 'approve-final',     className: 'text-blue-600',   requiredPermission: 'approve-payroll-runs',  condition: (item: any) => item.status === 'pending_approval' },
+    { label: t('Unlock'),              icon: 'Unlock',      action: 'unlock',            className: 'text-purple-500', requiredPermission: 'edit-payroll-runs',     condition: (item: any) => ['completed', 'pending_approval', 'final'].includes(item.status) },
+    { label: t('Generate Payslips'),   icon: 'FileText',    action: 'generate-payslips', className: 'text-purple-500', requiredPermission: 'create-payslips',       condition: (item: any) => item.status === 'completed' || item.status === 'final' },
+    { label: t('Delete'),              icon: 'Trash2',      action: 'delete',            className: 'text-red-500',    requiredPermission: 'delete-payroll-runs',   condition: (item: any) => item.status === 'draft' },
   ];
 
   const statusOptions = [
@@ -434,27 +578,41 @@ export default function PayrollRuns() {
     { value: 'cancelled',        label: t('Cancelled') },
   ];
 
-  const selectClass = "w-full border border-input rounded-md px-3 py-2 text-sm bg-background";
+  const selectClass = 'w-full border border-input rounded-md px-3 py-2 text-sm bg-background';
 
+  // ── Derived: available months for current payYear ───────────────────────────
+  const availableMonthsForYear = getAvailableMonths(payYear);
+
+  // ─── Render ────────────────────────────────────────────────────────────────
   return (
-    <PageTemplate title={t("Payroll Runs")} url="/hr/payroll-runs" actions={pageActions} breadcrumbs={breadcrumbs} noPadding>
+    <PageTemplate title={t('Payroll Runs')} url="/hr/payroll-runs" actions={pageActions} breadcrumbs={breadcrumbs} noPadding>
 
+      {/* Search & Filter Bar */}
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow mb-4 p-4">
         <SearchAndFilterBar
           searchTerm={searchTerm} onSearchChange={setSearchTerm} onSearch={handleSearch}
           filters={[
             { name: 'status', label: t('Status'), type: 'select', value: selectedStatus, onChange: setSelectedStatus, options: statusOptions },
             { name: 'date_from', label: t('Period From'), type: 'date', value: dateFrom, onChange: setDateFrom },
-            { name: 'date_to', label: t('Period To'), type: 'date', value: dateTo, onChange: setDateTo }
+            { name: 'date_to', label: t('Period To'), type: 'date', value: dateTo, onChange: setDateTo },
           ]}
           showFilters={showFilters} setShowFilters={setShowFilters}
           hasActiveFilters={hasActiveFilters} activeFilterCount={activeFilterCount}
           onResetFilters={handleResetFilters} onApplyFilters={applyFilters}
-          currentPerPage={pageFilters.per_page?.toString() || "10"}
-          onPerPageChange={(value) => router.get(route('hr.payroll-runs.index'), { page: 1, per_page: parseInt(value), search: searchTerm || undefined, status: selectedStatus !== 'all' ? selectedStatus : undefined, date_from: dateFrom || undefined, date_to: dateTo || undefined }, { preserveState: true, preserveScroll: true })}
+          currentPerPage={pageFilters.per_page?.toString() || '10'}
+          onPerPageChange={(value) =>
+            router.get(route('hr.payroll-runs.index'), {
+              page: 1, per_page: parseInt(value),
+              search: searchTerm || undefined,
+              status: selectedStatus !== 'all' ? selectedStatus : undefined,
+              date_from: dateFrom || undefined,
+              date_to: dateTo || undefined,
+            }, { preserveState: true, preserveScroll: true })
+          }
         />
       </div>
 
+      {/* Table */}
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
         <CrudTable
           columns={columns} actions={actions} data={payrollRuns?.data || []} from={payrollRuns?.from || 1}
@@ -462,11 +620,14 @@ export default function PayrollRuns() {
           onSort={handleSort} permissions={permissions}
           entityPermissions={{ view: 'view-payroll-runs', create: 'create-payroll-runs', edit: 'edit-payroll-runs', delete: 'delete-payroll-runs' }}
         />
-        <Pagination from={payrollRuns?.from || 0} to={payrollRuns?.to || 0} total={payrollRuns?.total || 0}
-          links={payrollRuns?.links} entityName={t("payroll runs")} onPageChange={(url) => router.get(url)} />
+        <Pagination
+          from={payrollRuns?.from || 0} to={payrollRuns?.to || 0} total={payrollRuns?.total || 0}
+          links={payrollRuns?.links} entityName={t('payroll runs')}
+          onPageChange={(url) => router.get(url)}
+        />
       </div>
 
-      {/* Process Payroll Modal */}
+      {/* ── Process Payroll Modal ──────────────────────────────────────────── */}
       {isProcessModalOpen && currentItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md mx-4">
@@ -520,44 +681,95 @@ export default function PayrollRuns() {
         </div>
       )}
 
-      {/* Create / Edit Modal */}
+      {/* ── Create / Edit Modal ────────────────────────────────────────────── */}
       {isFormModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b">
-              <h2 className="text-lg font-semibold">{formMode === 'create' ? t('Add New Payroll Run') : t('Edit Payroll Run')}</h2>
+              <h2 className="text-lg font-semibold">
+                {formMode === 'create' ? t('Add New Payroll Run') : t('Edit Payroll Run')}
+              </h2>
               <button onClick={() => setIsFormModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
             </div>
+
             <form onSubmit={handleFormSubmit} className="p-5 space-y-4">
+              {/* Title */}
               <div className="space-y-1">
                 <Label>{t('Title')} *</Label>
                 <Input value={formTitle} onChange={e => setFormTitle(e.target.value)} required />
               </div>
+
+              {/* Frequency */}
               <div className="space-y-1">
                 <Label>{t('Payroll Frequency')} *</Label>
-                <select className={selectClass} value={formFrequency} onChange={e => { setFormFrequency(e.target.value); if (e.target.value === 'monthly') handleMonthYearChange(payMonth, payYear); }} required>
+                <select
+                  className={selectClass}
+                  value={formFrequency}
+                  onChange={e => {
+                    setFormFrequency(e.target.value);
+                    if (e.target.value === 'monthly') handleMonthYearChange(payMonth, payYear);
+                  }}
+                  required
+                >
                   <option value="weekly">{t('Weekly')}</option>
                   <option value="biweekly">{t('Bi-Weekly')}</option>
                   <option value="monthly">{t('Monthly')}</option>
                 </select>
               </div>
+
+              {/* Period — Monthly uses month/year pickers; others use date inputs */}
               {formFrequency === 'monthly' ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label>{t('Month')} *</Label>
-                    <select className={selectClass} value={payMonth} onChange={e => { setPayMonth(e.target.value); handleMonthYearChange(e.target.value, payYear); }}>
-                      {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                    </select>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Month picker — only shows available months */}
+                    <div className="space-y-1">
+                      <Label>{t('Month')} *</Label>
+                      <select
+                        className={selectClass}
+                        value={payMonth}
+                        onChange={e => handleMonthChange(e.target.value)}
+                      >
+                        {availableMonthsForYear.length === 0 ? (
+                          <option value="" disabled>{t('No months available')}</option>
+                        ) : (
+                          availableMonthsForYear.map(m => (
+                            <option key={m.value} value={m.value}>{t(m.label)}</option>
+                          ))
+                        )}
+                      </select>
+                      {availableMonthsForYear.length === 0 && (
+                        <p className="text-xs text-red-600 mt-1">
+                          {t('All months for this year already have payroll runs.')}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Year picker */}
+                    <div className="space-y-1">
+                      <Label>{t('Year')} *</Label>
+                      <select
+                        className={selectClass}
+                        value={payYear}
+                        onChange={e => handleYearChange(e.target.value)}
+                      >
+                        {YEARS.map(y => (
+                          <option key={y} value={y.toString()}>{y}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label>{t('Year')} *</Label>
-                    <select className={selectClass} value={payYear} onChange={e => { setPayYear(e.target.value); handleMonthYearChange(payMonth, e.target.value); }}>
-                      {YEARS.map(y => <option key={y} value={y.toString()}>{y}</option>)}
-                    </select>
-                  </div>
+
+                  {/* Show computed period dates as read-only info */}
                   {formPeriodStart && (
-                    <div className="col-span-2 text-xs text-muted-foreground bg-muted/40 rounded px-3 py-2">
-                      {t('Pay period')}: {formPeriodStart} to {formPeriodEnd}
+                    <div className="text-xs text-muted-foreground bg-muted/40 rounded px-3 py-2">
+                      {t('Pay period')}: <span className="font-medium">{formPeriodStart}</span> {t('to')} <span className="font-medium">{formPeriodEnd}</span>
+                    </div>
+                  )}
+
+                  {/* Info: months that are already taken */}
+                  {minAllowedMonthDate && formMode === 'create' && (
+                    <div className="text-xs text-amber-700 bg-amber-50 rounded px-3 py-2 border border-amber-200">
+                      ⚠️ {t('Months up to and including')} <span className="font-semibold">{lastCompleted?.title}</span> {t('are already completed and cannot be recreated.')}
                     </div>
                   )}
                 </div>
@@ -573,23 +785,46 @@ export default function PayrollRuns() {
                   </div>
                 </div>
               )}
+
+              {/* Pay Date */}
               <div className="space-y-1">
                 <Label>{t('Pay Date')} *</Label>
                 <Input type="date" value={formPayDate} onChange={e => handlePayDateChange(e.target.value)} required />
-                {payDateWarning && <p className="text-xs text-amber-600 bg-amber-50 rounded px-2 py-1">{payDateWarning}</p>}
+                {payDateWarning && (
+                  <p className="text-xs text-amber-600 bg-amber-50 rounded px-2 py-1">{payDateWarning}</p>
+                )}
               </div>
+
+              {/* Notes */}
               <div className="space-y-1">
                 <Label>{t('Notes')}</Label>
-                <textarea className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background min-h-[80px]" value={formNotes} onChange={e => setFormNotes(e.target.value)} />
+                <textarea
+                  className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background min-h-[80px]"
+                  value={formNotes}
+                  onChange={e => setFormNotes(e.target.value)}
+                />
               </div>
+
+              {/* Last completed hint */}
               {formMode === 'create' && lastCompleted && (
                 <div className="text-xs text-blue-700 bg-blue-50 rounded px-3 py-2 border border-blue-200">
-                  ℹ️ {t('Period auto-suggested based on last completed run')}: {lastCompleted.title}
+                  ℹ️ {t('Period auto-suggested based on last completed run')}: <span className="font-semibold">{lastCompleted.title}</span>
                 </div>
               )}
+
               <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setIsFormModalOpen(false)} className="px-4 py-2 border rounded-md text-sm hover:bg-gray-50">{t('Cancel')}</button>
-                <button type="submit" className="px-4 py-2 bg-primary text-white rounded-md text-sm hover:bg-primary/90">
+                <button
+                  type="button"
+                  onClick={() => setIsFormModalOpen(false)}
+                  className="px-4 py-2 border rounded-md text-sm hover:bg-gray-50"
+                >
+                  {t('Cancel')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={formFrequency === 'monthly' && availableMonthsForYear.length === 0}
+                  className="px-4 py-2 bg-primary text-white rounded-md text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   {formMode === 'create' ? t('Create') : t('Save Changes')}
                 </button>
               </div>
@@ -598,19 +833,32 @@ export default function PayrollRuns() {
         </div>
       )}
 
-      <CrudDeleteModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} onConfirm={handleDeleteConfirm} itemName={currentItem?.title || ''} entityName="payroll run" />
+      {/* Delete Confirmation */}
+      <CrudDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        itemName={currentItem?.title || ''}
+        entityName="payroll run"
+      />
 
+      {/* Import Modal */}
       <ImportModal
-        isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)}
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
         title={t('Import Payroll Runs from CSV/Excel')}
-        importRoute="hr.payroll-runs.import" parseRoute="hr.payroll-runs.parse"
+        importRoute="hr.payroll-runs.import"
+        parseRoute="hr.payroll-runs.parse"
         sampleRoute={hasSampleFile ? 'hr.payroll-runs.download.template' : undefined}
         importNotes={t('Ensure date formats are correct (YYYY-MM-DD). Payroll frequency must be weekly, biweekly, or monthly.')}
         modalSize="xl"
         databaseFields={[
-          { key: 'title', required: true }, { key: 'payroll_frequency', required: true },
-          { key: 'pay_period_start', required: true }, { key: 'pay_period_end', required: true },
-          { key: 'pay_date', required: true }, { key: 'notes' }
+          { key: 'title', required: true },
+          { key: 'payroll_frequency', required: true },
+          { key: 'pay_period_start', required: true },
+          { key: 'pay_period_end', required: true },
+          { key: 'pay_date', required: true },
+          { key: 'notes' },
         ]}
       />
     </PageTemplate>

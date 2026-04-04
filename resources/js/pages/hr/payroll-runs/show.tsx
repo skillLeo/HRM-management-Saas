@@ -84,24 +84,74 @@ export default function PayrollRunShow() {
 
     const getStatusColor = (status: string) => {
         const colors: Record<string, string> = {
-            draft: 'bg-gray-50 text-gray-700 ring-gray-600/20',
-            processing: 'bg-yellow-50 text-yellow-700 ring-yellow-600/20',
-            completed: 'bg-green-50 text-green-700 ring-green-600/20',
-            cancelled: 'bg-red-50 text-red-700 ring-red-600/20',
+            draft:            'bg-gray-50 text-gray-700 ring-gray-600/20',
+            processing:       'bg-yellow-50 text-yellow-700 ring-yellow-600/20',
+            completed:        'bg-green-50 text-green-700 ring-green-600/20',
+            pending_approval: 'bg-orange-50 text-orange-700 ring-orange-600/20',
+            final:            'bg-blue-50 text-blue-700 ring-blue-600/20',
+            cancelled:        'bg-red-50 text-red-700 ring-red-600/20',
         };
         return colors[status] || colors.draft;
     };
 
-    // Helper to extract Zambia deduction amount by type
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /** Get a statutory deduction amount by its type tag */
     const getDeduction = (breakdown: any[], type: string): number => {
         if (!Array.isArray(breakdown)) return 0;
         const item = breakdown.find((d: any) => d?.type === type);
-        return item?.amount || 0;
+        return Number(item?.amount) || 0;
     };
 
-    return (
-        <PageTemplate title={payrollRun.title} url={`/hr/payroll-runs/${payrollRun.id}`} actions={pageActions} breadcrumbs={breadcrumbs}>
+    /**
+     * Sum all deductions that are NOT statutory Zambia ones.
+     * These are additional salary-component deductions e.g. loans, advances.
+     */
+    const getAdditionalDeductions = (breakdown: any[]): number => {
+        if (!Array.isArray(breakdown)) return 0;
+        const statutoryTypes = [
+            'zambia_paye',
+            'zambia_napsa_employee',
+            'zambia_nhima_employee',
+        ];
+        return breakdown
+            .filter((d: any) => d && !statutoryTypes.includes(d.type))
+            .reduce((sum: number, d: any) => sum + (Number(d.amount) || 0), 0);
+    };
 
+    /**
+     * Build a tooltip/title string listing each additional deduction by name + amount.
+     * Shown on hover so the user can see the breakdown without a new column per item.
+     */
+    const getAdditionalDeductionsLabel = (breakdown: any[]): string => {
+        if (!Array.isArray(breakdown)) return '';
+        const statutoryTypes = [
+            'zambia_paye',
+            'zambia_napsa_employee',
+            'zambia_nhima_employee',
+        ];
+        const items = breakdown.filter((d: any) => d && !statutoryTypes.includes(d.type));
+        if (items.length === 0) return 'None';
+        return items.map((d: any) => `${d.name}: ${window.appSettings?.formatCurrency(d.amount) ?? d.amount}`).join('\n');
+    };
+
+    /** Check whether any entry in this run has additional component deductions */
+    const hasAnyAdditionalDeductions = (entries: any[]): boolean => {
+        return entries.some((entry: any) => getAdditionalDeductions(entry.deductions_breakdown) > 0);
+    };
+
+    const entries     = payrollRun.payroll_entries || [];
+    const showAdditional = hasAnyAdditionalDeductions(entries);
+
+    // ─── Render ───────────────────────────────────────────────────────────────
+
+    return (
+        <PageTemplate
+            title={payrollRun.title}
+            url={`/hr/payroll-runs/${payrollRun.id}`}
+            actions={pageActions}
+            breadcrumbs={breadcrumbs}
+        >
             {/* Summary cards */}
             <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-4">
                 <Card>
@@ -166,7 +216,11 @@ export default function PayrollRunShow() {
                             <label className="text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400">{t('Payroll Frequency')}</label>
                             <p className="mt-1">
                                 <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset">
-                                    {payrollRun.payroll_frequency === 'weekly' ? t('Weekly') : payrollRun.payroll_frequency === 'biweekly' ? t('Bi-Weekly') : t('Monthly')}
+                                    {payrollRun.payroll_frequency === 'weekly'
+                                        ? t('Weekly')
+                                        : payrollRun.payroll_frequency === 'biweekly'
+                                        ? t('Bi-Weekly')
+                                        : t('Monthly')}
                                 </span>
                             </p>
                         </div>
@@ -174,7 +228,9 @@ export default function PayrollRunShow() {
                             <label className="text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400">{t('Status')}</label>
                             <p className="mt-1">
                                 <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${getStatusColor(payrollRun.status)}`}>
-                                    {t(payrollRun.status.charAt(0).toUpperCase() + payrollRun.status.slice(1))}
+                                    {t(payrollRun.status === 'pending_approval'
+                                        ? 'Pending Approval'
+                                        : payrollRun.status.charAt(0).toUpperCase() + payrollRun.status.slice(1))}
                                 </span>
                             </p>
                         </div>
@@ -197,16 +253,37 @@ export default function PayrollRunShow() {
             {/* Employee Payroll Entries */}
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('Employee Payroll Entries')}</CardTitle>
+                    <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        {t('Employee Payroll Entries')}
+                    </CardTitle>
+
+                    {/* ── Formula info box ── */}
                     <div className="mt-2 space-y-2 rounded-md bg-blue-50 p-3 dark:bg-blue-900/20">
                         <p className="text-xs font-medium text-blue-800 dark:text-blue-200">
-                            {t('Gross Pay Formula')} : <span className="font-mono">Total Earnings (Basic + Allowances) - Unpaid Leave + Overtime</span>
+                            {t('Gross Pay Formula')}:{' '}
+                            <span className="font-mono">
+                                Total Earnings (Basic + Allowances) - Unpaid Leave + Overtime
+                            </span>
                         </p>
                         <p className="text-xs font-medium text-blue-800 dark:text-blue-200">
-                            {t('Net Salary Formula')} : <span className="font-mono">Gross Pay - PAYE - NAPSA - NHIMA</span>
+                            {t('Net Salary Formula')}:{' '}
+                            <span className="font-mono">
+                                Gross Pay - PAYE - NAPSA - NHIMA
+                                {showAdditional && (
+                                    <span className="ml-1 text-orange-700 dark:text-orange-400">
+                                        - Additional Deductions
+                                    </span>
+                                )}
+                            </span>
                         </p>
+                        {showAdditional && (
+                            <p className="text-xs text-orange-700 dark:text-orange-300">
+                                ⚠️ {t('Some employees have additional salary-component deductions (e.g. loans, advances). Hover the "Additional" column to see the breakdown.')}
+                            </p>
+                        )}
                     </div>
                 </CardHeader>
+
                 <CardContent className="p-0">
                     <div className="overflow-x-auto">
                         <CrudTable
@@ -219,43 +296,89 @@ export default function PayrollRunShow() {
                                 {
                                     key: 'basic_salary',
                                     label: t('Basic Salary'),
-                                    render: (v: number) => <span className="font-mono text-gray-900">{window.appSettings?.formatCurrency(v)}</span>,
+                                    render: (v: number) => (
+                                        <span className="font-mono text-gray-900">
+                                            {window.appSettings?.formatCurrency(v)}
+                                        </span>
+                                    ),
                                 },
                                 {
                                     key: 'gross_pay',
                                     label: t('Gross Pay'),
-                                    render: (v: number) => <span className="font-mono text-green-600">{window.appSettings?.formatCurrency(v)}</span>,
+                                    render: (v: number) => (
+                                        <span className="font-mono text-green-600">
+                                            {window.appSettings?.formatCurrency(v)}
+                                        </span>
+                                    ),
                                 },
                                 {
                                     key: 'deductions_breakdown',
                                     label: t('PAYE Tax'),
                                     render: (v: any[]) => (
-                                        <span className="font-mono text-red-600">{window.appSettings?.formatCurrency(getDeduction(v, 'zambia_paye'))}</span>
+                                        <span className="font-mono text-red-600">
+                                            {window.appSettings?.formatCurrency(getDeduction(v, 'zambia_paye'))}
+                                        </span>
                                     ),
                                 },
                                 {
                                     key: 'deductions_breakdown',
                                     label: t('NAPSA'),
                                     render: (v: any[]) => (
-                                        <span className="font-mono text-red-600">{window.appSettings?.formatCurrency(getDeduction(v, 'zambia_napsa_employee'))}</span>
+                                        <span className="font-mono text-red-600">
+                                            {window.appSettings?.formatCurrency(getDeduction(v, 'zambia_napsa_employee'))}
+                                        </span>
                                     ),
                                 },
                                 {
                                     key: 'deductions_breakdown',
                                     label: t('NHIMA'),
                                     render: (v: any[]) => (
-                                        <span className="font-mono text-red-600">{window.appSettings?.formatCurrency(getDeduction(v, 'zambia_nhima_employee'))}</span>
+                                        <span className="font-mono text-red-600">
+                                            {window.appSettings?.formatCurrency(getDeduction(v, 'zambia_nhima_employee'))}
+                                        </span>
                                     ),
                                 },
+
+                                // ── Additional component deductions column ──
+                                // Always rendered; shows $0.00 when none exist so the
+                                // table stays consistent, but the header highlights
+                                // orange when at least one employee has extras.
+                                {
+                                    key: 'deductions_breakdown',
+                                    label: showAdditional
+                                        ? '⚠ ' + t('Additional')
+                                        : t('Additional'),
+                                    render: (v: any[]) => {
+                                        const total = getAdditionalDeductions(v);
+                                        const label = getAdditionalDeductionsLabel(v);
+                                        return (
+                                            <span
+                                                className={`cursor-help font-mono ${total > 0 ? 'font-semibold text-orange-600' : 'text-gray-400'}`}
+                                                title={label}
+                                            >
+                                                {window.appSettings?.formatCurrency(total)}
+                                            </span>
+                                        );
+                                    },
+                                },
+
                                 {
                                     key: 'total_deductions',
                                     label: t('Total Deductions'),
-                                    render: (v: number) => <span className="font-mono text-red-600">{window.appSettings?.formatCurrency(v)}</span>,
+                                    render: (v: number) => (
+                                        <span className="font-mono text-red-600">
+                                            {window.appSettings?.formatCurrency(v)}
+                                        </span>
+                                    ),
                                 },
                                 {
                                     key: 'net_pay',
                                     label: t('Net Pay'),
-                                    render: (v: number) => <span className="font-mono font-bold text-blue-600">{window.appSettings?.formatCurrency(v)}</span>,
+                                    render: (v: number) => (
+                                        <span className="font-mono font-bold text-blue-600">
+                                            {window.appSettings?.formatCurrency(v)}
+                                        </span>
+                                    ),
                                 },
                                 {
                                     key: 'working_days',
@@ -270,15 +393,23 @@ export default function PayrollRunShow() {
                                 {
                                     key: 'overtime_amount',
                                     label: t('Overtime'),
-                                    render: (v: number) => <span className="font-mono text-green-600">{window.appSettings?.formatCurrency(v || 0)}</span>,
+                                    render: (v: number) => (
+                                        <span className="font-mono text-green-600">
+                                            {window.appSettings?.formatCurrency(v || 0)}
+                                        </span>
+                                    ),
                                 },
                                 {
                                     key: 'unpaid_leave_deduction',
                                     label: t('Leave Deduction'),
-                                    render: (v: number) => <span className="font-mono text-red-600">{window.appSettings?.formatCurrency(v || 0)}</span>,
+                                    render: (v: number) => (
+                                        <span className="font-mono text-red-600">
+                                            {window.appSettings?.formatCurrency(v || 0)}
+                                        </span>
+                                    ),
                                 },
                             ]}
-                            data={payrollRun.payroll_entries || []}
+                            data={entries}
                             from={1}
                             onAction={handleAction}
                             permissions={permissions}

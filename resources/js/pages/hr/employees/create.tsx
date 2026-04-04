@@ -102,6 +102,8 @@ export default function EmployeeCreate() {
         exempt_from_nhima: false,
         exempt_from_sdl: false,
         documents: [],
+        passport_no: '',
+        permit_no: '',
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
