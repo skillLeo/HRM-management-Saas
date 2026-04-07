@@ -642,6 +642,11 @@ class EmployeeController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     *
+     * Payroll entries and payslips linked to this employee are preserved:
+     * the FK is SET NULL so the records survive and history remains intact.
+     * The employee_name snapshot stored at payroll-processing time keeps
+     * the name readable in reports even after the user record is gone.
      */
     public function destroy($userId)
     {
@@ -655,12 +660,20 @@ class EmployeeController extends Controller
 
                 $employee = $user->employee;
 
+                // Remove employee documents (these are not historical financial records)
                 EmployeeDocument::where('employee_id', $employee->id)->delete();
+
+                // Delete the employee profile row
                 $employee->delete();
 
+                // Remove avatar from storage
                 if ($user->avatar) {
                     Storage::disk('public')->delete($user->avatar);
                 }
+
+                // Delete the user account — payroll_entries.employee_id and
+                // payslips.employee_id will be set to NULL automatically by the
+                // database FK (SET NULL), preserving all payroll history.
                 $user->delete();
 
                 return redirect()->route('hr.employees.index')->with('success', __('Employee deleted successfully'));

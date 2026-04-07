@@ -19,11 +19,11 @@ class ZambiaReportController extends Controller
             return redirect()->back()->with('error', __('Permission Denied.'));
         }
 
-        // All completed payroll runs for the dropdown
+        // All processed payroll runs for the dropdown (completed, pending_approval, or final)
         $payrollRuns = PayrollRun::whereIn('created_by', getCompanyAndUsersId())
-            ->where('status', 'completed')
+            ->whereIn('status', ['completed', 'pending_approval', 'final'])
             ->orderBy('pay_period_start', 'desc')
-            ->get(['id', 'title', 'pay_period_start', 'pay_period_end', 'pay_date']);
+            ->get(['id', 'title', 'pay_period_start', 'pay_period_end', 'pay_date', 'status']);
 
         return Inertia::render('hr/zambia-reports/index', [
             'payrollRuns' => $payrollRuns,
@@ -47,11 +47,11 @@ class ZambiaReportController extends Controller
             fputcsv($f, ['Employee Name', 'TPIN', 'Basic Salary (ZMW)', 'Gross Pay (ZMW)', 'PAYE Deducted (ZMW)']);
 
             foreach ($entries as $entry) {
-                $emp         = $entry->employee->employee ?? null;
+                $emp         = $entry->employee?->employee ?? null;
                 $paye        = $this->getDeductionAmount($entry, 'zambia_paye');
 
                 fputcsv($f, [
-                    $entry->employee->name,
+                    $entry->employee?->name ?? $entry->employee_name ?? 'Unknown Employee',
                     $emp->tpin ?? 'N/A',
                     number_format($entry->basic_salary, 2, '.', ''),
                     number_format($entry->gross_pay, 2, '.', ''),
@@ -79,12 +79,12 @@ class ZambiaReportController extends Controller
             fputcsv($f, ['Employee Name', 'NAPSA Number', 'Gross Pay (ZMW)', 'Employee Contribution (ZMW)', 'Employer Contribution (ZMW)', 'Total (ZMW)']);
 
             foreach ($entries as $entry) {
-                $emp      = $entry->employee->employee ?? null;
+                $emp      = $entry->employee?->employee ?? null;
                 $employee = $this->getDeductionAmount($entry, 'zambia_napsa_employee');
                 $employer = $this->getEarningAmount($entry, 'zambia_napsa_employer');
 
                 fputcsv($f, [
-                    $entry->employee->name,
+                    $entry->employee?->name ?? $entry->employee_name ?? 'Unknown Employee',
                     $emp->napsa_number ?? 'N/A',
                     number_format($entry->gross_pay, 2, '.', ''),
                     number_format($employee, 2, '.', ''),
@@ -113,12 +113,12 @@ class ZambiaReportController extends Controller
             fputcsv($f, ['Employee Name', 'NHIMA Number', 'Gross Pay (ZMW)', 'Employee Contribution (ZMW)', 'Employer Contribution (ZMW)', 'Total (ZMW)']);
 
             foreach ($entries as $entry) {
-                $emp      = $entry->employee->employee ?? null;
+                $emp      = $entry->employee?->employee ?? null;
                 $employee = $this->getDeductionAmount($entry, 'zambia_nhima_employee');
                 $employer = $this->getEarningAmount($entry, 'zambia_nhima_employer');
 
                 fputcsv($f, [
-                    $entry->employee->name,
+                    $entry->employee?->name ?? $entry->employee_name ?? 'Unknown Employee',
                     $emp->nhima_number ?? 'N/A',
                     number_format($entry->gross_pay, 2, '.', ''),
                     number_format($employee, 2, '.', ''),
@@ -147,12 +147,13 @@ class ZambiaReportController extends Controller
             fputcsv($f, ['Employee Name', 'Bank Name', 'Account Holder', 'Account Number', 'BIC/SWIFT', 'Net Pay (ZMW)']);
 
             foreach ($entries as $entry) {
-                $emp = $entry->employee->employee ?? null;
+                $emp  = $entry->employee?->employee ?? null;
+                $name = $entry->employee?->name ?? $entry->employee_name ?? 'Unknown Employee';
 
                 fputcsv($f, [
-                    $entry->employee->name,
+                    $name,
                     $emp->bank_name ?? 'N/A',
-                    $emp->account_holder_name ?? $entry->employee->name,
+                    $emp->account_holder_name ?? $name,
                     $emp->account_number ?? 'N/A',
                     $emp->bank_identifier_code ?? 'N/A',
                     number_format($entry->net_pay, 2, '.', ''),

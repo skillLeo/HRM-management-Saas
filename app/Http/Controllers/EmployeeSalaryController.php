@@ -147,9 +147,10 @@ class EmployeeSalaryController extends Controller
 
             // Load component names and types for each salary record
             $employeeSalaries->getCollection()->transform(function ($salary) {
-                if ($salary->components) {
-                    $components = SalaryComponent::whereIn('id', $salary->components)
-                        ->get(['id', 'name', 'type']);
+                $normalised = $salary->getNormalisedComponents();
+                if (!empty($normalised)) {
+                    $ids = array_column($normalised, 'id');
+                    $components = SalaryComponent::whereIn('id', $ids)->get(['id', 'name', 'type']);
                     $salary->component_names = $components->pluck('name')->toArray();
                     $salary->component_types = $components->pluck('type')->toArray();
                 } else {
@@ -165,10 +166,9 @@ class EmployeeSalaryController extends Controller
                 ->whereIn('created_by', getCompanyAndUsersId())
                 ->get(['id', 'name']);
 
-            // Get salary components for form
-            $salaryComponents = SalaryComponent::where('status', 'active')
-                ->whereIn('created_by', getCompanyAndUsersId())
-                ->get(['id', 'name', 'type', 'calculation_type', 'default_amount', 'percentage_of_basic']);
+            // All components (for displaying existing assignments, even inactive ones)
+            $salaryComponents = SalaryComponent::whereIn('created_by', getCompanyAndUsersId())
+                ->get(['id', 'name', 'type', 'calculation_type', 'default_amount', 'percentage_of_basic', 'status']);
 
             return Inertia::render('hr/employee-salaries/index', [
                 'employeeSalaries' => $employeeSalaries,
@@ -211,16 +211,21 @@ class EmployeeSalaryController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'employee_id' => 'required|exists:users,id',
+        $request->validate([
+            'employee_id'  => 'required|exists:users,id',
             'basic_salary' => 'required|numeric|min:0',
-            'components' => 'nullable|array',
-            'components.*' => 'exists:salary_components,id',
-            'notes' => 'nullable|string',
+            'components'   => 'nullable|array',
+            'notes'        => 'nullable|string',
         ]);
 
+        // Normalise and validate components after normalisation
+        $components = $this->normaliseAndValidateComponents($request->input('components', []));
+        if ($components === false) {
+            return redirect()->back()->with('error', __('One or more salary components are invalid.'));
+        }
+
         // Check if employee already has salary
-        $exists = EmployeeSalary::where('employee_id', $validated['employee_id'])
+        $exists = EmployeeSalary::where('employee_id', $request->employee_id)
             ->whereIn('created_by', getCompanyAndUsersId())
             ->exists();
 
@@ -228,10 +233,14 @@ class EmployeeSalaryController extends Controller
             return redirect()->back()->with('error', __('Employee already has a salary record. Please update the existing one.'));
         }
 
-        $validated['created_by'] = creatorId();
-        $validated['is_active'] = true;
-
-        EmployeeSalary::create($validated);
+        EmployeeSalary::create([
+            'employee_id'  => $request->employee_id,
+            'basic_salary' => $request->basic_salary,
+            'components'   => $components,
+            'notes'        => $request->notes,
+            'created_by'   => creatorId(),
+            'is_active'    => true,
+        ]);
 
         return redirect()->back()->with('success', __('Employee salary created successfully.'));
     }
@@ -247,13 +256,18 @@ class EmployeeSalaryController extends Controller
         if ($employeeSalary) {
             try {
                 $validated = $request->validate([
-                    'employee_id' => 'required|exists:users,id',
+                    'employee_id'  => 'required|exists:users,id',
                     'basic_salary' => 'required|numeric|min:0',
-                    'components' => 'nullable|array',
-                    'components.*' => 'exists:salary_components,id',
-                    'is_active' => 'boolean',
-                    'notes' => 'nullable|string',
+                    'components'   => 'nullable|array',
+                    'is_active'    => 'boolean',
+                    'notes'        => 'nullable|string',
                 ]);
+
+                $components = $this->normaliseAndValidateComponents($request->input('components', []));
+                if ($components === false) {
+                    return redirect()->back()->with('error', __('One or more salary components are invalid.'));
+                }
+                $validated['components'] = $components;
 
                 $employeeSalary->update($validated);
 
@@ -271,6 +285,56 @@ class EmployeeSalaryController extends Controller
         } else {
             return redirect()->back()->with('error', __('Employee salary Not Found.'));
         }
+    }
+
+    /**
+     * Normalise raw component input and verify each ID belongs to the company.
+     * Returns the normalised array on success, or false if any ID is invalid.
+     */
+    private function normaliseAndValidateComponents(array $raw): array|false
+    {
+        $normalised = $this->normaliseComponents($raw);
+
+        if (empty($normalised)) {
+            return $normalised;
+        }
+
+        $ids = array_column($normalised, 'id');
+
+        $validIds = SalaryComponent::whereIn('id', $ids)
+            ->whereIn('created_by', getCompanyAndUsersId())
+            ->pluck('id')
+            ->toArray();
+
+        foreach ($ids as $id) {
+            if (!in_array($id, $validIds)) {
+                return false;
+            }
+        }
+
+        return $normalised;
+    }
+
+    /**
+     * Ensure components are always stored as [{id, amount}] objects.
+     * Accepts both the old plain-ID array and the new object array from the frontend.
+     */
+    private function normaliseComponents(array $raw): array
+    {
+        if (empty($raw)) {
+            return [];
+        }
+
+        // Already in object format sent by the new frontend
+        if (isset($raw[0]['id'])) {
+            return array_map(fn($c) => [
+                'id'     => (int) $c['id'],
+                'amount' => isset($c['amount']) && $c['amount'] !== '' ? (float) $c['amount'] : null,
+            ], $raw);
+        }
+
+        // Legacy plain-ID array — no custom amount
+        return array_map(fn($id) => ['id' => (int) $id, 'amount' => null], $raw);
     }
 
     public function destroy($employeeSalaryId)

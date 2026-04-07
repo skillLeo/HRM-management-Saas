@@ -81,10 +81,8 @@ class PayrollRun extends BaseModel
             return false;
         }
 
-        if ($this->status === 'draft') {
-            $this->status = 'processing';
-            $this->save();
-        }
+        $this->status = 'processing';
+        $this->save();
 
         try {
             $zambiaService = new ZambiaPayrollService($this->created_by);
@@ -106,7 +104,23 @@ class PayrollRun extends BaseModel
             $employeeRecords = $query->get();
 
             if ($employeeRecords->isEmpty()) {
+                // If this run already has entries (e.g. unlocked run or partial run),
+                // just recalculate totals and complete rather than throwing an error.
+                if ($this->payrollEntries()->exists()) {
+                    $this->applySDL($zambiaService);
+                    $this->calculateTotals();
+                    $this->status = 'completed';
+                    $this->save();
+                    return true;
+                }
                 throw new \Exception(__('No active employees found for the selected filters.'));
+            }
+
+            // When reprocessing after an unlock, delete existing entries so
+            // every employee gets freshly recalculated figures.
+            // Only do this AFTER confirming there are employees to process.
+            if (!is_null($this->unlocked_at)) {
+                $this->payrollEntries()->delete();
             }
 
             foreach ($employeeRecords as $employeeRecord) {
@@ -119,18 +133,8 @@ class PayrollRun extends BaseModel
             $this->applySDL($zambiaService);
             $this->calculateTotals();
 
-            $totalActiveEmployees = Employee::whereIn('created_by', getCompanyAndUsersId())
-                ->whereIn('employee_status', ['active', 'probation'])
-                ->count();
-
-            $processedEmployees = $this->payrollEntries()->count();
-
-            if ($processedEmployees >= $totalActiveEmployees) {
-                $this->status = 'completed';
-            } else {
-                $this->status = 'processing';
-            }
-
+            // Mark as completed as long as at least one entry was created/exists.
+            $this->status = $this->payrollEntries()->exists() ? 'completed' : 'draft';
             $this->save();
 
             return true;
@@ -312,6 +316,7 @@ class PayrollRun extends BaseModel
         PayrollEntry::create([
             'payroll_run_id'         => $this->id,
             'employee_id'            => $employee->id,
+            'employee_name'          => $employee->name,
             'basic_salary'           => $employeeSalary->basic_salary,
             'component_earnings'     => $componentEarnings,
             'total_earnings'         => $totalEarnings,

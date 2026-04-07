@@ -31,7 +31,7 @@ export default function PayrollRunShow() {
         },
     ];
 
-    if (payrollRun.status === 'completed') {
+    if (payrollRun.status === 'completed' || payrollRun.status === 'final') {
         pageActions.unshift({
             label: t('Generate Payslips'),
             icon: <Download className="mr-2 h-4 w-4" />,
@@ -291,7 +291,8 @@ export default function PayrollRunShow() {
                                 {
                                     key: 'employee',
                                     label: t('Employee'),
-                                    render: (_: any, row: any) => row.employee?.name || '-',
+                                    render: (_: any, row: any) =>
+                                        row.employee?.name || row.employee_name || '-',
                                 },
                                 {
                                     key: 'basic_salary',

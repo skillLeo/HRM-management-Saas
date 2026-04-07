@@ -29,6 +29,7 @@ class PayslipController extends Controller
             if ($request->has('search') && ! empty($request->search)) {
                 $query->where(function ($q) use ($request) {
                     $q->where('payslip_number', 'like', '%' . $request->search . '%')
+                        ->orWhere('employee_name', 'like', '%' . $request->search . '%')
                         ->orWhereHas('employee', function ($subQ) use ($request) {
                             $subQ->where('name', 'like', '%' . $request->search . '%');
                         });
@@ -117,6 +118,7 @@ class PayslipController extends Controller
                 $payslip = Payslip::create([
                     'payroll_entry_id' => $entryId,
                     'employee_id' => $payrollEntry->employee_id,
+                    'employee_name' => $payrollEntry->employee?->name ?? null,
                     'payslip_number' => $payslipNumber,
                     'pay_period_start' => $payrollEntry->payrollRun->pay_period_start,
                     'pay_period_end' => $payrollEntry->payrollRun->pay_period_end,
@@ -246,19 +248,23 @@ class PayslipController extends Controller
                     $entry->payrollRun->pay_date
                 );
 
-                Payslip::create([
+                $payslip = Payslip::create([
                     'payroll_entry_id' => $entry->id,
-                    'employee_id' => $entry->employee_id,
-                    'payslip_number' => $payslipNumber,
+                    'employee_id'      => $entry->employee_id,
+                    'employee_name'    => $entry->employee?->name ?? $entry->employee_name ?? null,
+                    'payslip_number'   => $payslipNumber,
                     'pay_period_start' => $entry->payrollRun->pay_period_start,
-                    'pay_period_end' => $entry->payrollRun->pay_period_end,
-                    'pay_date' => $entry->payrollRun->pay_date,
-                    'status' => 'generated',
-                    'created_by' => creatorId(),
+                    'pay_period_end'   => $entry->payrollRun->pay_period_end,
+                    'pay_date'         => $entry->payrollRun->pay_date,
+                    'status'           => 'generated',
+                    'created_by'       => creatorId(),
                 ]);
 
-                // Generate PDF
-                // $payslip->generatePDF();
+                try {
+                    $payslip->generatePDF();
+                } catch (\Exception $pdfEx) {
+                    // PDF generation failed; payslip record still created, download will render on-the-fly
+                }
                 $generatedCount++;
             }
 

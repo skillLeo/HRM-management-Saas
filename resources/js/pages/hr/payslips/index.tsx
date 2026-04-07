@@ -151,7 +151,7 @@ export default function Payslips() {
     {
       key: 'employee',
       label: t('Employee'),
-      render: (value: any, row: any) => row.employee?.name || '-'
+      render: (value: any, row: any) => row.employee?.name || row.employee_name || '-'
     },
     {
       key: 'pay_period',

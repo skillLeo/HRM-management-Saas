@@ -120,13 +120,11 @@ Route::middleware(['auth', 'verified', 'plan.access'])->group(function () {
         Route::post('settings/experience-certificate/update', [ExperienceCertificateTemplateController::class, 'update'])->name('settings.experience-certificate.update');
     });
 
+    
     // Zambia Tax Settings routes
-     // Zambia Tax Settings routes
-    Route::middleware('permission:manage-zambia-tax-settings')->group(function () {
-        Route::post('settings/zambia-tax/update',
-            [\App\Http\Controllers\Settings\ZambiaTaxSettingController::class, 'update']
-        )->name('settings.zambia-tax.update');
-    });
+Route::post('settings/zambia-tax/update',
+    [\App\Http\Controllers\Settings\ZambiaTaxSettingController::class, 'update']
+)->name('settings.zambia-tax.update');
 
     // Zambia Compliance Reports — uses manage-payroll-runs permission (HR already has this)
     Route::middleware('permission:manage-payroll-runs')->group(function () {

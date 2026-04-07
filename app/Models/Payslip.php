@@ -14,6 +14,7 @@ class Payslip extends BaseModel
     protected $fillable = [
         'payroll_entry_id',
         'employee_id',
+        'employee_name',
         'payslip_number',
         'pay_period_start',
         'pay_period_end',

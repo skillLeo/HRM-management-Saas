@@ -27,19 +27,19 @@ class ZambiaPayrollService
                 'rate' => (float) ($this->settings['zambia_paye_slab_1_rate'] ?? 0) / 100,
             ],
             [
-                'min'  => (float) ($this->settings['zambia_paye_slab_2_min'] ?? 5101),
+                'min'  => (float) ($this->settings['zambia_paye_slab_2_min'] ?? 5100.01),
                 'max'  => (float) ($this->settings['zambia_paye_slab_2_max'] ?? 7100),
-                'rate' => (float) ($this->settings['zambia_paye_slab_2_rate'] ?? 20) / 100,
+                'rate' => (float) ($this->settings['zambia_paye_slab_2_rate'] ?? 25) / 100,
             ],
             [
-                'min'  => (float) ($this->settings['zambia_paye_slab_3_min'] ?? 7101),
+                'min'  => (float) ($this->settings['zambia_paye_slab_3_min'] ?? 7100.01),
                 'max'  => (float) ($this->settings['zambia_paye_slab_3_max'] ?? 9200),
                 'rate' => (float) ($this->settings['zambia_paye_slab_3_rate'] ?? 30) / 100,
             ],
             [
-                'min'  => (float) ($this->settings['zambia_paye_slab_4_min'] ?? 9201),
+                'min'  => (float) ($this->settings['zambia_paye_slab_4_min'] ?? 9201.01),
                 'max'  => (float) ($this->settings['zambia_paye_slab_4_max'] ?? 999999999),
-                'rate' => (float) ($this->settings['zambia_paye_slab_4_rate'] ?? 37) / 100,
+                'rate' => (float) ($this->settings['zambia_paye_slab_4_rate'] ?? 35) / 100,
             ],
         ];
 

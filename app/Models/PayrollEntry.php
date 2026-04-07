@@ -12,6 +12,7 @@ class PayrollEntry extends BaseModel
     protected $fillable = [
         'payroll_run_id',
         'employee_id',
+        'employee_name',
         'basic_salary',
         'component_earnings',
         'total_earnings',
@@ -90,12 +91,21 @@ class PayrollEntry extends BaseModel
     }
     
     /**
+     * Returns the employee display name, falling back to the snapshotted name
+     * stored at processing time so deleted-employee records remain readable.
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->employee?->name ?? $this->employee_name ?? 'Unknown Employee';
+    }
+
+    /**
      * Get complete salary breakdown showing all interconnections.
      */
     public function getCompleteSalaryBreakdown()
     {
         $breakdown = [
-            'employee_name' => $this->employee->name,
+            'employee_name' => $this->display_name,
             'pay_period' => $this->payrollRun->pay_period_start->format('M Y'),
             
             // Attendance Data (from Attendance Management)

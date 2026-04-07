@@ -425,7 +425,7 @@ export default function Settings() {
           )}
 
           {/* Zambia Tax Settings */}
-          {auth.user?.type === 'company' && (
+          {(auth.user?.type === 'company' || auth.permissions?.includes('manage-zambia-tax-settings')) && (
             <section id="zambia-tax-settings" ref={zambiaTaxSettingsRef} className="mb-8">
               <ZambiaTaxSettings settings={zambiaTaxSettings} />
             </section>

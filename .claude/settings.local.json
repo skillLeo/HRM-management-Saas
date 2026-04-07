@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(grep -E \"\\\\.\\(php|tsx|ts\\)$\")",
+      "Bash(grep -n \"Foreign Key\\\\|CASCADE\\\\|RESTRICT\" /c/xampp/htdocs/HRM-management-Saas/database/migrations/*employee*)",
+      "Bash(php artisan:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}
