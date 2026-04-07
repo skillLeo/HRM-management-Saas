@@ -209,10 +209,12 @@ class EmployeeController extends Controller
                     'first_name' => 'required|string|max:100',
                     'middle_name' => 'nullable|string|max:100',
                     'last_name' => 'required|string|max:100',
-                    'nationality' => 'nullable|string|max:100',
-                    'marital_status' => 'nullable|string|max:50',
+                    'nationality' => 'required|string|max:100',
+                    'marital_status' => 'required|string|max:50',
                     'nrc' => ['nullable', 'string', 'regex:/^\d{6}\/\d{2}\/\d{1}$/'],
-                    'tpin' => 'nullable|string|max:50',
+                    'passport_no' => 'nullable|string|max:100',
+                    'permit_no' => 'nullable|string|max:100',
+                    'tpin' => 'required|string|max:50',
                     'biometric_emp_id' => 'nullable|string|max:255|unique:employees,biometric_emp_id',
                     'email' => 'required|email|max:255|unique:users,email',
                     'password' => 'required|string|min:8',
@@ -308,7 +310,9 @@ class EmployeeController extends Controller
                 $employee->last_name = $request->last_name;
                 $employee->nationality = $request->nationality;
                 $employee->marital_status = $request->marital_status;
-                $employee->nrc = $request->nrc;
+                $employee->nrc = $request->nationality === 'Zambian' ? $request->nrc : null;
+                $employee->passport_no = $request->nationality !== 'Zambian' ? $request->passport_no : null;
+                $employee->permit_no = $request->nationality !== 'Zambian' ? $request->permit_no : null;
                 $employee->tpin = $request->tpin;
                 $employee->phone = $request->phone;
                 $employee->date_of_birth = $request->date_of_birth;
@@ -487,10 +491,12 @@ class EmployeeController extends Controller
                     'first_name' => 'required|string|max:100',
                     'middle_name' => 'nullable|string|max:100',
                     'last_name' => 'required|string|max:100',
-                    'nationality' => 'nullable|string|max:100',
-                    'marital_status' => 'nullable|string|max:50',
+                    'nationality' => 'required|string|max:100',
+                    'marital_status' => 'required|string|max:50',
                     'nrc' => ['nullable', 'string', 'regex:/^\d{6}\/\d{2}\/\d{1}$/'],
-                    'tpin' => 'nullable|string|max:50',
+                    'passport_no' => 'nullable|string|max:100',
+                    'permit_no' => 'nullable|string|max:100',
+                    'tpin' => 'required|string|max:50',
                     'biometric_emp_id' => 'nullable|string|max:255|unique:employees,biometric_emp_id,' . $employee->id,
                     'email' => 'required|email|max:255|unique:users,email,' . $employee->user_id,
                     'password' => 'nullable|string|min:8',
@@ -570,7 +576,9 @@ class EmployeeController extends Controller
                 $employee->last_name = $request->last_name;
                 $employee->nationality = $request->nationality;
                 $employee->marital_status = $request->marital_status;
-                $employee->nrc = $request->nrc;
+                $employee->nrc = $request->nationality === 'Zambian' ? $request->nrc : null;
+                $employee->passport_no = $request->nationality !== 'Zambian' ? $request->passport_no : null;
+                $employee->permit_no = $request->nationality !== 'Zambian' ? $request->permit_no : null;
                 $employee->tpin = $request->tpin;
                 $employee->phone = $request->phone;
                 $employee->date_of_birth = $request->date_of_birth;

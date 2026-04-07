@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EmployeeSalary;
+use App\Models\PayrollEntry;
 use App\Models\SalaryComponent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -164,15 +166,35 @@ class SalaryComponentController extends Controller
             ->whereIn('created_by', getCompanyAndUsersId())
             ->first();
 
-        if ($salaryComponent) {
-            try {
-                $salaryComponent->delete();
-                return redirect()->back()->with('success', __('Salary component deleted successfully'));
-            } catch (\Exception $e) {
-                return redirect()->back()->with('error', $e->getMessage() ?: __('Failed to delete salary component'));
-            }
-        } else {
+        if (!$salaryComponent) {
             return redirect()->back()->with('error', __('Salary component Not Found.'));
+        }
+
+        // Block deletion if the component is referenced in any employee salary or payroll entry.
+        // Mark it inactive instead so history is preserved.
+        $usedInSalaries = EmployeeSalary::whereJsonContains('components', ['id' => (int)$salaryComponentId])
+            ->whereIn('created_by', getCompanyAndUsersId())
+            ->exists();
+
+        $usedInPayroll = PayrollEntry::whereIn('created_by', getCompanyAndUsersId())
+            ->where(function ($q) use ($salaryComponentId) {
+                $q->whereRaw("JSON_SEARCH(earnings_breakdown, 'one', ?, null, '$[*].component_id') IS NOT NULL", [$salaryComponentId])
+                  ->orWhereRaw("JSON_SEARCH(deductions_breakdown, 'one', ?, null, '$[*].component_id') IS NOT NULL", [$salaryComponentId]);
+            })
+            ->exists();
+
+        if ($usedInSalaries || $usedInPayroll) {
+            // Cannot delete — mark inactive instead
+            $salaryComponent->status = 'inactive';
+            $salaryComponent->save();
+            return redirect()->back()->with('success', __('Salary component has been used in payroll and cannot be deleted. It has been marked as inactive instead.'));
+        }
+
+        try {
+            $salaryComponent->delete();
+            return redirect()->back()->with('success', __('Salary component deleted successfully'));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage() ?: __('Failed to delete salary component'));
         }
     }
 

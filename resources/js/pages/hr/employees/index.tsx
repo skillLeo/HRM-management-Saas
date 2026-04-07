@@ -13,7 +13,7 @@ import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
 import { useInitials } from '@/hooks/use-initials';
 import { hasPermission } from '@/utils/authorization';
 import { router, usePage } from '@inertiajs/react';
-import { Edit, Eye, FileDown, FileUp, Key, Lock, MoreHorizontal, Plus, Trash2, Unlock } from 'lucide-react';
+import { ChevronDown, Edit, Eye, FileDown, FileText, FileUp, Key, Lock, MoreHorizontal, Plus, Trash2, Unlock } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -296,6 +296,28 @@ export default function Employees() {
         }
     };
 
+    // Helper: POST form download for employee reports
+    const downloadEmployeeReport = (routeName: string, extraFields: Record<string, string> = {}) => {
+        const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = route(routeName);
+        form.target = '_blank';
+        const addField = (n: string, v: string) => {
+            const input = document.createElement('input');
+            input.type = 'hidden'; input.name = n; input.value = v;
+            form.appendChild(input);
+        };
+        addField('_token', csrfToken);
+        Object.entries(extraFields).forEach(([k, v]) => addField(k, v));
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+        toast.success(t('Report download started'));
+    };
+
+    const [reportStatusFilter, setReportStatusFilter] = useState('all');
+
     // Define page actions
     const pageActions = [];
 
@@ -528,6 +550,59 @@ export default function Employees() {
 
     return (
         <PageTemplate title={t('Employees')} url="/hr/employees" actions={pageActions} breadcrumbs={breadcrumbs} noPadding>
+            {/* Employee Reports — accessible from this list */}
+            {hasPermission(permissions, 'manage-employees') && (
+                <div className="mb-4 flex items-center justify-end gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="gap-1.5">
+                                <FileText className="h-4 w-4" />
+                                {t('Employee Reports')}
+                                <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-64">
+                            <DropdownMenuItem
+                                onClick={() => downloadEmployeeReport('hr.zambia-reports.employee-list')}
+                                className="cursor-pointer"
+                            >
+                                <FileDown className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <div>
+                                    <p className="text-sm font-medium">{t('Employee List Report')}</p>
+                                    <p className="text-xs text-muted-foreground">{t('Names, DOJ, TPIN, NAPSA, NHIMA')}</p>
+                                </div>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <div className="px-2 py-1.5">
+                                <p className="text-xs text-muted-foreground mb-1">{t('Employee Status Report — Filter by:')}</p>
+                                <select
+                                    className="w-full border border-input rounded px-2 py-1 text-xs bg-background mb-1.5"
+                                    value={reportStatusFilter}
+                                    onChange={e => setReportStatusFilter(e.target.value)}
+                                    onClick={e => e.stopPropagation()}
+                                >
+                                    <option value="all">{t('All Statuses')}</option>
+                                    <option value="active">{t('Active')}</option>
+                                    <option value="inactive">{t('Inactive')}</option>
+                                    <option value="terminated">{t('Terminated')}</option>
+                                    <option value="suspended">{t('Suspended')}</option>
+                                    <option value="probation">{t('Probation')}</option>
+                                </select>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="w-full text-xs h-7"
+                                    onClick={() => downloadEmployeeReport('hr.zambia-reports.employee-status', { status: reportStatusFilter })}
+                                >
+                                    <FileDown className="mr-1.5 h-3.5 w-3.5" />
+                                    {t('Download Status Report')}
+                                </Button>
+                            </div>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            )}
+
             {/* Search and filters section */}
             <div className="mb-4 rounded-lg bg-white p-4 shadow dark:bg-gray-900">
                 <SearchAndFilterBar

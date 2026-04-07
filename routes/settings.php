@@ -140,5 +140,19 @@ Route::post('settings/zambia-tax/update',
             ->name('hr.zambia-reports.bank-schedule');
         Route::post('hr/zambia-reports/payroll-summary', [\App\Http\Controllers\ZambiaReportController::class, 'payrollSummary'])
             ->name('hr.zambia-reports.payroll-summary');
+        Route::post('hr/zambia-reports/payroll-detailed', [\App\Http\Controllers\ZambiaReportController::class, 'payrollDetailed'])
+            ->name('hr.zambia-reports.payroll-detailed');
+        Route::post('hr/zambia-reports/payroll-entries', [\App\Http\Controllers\ZambiaReportController::class, 'payrollEntries'])
+            ->name('hr.zambia-reports.payroll-entries');
+        Route::post('hr/zambia-reports/contributory-history', [\App\Http\Controllers\ZambiaReportController::class, 'contributoryHistory'])
+            ->name('hr.zambia-reports.contributory-history');
+        Route::post('hr/zambia-reports/deductions-report', [\App\Http\Controllers\ZambiaReportController::class, 'deductionsReport'])
+            ->name('hr.zambia-reports.deductions-report');
+        Route::post('hr/zambia-reports/variance-report', [\App\Http\Controllers\ZambiaReportController::class, 'varianceReport'])
+            ->name('hr.zambia-reports.variance-report');
+        Route::post('hr/zambia-reports/employee-list', [\App\Http\Controllers\ZambiaReportController::class, 'employeeList'])
+            ->name('hr.zambia-reports.employee-list');
+        Route::post('hr/zambia-reports/employee-status', [\App\Http\Controllers\ZambiaReportController::class, 'employeeStatus'])
+            ->name('hr.zambia-reports.employee-status');
     });
 });

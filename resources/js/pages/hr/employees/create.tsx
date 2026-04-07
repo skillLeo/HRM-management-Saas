@@ -420,9 +420,9 @@ export default function EmployeeCreate() {
                                 {errors.gender && <p className="text-xs text-red-500">{errors.gender}</p>}
                             </div>
 
-                            {/* Nationality */}
+                            {/* Nationality — REQUIRED */}
                             <div className="space-y-2">
-                                <Label htmlFor="nationality">{t('Nationality')}</Label>
+                                <Label htmlFor="nationality" required>{t('Nationality')}</Label>
                                 <Select value={formData.nationality} onValueChange={(value) => handleChange('nationality', value)}>
                                     <SelectTrigger className={errors.nationality ? 'border-red-500' : ''}>
                                         <SelectValue placeholder={t('Select Nationality')} />
@@ -465,9 +465,9 @@ export default function EmployeeCreate() {
                                 {errors.nationality && <p className="text-xs text-red-500">{errors.nationality}</p>}
                             </div>
 
-                            {/* Marital Status */}
+                            {/* Marital Status — REQUIRED */}
                             <div className="space-y-2">
-                                <Label htmlFor="marital_status">{t('Marital Status')}</Label>
+                                <Label htmlFor="marital_status" required>{t('Marital Status')}</Label>
                                 <Select value={formData.marital_status} onValueChange={(value) => handleChange('marital_status', value)}>
                                     <SelectTrigger className={errors.marital_status ? 'border-red-500' : ''}>
                                         <SelectValue placeholder={t('Select Marital Status')} />
@@ -482,9 +482,10 @@ export default function EmployeeCreate() {
                                 {errors.marital_status && <p className="text-xs text-red-500">{errors.marital_status}</p>}
                             </div>
 
-                            {/* NRC — Zambian format XXXXXX/XX/X */}
+                            {/* NRC — Zambian only; Passport+Permit for non-Zambian */}
+                            {formData.nationality === 'Zambian' ? (
                             <div className="space-y-2">
-                                <Label htmlFor="nrc">{t('NRC (National Registration Card)')}</Label>
+                                <Label htmlFor="nrc" required>{t('NRC (National Registration Card)')}</Label>
                                 <Input
                                     id="nrc"
                                     value={formData.nrc}
@@ -502,10 +503,39 @@ export default function EmployeeCreate() {
                                 <p className="text-muted-foreground text-xs">{t('Format: XXXXXX/XX/X')}</p>
                                 {errors.nrc && <p className="text-xs text-red-500">{errors.nrc}</p>}
                             </div>
+                            ) : formData.nationality ? (
+                            <>
+                                {/* Passport No — non-Zambian employees */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="passport_no" required>{t('Passport No')}</Label>
+                                    <Input
+                                        id="passport_no"
+                                        value={formData.passport_no}
+                                        onChange={(e) => handleChange('passport_no', e.target.value)}
+                                        placeholder={t('Enter passport number')}
+                                        className={errors.passport_no ? 'border-red-500' : ''}
+                                    />
+                                    {errors.passport_no && <p className="text-xs text-red-500">{errors.passport_no}</p>}
+                                </div>
 
-                            {/* TPIN */}
+                                {/* Permit No — non-Zambian employees */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="permit_no">{t('Permit No')}</Label>
+                                    <Input
+                                        id="permit_no"
+                                        value={formData.permit_no}
+                                        onChange={(e) => handleChange('permit_no', e.target.value)}
+                                        placeholder={t('Enter permit number')}
+                                        className={errors.permit_no ? 'border-red-500' : ''}
+                                    />
+                                    {errors.permit_no && <p className="text-xs text-red-500">{errors.permit_no}</p>}
+                                </div>
+                            </>
+                            ) : null}
+
+                            {/* TPIN — REQUIRED */}
                             <div className="space-y-2">
-                                <Label htmlFor="tpin">{t('TPIN (Tax ID)')}</Label>
+                                <Label htmlFor="tpin" required>{t('TPIN (Tax ID)')}</Label>
                                 <Input
                                     id="tpin"
                                     value={formData.tpin}

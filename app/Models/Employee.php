@@ -57,6 +57,8 @@ class Employee extends Model
     'nationality',
     'marital_status',
     'nrc',
+    'passport_no',
+    'permit_no',
 ];
 
     /**

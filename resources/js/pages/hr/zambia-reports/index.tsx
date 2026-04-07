@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { PageTemplate } from '@/components/page-template';
-import { usePage, router } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import { Download, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/custom-toast';
@@ -13,6 +13,8 @@ export default function ZambiaReports() {
     const { payrollRuns, flash } = usePage().props as any;
 
     const [selectedRun, setSelectedRun] = useState('');
+    const [historyType, setHistoryType] = useState('napsa');
+    const [historyYear, setHistoryYear] = useState(new Date().getFullYear().toString());
     const [loading, setLoading] = useState<string | null>(null);
 
     useEffect(() => {
@@ -26,79 +28,101 @@ export default function ZambiaReports() {
         { title: t('Zambia Compliance Reports') },
     ];
 
-    const downloadReport = (routeName: string, label: string) => {
-        if (!selectedRun) {
-            toast.error(t('Please select a payroll run first'));
-            return;
-        }
+    const getCsrfToken = () =>
+        (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
 
+    const postDownload = (routeName: string, fields: Record<string, string> = {}) => {
         setLoading(routeName);
-
-        // Use a hidden form POST — bypasses CSRF and fetch blob issues in Inertia apps
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = route(routeName);
-        form.target = '_blank'; // open in new tab so page doesn't reload
-
-        // CSRF token
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = '_token';
-        csrfInput.value = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
-        form.appendChild(csrfInput);
-
-        // Payroll run ID
-        const runInput = document.createElement('input');
-        runInput.type = 'hidden';
-        runInput.name = 'payroll_run_id';
-        runInput.value = selectedRun;
-        form.appendChild(runInput);
-
+        form.target = '_blank';
+        const addField = (n: string, v: string) => {
+            const i = document.createElement('input');
+            i.type = 'hidden'; i.name = n; i.value = v;
+            form.appendChild(i);
+        };
+        addField('_token', getCsrfToken());
+        Object.entries(fields).forEach(([k, v]) => addField(k, v));
         document.body.appendChild(form);
         form.submit();
         document.body.removeChild(form);
-
         toast.success(t('Report download started'));
         setLoading(null);
     };
 
-    const reports = [
+    const downloadRunReport = (routeName: string) => {
+        if (!selectedRun) { toast.error(t('Please select a payroll run first')); return; }
+        postDownload(routeName, { payroll_run_id: selectedRun });
+    };
+
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 5 }, (_, i) => (currentYear - i).toString());
+
+    const statutoryReports = [
         {
             key: 'hr.zambia-reports.paye-p11',
             title: t('PAYE P11 Report'),
-            description: t('Employee TPIN, gross salary and PAYE deducted for the month. Submit to ZRA.'),
-            filename: 'PAYE_P11',
-            color: 'border-l-blue-500',
+            description: t('Employee TPIN, gross salary and PAYE deducted. Submit to ZRA.'),
         },
         {
             key: 'hr.zambia-reports.napsa-schedule',
             title: t('NAPSA Schedule'),
-            description: t('Employee NAPSA numbers, gross salary, employee and employer contributions. Submit to NAPSA office.'),
-            filename: 'NAPSA_Schedule',
-            color: 'border-l-green-500',
+            description: t('NAPSA numbers, gross salary, employee & employer contributions.'),
         },
         {
             key: 'hr.zambia-reports.nhima-report',
             title: t('NHIMA Report'),
-            description: t('Employee NHIMA numbers, gross salary, employee and employer contributions. Submit to NHIMA office.'),
-            filename: 'NHIMA_Report',
-            color: 'border-l-purple-500',
+            description: t('NHIMA numbers, gross salary, employee & employer contributions.'),
         },
         {
             key: 'hr.zambia-reports.bank-schedule',
             title: t('Bank Payment Schedule'),
-            description: t('Employee bank details and net pay amounts. Send to your bank to process salary payments.'),
-            filename: 'Bank_Schedule',
-            color: 'border-l-orange-500',
+            description: t('Employee bank details and net pay amounts for bank transfer.'),
         },
         {
             key: 'hr.zambia-reports.payroll-summary',
             title: t('Payroll Summary'),
-            description: t('Overall totals — gross pay, all deductions, net pay, and total employer cost for the month.'),
-            filename: 'Payroll_Summary',
-            color: 'border-l-red-500',
+            description: t('Overall totals — gross pay, all deductions, net pay and employer cost.'),
+        },
+        {
+            key: 'hr.zambia-reports.payroll-detailed',
+            title: t('Payroll Detailed Report'),
+            description: t('Full per-employee breakdown: basic, earnings, PAYE, NAPSA, NHIMA and net pay.'),
+        },
+        {
+            key: 'hr.zambia-reports.deductions-report',
+            title: t('Deductions Report'),
+            description: t('Detailed and summary view of all deductions per employee.'),
+        },
+        {
+            key: 'hr.zambia-reports.variance-report',
+            title: t('Variance vs Previous Month'),
+            description: t('Comparison of gross pay, net pay and PAYE against the previous payroll run.'),
         },
     ];
+
+    const DownloadBtn = ({ routeKey, disabled = false }: { routeKey: string; disabled?: boolean }) => (
+        <Button
+            size="sm"
+            variant="outline"
+            disabled={disabled || loading === routeKey}
+            onClick={() => disabled ? undefined : downloadRunReport(routeKey)}
+            className="shrink-0 min-w-[120px]"
+        >
+            {loading === routeKey ? (
+                <span className="flex items-center gap-1.5">
+                    <span className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    {t('Generating...')}
+                </span>
+            ) : (
+                <span className="flex items-center gap-1.5">
+                    <Download className="h-3.5 w-3.5" />
+                    {t('Download CSV')}
+                </span>
+            )}
+        </Button>
+    );
 
     return (
         <PageTemplate
@@ -107,20 +131,90 @@ export default function ZambiaReports() {
             breadcrumbs={breadcrumbs}
             noPadding
         >
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-8">
 
-                {/* Payroll Run Selector */}
-                <Card>
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-base">{t('Select Payroll Run')}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="max-w-md space-y-1">
-                            <Label className="text-sm text-muted-foreground">
-                                {t('All reports below will be generated for the selected payroll run')}
-                            </Label>
+                {/* ── NAPSA / NHIMA Contributory History ──────────────────── */}
+                <div>
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                        {t('NAPSA / NHIMA Contributory History')}
+                    </h2>
+                    <Card>
+                        <CardContent className="pt-5 pb-4">
+                            <div className="flex flex-wrap items-end justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm text-muted-foreground mb-3">
+                                        {t('Monthly contribution history for every employee across all completed payroll runs for the selected year.')}
+                                    </p>
+                                    <div className="flex gap-4 flex-wrap">
+                                        <div className="space-y-1">
+                                            <Label className="text-xs">{t('Contribution Type')}</Label>
+                                            <select
+                                                className="border border-input rounded-md px-3 py-1.5 text-sm bg-background"
+                                                value={historyType}
+                                                onChange={e => setHistoryType(e.target.value)}
+                                            >
+                                                <option value="napsa">{t('NAPSA')}</option>
+                                                <option value="nhima">{t('NHIMA')}</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs">{t('Year')}</Label>
+                                            <select
+                                                className="border border-input rounded-md px-3 py-1.5 text-sm bg-background"
+                                                value={historyYear}
+                                                onChange={e => setHistoryYear(e.target.value)}
+                                            >
+                                                {years.map(y => (
+                                                    <option key={y} value={y}>{y}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="min-w-[120px]"
+                                    disabled={loading === 'hr.zambia-reports.contributory-history'}
+                                    onClick={() => postDownload('hr.zambia-reports.contributory-history', {
+                                        type: historyType,
+                                        year: historyYear,
+                                    })}
+                                >
+                                    {loading === 'hr.zambia-reports.contributory-history' ? (
+                                        <span className="flex items-center gap-1.5">
+                                            <span className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                            {t('Generating...')}
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-1.5">
+                                            <Download className="h-3.5 w-3.5" />
+                                            {t('Download CSV')}
+                                        </span>
+                                    )}
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* ── Payroll Run Reports ──────────────────────────────────── */}
+                <div>
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                        {t('Payroll Run Reports')}
+                    </h2>
+
+                    {/* Payroll Run Selector */}
+                    <Card className="mb-4">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium">{t('Select Payroll Run')}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                            <p className="text-xs text-muted-foreground mb-2">
+                                {t('All reports below will be generated for the selected payroll run.')}
+                            </p>
                             <select
-                                className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background"
+                                className="w-full max-w-md border border-input rounded-md px-3 py-2 text-sm bg-background"
                                 value={selectedRun}
                                 onChange={e => setSelectedRun(e.target.value)}
                             >
@@ -131,53 +225,32 @@ export default function ZambiaReports() {
                                     </option>
                                 ))}
                             </select>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
 
-                {/* Report Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {reports.map(report => (
-                        <Card key={report.key} className={`border-l-4 ${report.color}`}>
-                            <CardContent className="pt-5 pb-4">
-                                <div className="flex items-start justify-between gap-4">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <FileText className="h-4 w-4 text-muted-foreground" />
-                                            <span className="font-semibold text-sm">{report.title}</span>
+                    {/* Report table-style list */}
+                    <Card>
+                        <CardContent className="p-0">
+                            <div className="divide-y divide-border">
+                                {statutoryReports.map((report, idx) => (
+                                    <div key={report.key} className={`flex items-center justify-between gap-4 px-5 py-4 ${idx % 2 === 0 ? '' : 'bg-muted/30'}`}>
+                                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                                            <FileText className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-medium">{report.title}</p>
+                                                <p className="text-xs text-muted-foreground mt-0.5">{report.description}</p>
+                                            </div>
                                         </div>
-                                        <p className="text-xs text-muted-foreground leading-relaxed">
-                                            {report.description}
-                                        </p>
+                                        <DownloadBtn routeKey={report.key} disabled={!selectedRun} />
                                     </div>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        disabled={!selectedRun || loading === report.key}
-                                        onClick={() => downloadReport(report.key, report.filename)}
-                                        className="shrink-0"
-                                    >
-                                        {loading === report.key ? (
-                                            <span className="flex items-center gap-1.5">
-                                                <span className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                                {t('Generating...')}
-                                            </span>
-                                        ) : (
-                                            <span className="flex items-center gap-1.5">
-                                                <Download className="h-3.5 w-3.5" />
-                                                {t('Download CSV')}
-                                            </span>
-                                        )}
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
-                {/* Info note */}
                 <p className="text-xs text-muted-foreground text-center">
-                    {t('All reports export as CSV. Select the payroll run above then click Download CSV next to each report.')}
+                    {t('All reports export as CSV. Open in Excel or any spreadsheet application.')}
                 </p>
             </div>
         </PageTemplate>

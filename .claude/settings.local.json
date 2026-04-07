@@ -5,7 +5,9 @@
       "Bash(grep -E \"\\\\.\\(php|tsx|ts\\)$\")",
       "Bash(grep -n \"Foreign Key\\\\|CASCADE\\\\|RESTRICT\" /c/xampp/htdocs/HRM-management-Saas/database/migrations/*employee*)",
       "Bash(php artisan:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(node -e \"const icons = require\\('lucide-react'\\); console.log\\(Object.keys\\(icons\\).filter\\(k => k.includes\\('Bar'\\) || k.includes\\('Chart'\\)\\).join\\(', '\\)\\)\")",
+      "Bash(node -e \"const icons = require\\('./node_modules/lucide-react'\\); const keys = Object.keys\\(icons\\).filter\\(k => k.toLowerCase\\(\\).includes\\('chart'\\) || k.toLowerCase\\(\\).includes\\('bar'\\)\\); console.log\\(keys.slice\\(0,20\\).join\\(', '\\)\\)\")"
     ]
   }
 }

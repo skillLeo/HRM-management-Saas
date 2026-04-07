@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PageTemplate } from '@/components/page-template';
 import { usePage, router } from '@inertiajs/react';
-import { Plus, Play, FileDown, FileUp, Send, CheckCircle, Unlock } from 'lucide-react';
+import { Plus, Play, FileDown, FileUp, Send, CheckCircle, Unlock, BarChart2, Download } from 'lucide-react';
 import { hasPermission } from '@/utils/authorization';
 import { CrudTable } from '@/components/CrudTable';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
@@ -74,8 +74,29 @@ export default function PayrollRuns() {
   const [isDeleteModalOpen, setIsDeleteModalOpen]   = useState(false);
   const [isImportModalOpen, setIsImportModalOpen]   = useState(false);
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen]   = useState(false);
   const [currentItem, setCurrentItem]               = useState<any>(null);
   const [formMode, setFormMode]                     = useState<'create' | 'edit' | 'view'>('create');
+
+  // ── Report download helper ──────────────────────────────────────────────────
+  const downloadRunReport = (routeName: string, runId: string | number) => {
+    const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = route(routeName);
+    form.target = '_blank';
+    const addField = (n: string, v: string) => {
+      const input = document.createElement('input');
+      input.type = 'hidden'; input.name = n; input.value = v;
+      form.appendChild(input);
+    };
+    addField('_token', csrfToken);
+    addField('payroll_run_id', String(runId));
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    toast.success(t('Report download started'));
+  };
 
   // ── Form fields ─────────────────────────────────────────────────────────────
   const [formTitle, setFormTitle]           = useState('');
@@ -302,6 +323,7 @@ export default function PayrollRuns() {
       case 'submit-final':      handleSubmitFinal(item); break;
       case 'approve-final':     handleApproveFinal(item); break;
       case 'generate-payslips': handleGeneratePayslips(item); break;
+      case 'download-reports':  setIsReportModalOpen(true); break;
     }
   };
 
@@ -566,6 +588,7 @@ export default function PayrollRuns() {
     { label: t('Unlock'),              icon: 'Unlock',      action: 'unlock',            className: 'text-purple-500', requiredPermission: 'edit-payroll-runs',     condition: (item: any) => ['completed', 'pending_approval', 'final'].includes(item.status) },
     { label: t('Generate Payslips'),   icon: 'FileText',    action: 'generate-payslips', className: 'text-purple-500', requiredPermission: 'create-payslips',       condition: (item: any) => item.status === 'completed' || item.status === 'final' },
     { label: t('Delete'),              icon: 'Trash2',      action: 'delete',            className: 'text-red-500',    requiredPermission: 'delete-payroll-runs',   condition: (item: any) => item.status === 'draft' },
+    { label: t('Download Reports'),    icon: 'FileDown',    action: 'download-reports',  className: 'text-slate-600',  requiredPermission: 'view-payroll-runs',     condition: (item: any) => ['completed', 'pending_approval', 'final'].includes(item.status) },
   ];
 
   const statusOptions = [
@@ -861,6 +884,53 @@ export default function PayrollRuns() {
           { key: 'notes' },
         ]}
       />
+
+      {/* ── Payroll Run Reports Modal ────────────────────────────────────── */}
+      {isReportModalOpen && currentItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-lg mx-4">
+            <div className="flex items-center justify-between p-5 border-b">
+              <div>
+                <h2 className="text-lg font-semibold">{t('Download Reports')}</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">{currentItem.title}</p>
+              </div>
+              <button onClick={() => setIsReportModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+            </div>
+            <div className="p-5">
+              <div className="divide-y divide-border border rounded-lg overflow-hidden">
+                {[
+                  { route: 'hr.zambia-reports.payroll-summary',        label: t('Payroll Summary Report'),        desc: t('Overall totals — gross pay, all deductions, net pay and employer cost') },
+                  { route: 'hr.zambia-reports.payroll-detailed',       label: t('Payroll Detailed Report'),       desc: t('Full per-employee breakdown with earnings, PAYE, NAPSA, NHIMA and net pay') },
+                  { route: 'hr.zambia-reports.payroll-entries',        label: t('Employee Payroll Entries'),      desc: t('Individual payroll entry records per employee for this period') },
+                ].map((report, idx) => (
+                  <div key={report.route} className={`flex items-center justify-between gap-3 px-4 py-3 ${idx % 2 === 0 ? 'bg-muted/20' : ''}`}>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{report.label}</p>
+                      <p className="text-xs text-muted-foreground truncate">{report.desc}</p>
+                    </div>
+                    <button
+                      onClick={() => downloadRunReport(report.route, currentItem.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-input rounded-md hover:bg-muted transition-colors shrink-0"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      {t('CSV')}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end px-5 pb-5">
+              <button
+                onClick={() => setIsReportModalOpen(false)}
+                className="px-4 py-2 border rounded-md text-sm hover:bg-muted transition-colors"
+              >
+                {t('Close')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </PageTemplate>
   );
 }

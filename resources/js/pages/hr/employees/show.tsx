@@ -403,15 +403,36 @@ export default function EmployeeShow() {
                                             </p>
                                         </div>
 
-                                        {/* NRC */}
-                                        <div>
-                                            <h3 className="text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400">
-                                                {t('NRC (National Registration Card)')}
-                                            </h3>
-                                            <p className="mt-1 text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                {employee.employee?.nrc || '-'}
-                                            </p>
-                                        </div>
+                                        {/* NRC / Passport — depends on nationality */}
+                                        {employee.employee?.nationality === 'Zambian' ? (
+                                            <div>
+                                                <h3 className="text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400">
+                                                    {t('NRC (National Registration Card)')}
+                                                </h3>
+                                                <p className="mt-1 text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    {employee.employee?.nrc || '-'}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div>
+                                                    <h3 className="text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400">
+                                                        {t('Passport No')}
+                                                    </h3>
+                                                    <p className="mt-1 text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                        {employee.employee?.passport_no || '-'}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400">
+                                                        {t('Permit No')}
+                                                    </h3>
+                                                    <p className="mt-1 text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                        {employee.employee?.permit_no || '-'}
+                                                    </p>
+                                                </div>
+                                            </>
+                                        )}
                                         <div>
                                             <h3 className="text-xs font-medium tracking-wide text-gray-500 dark:text-gray-400">
                                                 {t('TPIN (Tax ID)')}
