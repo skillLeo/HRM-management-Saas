@@ -14,12 +14,11 @@ import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
 
 export default function Departments() {
   const { t } = useTranslation();
-  const { auth, departments, branches, filters: pageFilters = {}, globalSettings } = usePage().props as any;
+  const { auth, departments, filters: pageFilters = {}, globalSettings } = usePage().props as any;
   const permissions = auth?.permissions || [];
 
   // State
   const [searchTerm, setSearchTerm] = useState(pageFilters.search || '');
-  const [selectedBranch, setSelectedBranch] = useState(pageFilters.branch_id || 'all');
   const [selectedStatus, setSelectedStatus] = useState(pageFilters.status || 'all');
   const [showFilters, setShowFilters] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -29,12 +28,12 @@ export default function Departments() {
 
   // Check if any filters are active
   const hasActiveFilters = () => {
-    return searchTerm !== '' || selectedBranch !== 'all' || selectedStatus !== 'all';
+    return searchTerm !== '' || selectedStatus !== 'all';
   };
 
   // Count active filters
   const activeFilterCount = () => {
-    return (searchTerm ? 1 : 0) + (selectedBranch !== 'all' ? 1 : 0) + (selectedStatus !== 'all' ? 1 : 0);
+    return (searchTerm ? 1 : 0) + (selectedStatus !== 'all' ? 1 : 0);
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -46,7 +45,6 @@ export default function Departments() {
     router.get(route('hr.departments.index'), {
       page: 1,
       search: searchTerm || undefined,
-      branch_id: selectedBranch !== 'all' ? selectedBranch : undefined,
       status: selectedStatus !== 'all' ? selectedStatus : undefined,
       per_page: pageFilters.per_page
     }, { preserveState: true, preserveScroll: true });
@@ -60,7 +58,6 @@ export default function Departments() {
       sort_direction: direction,
       page: 1,
       search: searchTerm || undefined,
-      branch_id: selectedBranch !== 'all' ? selectedBranch : undefined,
       status: selectedStatus !== 'all' ? selectedStatus : undefined,
       per_page: pageFilters.per_page
     }, { preserveState: true, preserveScroll: true });
@@ -215,7 +212,6 @@ export default function Departments() {
 
   const handleResetFilters = () => {
     setSearchTerm('');
-    setSelectedBranch('all');
     setSelectedStatus('all');
     setShowFilters(false);
 
@@ -228,7 +224,6 @@ export default function Departments() {
   // Define page actions
   const pageActions = [];
 
-  // Add the "Add New Department" button if user has permission
   if (hasPermission(permissions, 'create-departments')) {
     pageActions.push({
       label: t('Add Department'),
@@ -250,13 +245,6 @@ export default function Departments() {
       key: 'name',
       label: t('Name'),
       sortable: true
-    },
-    {
-      key: 'branch',
-      label: t('Branch'),
-      render: (value: any, row: any) => {
-        return row.branch?.name || '-';
-      }
     },
     {
       key: 'status',
@@ -312,15 +300,6 @@ export default function Departments() {
     }
   ];
 
-  // Prepare branch options for filter and form
-  const branchOptions = [
-    { value: 'all', label: t('All Branches') },
-    ...(branches || []).map((branch: any) => ({
-      value: branch.id.toString(),
-      label: branch.name
-    }))
-  ];
-
   // Prepare status options for filter
   const statusOptions = [
     { value: 'all', label: t('Select Status'), disabled: true },
@@ -344,15 +323,6 @@ export default function Departments() {
           onSearch={handleSearch}
           filters={[
             {
-              name: 'branch_id',
-              label: t('Branch'),
-              type: 'select',
-              value: selectedBranch,
-              onChange: setSelectedBranch,
-              options: branchOptions,
-              searchable: true
-            },
-            {
               name: 'status',
               label: t('Status'),
               type: 'select',
@@ -373,7 +343,6 @@ export default function Departments() {
               page: 1,
               per_page: parseInt(value),
               search: searchTerm || undefined,
-              branch_id: selectedBranch !== 'all' ? selectedBranch : undefined,
               status: selectedStatus !== 'all' ? selectedStatus : undefined
             }, { preserveState: true, preserveScroll: true });
           }}
@@ -419,17 +388,6 @@ export default function Departments() {
         formConfig={{
           fields: [
             { name: 'name', label: t('Department Name'), type: 'text', required: true },
-            {
-              name: 'branch_id',
-              label: t('Branch'),
-              type: 'select',
-              required: true,
-              searchable: true,
-              options: branches ? branches.map((branch: any) => ({
-                value: branch.id.toString(),
-                label: branch.name
-              })) : []
-            },
             { name: 'description', label: t('Description'), type: 'textarea' },
             {
               name: 'status',

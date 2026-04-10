@@ -486,6 +486,9 @@ class DefaultCompanyUserSeeder extends Seeder
             'view-employees',
             'create-employees',
             'edit-employees',
+            'delete-employees',
+            'import-employee',
+            'export-employee',
 
             // Award Type management
             'manage-award-types',

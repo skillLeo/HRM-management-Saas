@@ -51,10 +51,9 @@ class OfferController extends Controller
                 ->select('id', 'first_name', 'last_name', 'job_id')
                 ->get();
 
-            $departments = Department::with('branch')
-                ->whereIn('created_by', getCompanyAndUsersId())
+            $departments = Department::whereIn('created_by', getCompanyAndUsersId())
                 ->where('status', 'active')
-                ->select('id', 'name', 'branch_id')
+                ->select('id', 'name')
                 ->get();
 
             $employees = User::whereIn('created_by', getCompanyAndUsersId())

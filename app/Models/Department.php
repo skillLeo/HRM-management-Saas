@@ -11,19 +11,10 @@ class Department extends BaseModel
 
     protected $fillable = [
         'name',
-        'branch_id',
         'description',
         'status',
         'created_by'
     ];
-
-    /**
-     * Get the branch that owns the department.
-     */
-    public function branch()
-    {
-        return $this->belongsTo(Branch::class);
-    }
 
     /**
      * Get the user who created the department.

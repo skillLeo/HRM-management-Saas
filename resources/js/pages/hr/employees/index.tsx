@@ -138,7 +138,7 @@ export default function Employees() {
             toast.loading(t('Deleting employee...'));
         }
 
-        router.delete(route('hr.employees.destroy', currentItem.id), {
+        router.delete(route('hr.employees.destroy', currentItem.employee?.id || currentItem.id), {
             onSuccess: (page) => {
                 setIsDeleteModalOpen(false);
                 if (!globalSettings?.is_demo) {
@@ -510,7 +510,7 @@ export default function Employees() {
         { value: 'all', label: t('All Departments') },
         ...(departments || []).map((department: any) => ({
             value: department.id.toString(),
-            label: `${department.name} (${department.branch?.name || t('No Branch')})`,
+            label: department.name,
         })),
     ];
 
@@ -518,7 +518,7 @@ export default function Employees() {
         { value: 'all', label: t('All Designations') },
         ...(designations || []).map((designation: any) => ({
             value: designation.id.toString(),
-            label: `${designation.name} (${designation.department?.name || t('No Department')})`,
+            label: designation.name,
         })),
     ];
 
@@ -938,11 +938,12 @@ export default function Employees() {
                     { key: 'name', required: true },
                     { key: 'email', required: true },
                     { key: 'password', required: true },
-                    { key: 'biometric_emp_id', required: true },
+                    { key: 'employee_id' },
+                    { key: 'biometric_emp_id' },
                     { key: 'phone', required: true },
-                    { key: 'department', required: true },
-                    { key: 'designation', required: true },
-                    { key: 'branch', required: true },
+                    { key: 'department' },
+                    { key: 'designation' },
+                    { key: 'branch' },
                     { key: 'base_salary', required: true },
                     { key: 'date_of_joining', required: true },
                     { key: 'date_of_birth', required: true },

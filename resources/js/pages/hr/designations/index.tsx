@@ -14,58 +14,58 @@ import { SearchAndFilterBar } from '@/components/ui/search-and-filter-bar';
 
 export default function Designations() {
   const { t } = useTranslation();
-  const { auth, designations, departments, filters: pageFilters = {}, globalSettings } = usePage().props as any;
+  const { auth, designations, filters: pageFilters = {}, globalSettings } = usePage().props as any;
   const permissions = auth?.permissions || [];
-  
+
   // State
   const [searchTerm, setSearchTerm] = useState(pageFilters.search || '');
-  const [selectedDepartment, setSelectedDepartment] = useState(pageFilters.department || 'all');
+  const [selectedStatus, setSelectedStatus] = useState(pageFilters.status || 'all');
   const [showFilters, setShowFilters] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState<any>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit' | 'view'>('create');
-  
+
   // Check if any filters are active
   const hasActiveFilters = () => {
-    return searchTerm !== '' || selectedDepartment !== 'all';
+    return searchTerm !== '' || selectedStatus !== 'all';
   };
-  
+
   // Count active filters
   const activeFilterCount = () => {
-    return (searchTerm ? 1 : 0) + (selectedDepartment !== 'all' ? 1 : 0);
+    return (searchTerm ? 1 : 0) + (selectedStatus !== 'all' ? 1 : 0);
   };
-  
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     applyFilters();
   };
-  
+
   const applyFilters = () => {
-    router.get(route('hr.designations.index'), { 
+    router.get(route('hr.designations.index'), {
       page: 1,
       search: searchTerm || undefined,
-      department: selectedDepartment !== 'all' ? selectedDepartment : undefined,
+      status: selectedStatus !== 'all' ? selectedStatus : undefined,
       per_page: pageFilters.per_page
     }, { preserveState: true, preserveScroll: true });
   };
-  
+
   const handleSort = (field: string) => {
     const direction = pageFilters.sort_field === field && pageFilters.sort_direction === 'asc' ? 'desc' : 'asc';
-    
-    router.get(route('hr.designations.index'), { 
-      sort_field: field, 
-      sort_direction: direction, 
+
+    router.get(route('hr.designations.index'), {
+      sort_field: field,
+      sort_direction: direction,
       page: 1,
       search: searchTerm || undefined,
-      department: selectedDepartment !== 'all' ? selectedDepartment : undefined,
+      status: selectedStatus !== 'all' ? selectedStatus : undefined,
       per_page: pageFilters.per_page
     }, { preserveState: true, preserveScroll: true });
   };
-  
+
   const handleAction = (action: string, item: any) => {
     setCurrentItem(item);
-    
+
     switch (action) {
       case 'view':
         setFormMode('view');
@@ -83,19 +83,19 @@ export default function Designations() {
         break;
     }
   };
-  
+
   const handleAddNew = () => {
     setCurrentItem(null);
     setFormMode('create');
     setIsFormModalOpen(true);
   };
-  
+
   const handleFormSubmit = (formData: any) => {
     if (formMode === 'create') {
       if (!globalSettings?.is_demo) {
         toast.loading(t('Creating designation...'));
       }
-      
+
       router.post(route('hr.designations.store'), formData, {
         onSuccess: (page) => {
           setIsFormModalOpen(false);
@@ -123,7 +123,7 @@ export default function Designations() {
       if (!globalSettings?.is_demo) {
         toast.loading(t('Updating designation...'));
       }
-      
+
       router.put(route('hr.designations.update', currentItem.id), formData, {
         onSuccess: (page) => {
           setIsFormModalOpen(false);
@@ -149,12 +149,12 @@ export default function Designations() {
       });
     }
   };
-  
+
   const handleDeleteConfirm = () => {
     if (!globalSettings?.is_demo) {
       toast.loading(t('Deleting designation...'));
     }
-    
+
     router.delete(route('hr.designations.destroy', currentItem.id), {
       onSuccess: (page) => {
         setIsDeleteModalOpen(false);
@@ -179,13 +179,13 @@ export default function Designations() {
       }
     });
   };
-  
+
   const handleToggleStatus = (designation: any) => {
     const newStatus = designation.status === 'active' ? 'inactive' : 'active';
     if (!globalSettings?.is_demo) {
       toast.loading(`${newStatus === 'active' ? t('Activating') : t('Deactivating')} designation...`);
     }
-    
+
     router.put(route('hr.designations.toggle-status', designation.id), {}, {
       onSuccess: (page) => {
         if (!globalSettings?.is_demo) {
@@ -209,12 +209,12 @@ export default function Designations() {
       }
     });
   };
-  
+
   const handleResetFilters = () => {
     setSearchTerm('');
-    setSelectedDepartment('all');
+    setSelectedStatus('all');
     setShowFilters(false);
-    
+
     router.get(route('hr.designations.index'), {
       page: 1,
       per_page: pageFilters.per_page
@@ -223,8 +223,7 @@ export default function Designations() {
 
   // Define page actions
   const pageActions = [];
-  
-  // Add the "Add New Designation" button if user has permission
+
   if (hasPermission(permissions, 'create-designations')) {
     pageActions.push({
       label: t('Add Designation'),
@@ -242,34 +241,19 @@ export default function Designations() {
 
   // Define table columns
   const columns = [
-    { 
-      key: 'name', 
-      label: t('Name'), 
+    {
+      key: 'name',
+      label: t('Name'),
       sortable: true
     },
-    { 
-      key: 'department', 
-      label: t('Department'),
-      render: (value: any, row: any) => {
-        if (!value) return '-';
-        return (
-          <div>
-            <div>{value.name}</div>
-            <div className="text-xs text-muted-foreground">
-              {t('Branch')}: {value.branch?.name || '-'}
-            </div>
-          </div>
-        );
-      }
-    },
-    { 
-      key: 'status', 
+    {
+      key: 'status',
       label: t('Status'),
       render: (value: string) => {
         return (
           <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-            value === 'active' 
-              ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20' 
+            value === 'active'
+              ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
               : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
           }`}>
             {value === 'active' ? t('Active') : t('Inactive')}
@@ -277,9 +261,9 @@ export default function Designations() {
         );
       }
     },
-    { 
-      key: 'created_at', 
-      label: t('Created At'), 
+    {
+      key: 'created_at',
+      label: t('Created At'),
       sortable: true,
       render: (value: string) => window.appSettings?.formatDateTimeSimple(value, false) || new Date(value).toLocaleDateString()
     }
@@ -287,48 +271,46 @@ export default function Designations() {
 
   // Define table actions
   const actions = [
-    { 
-      label: t('View'), 
-      icon: 'Eye', 
-      action: 'view', 
+    {
+      label: t('View'),
+      icon: 'Eye',
+      action: 'view',
       className: 'text-blue-500',
       requiredPermission: 'view-designations'
     },
-    { 
-      label: t('Edit'), 
-      icon: 'Edit', 
-      action: 'edit', 
+    {
+      label: t('Edit'),
+      icon: 'Edit',
+      action: 'edit',
       className: 'text-amber-500',
       requiredPermission: 'edit-designations'
     },
-    { 
-      label: t('Toggle Status'), 
-      icon: 'Lock', 
-      action: 'toggle-status', 
+    {
+      label: t('Toggle Status'),
+      icon: 'Lock',
+      action: 'toggle-status',
       className: 'text-amber-500',
       requiredPermission: 'toggle-status-designations'
     },
-    { 
-      label: t('Delete'), 
-      icon: 'Trash2', 
-      action: 'delete', 
+    {
+      label: t('Delete'),
+      icon: 'Trash2',
+      action: 'delete',
       className: 'text-red-500',
       requiredPermission: 'delete-designations'
     }
   ];
 
-  // Prepare department options for filter
-  const departmentOptions = [
-    { value: 'all', label: t('All Departments') },
-    ...(departments || []).map((department: any) => ({
-      value: department.id.toString(),
-      label: `${department.name} (${department.branch?.name || t('No Branch')})`
-    }))
+  // Status options for filter
+  const statusOptions = [
+    { value: 'all', label: t('Select Status'), disabled: true },
+    { value: 'active', label: t('Active') },
+    { value: 'inactive', label: t('Inactive') }
   ];
 
   return (
-    <PageTemplate 
-      title={t("Designations")} 
+    <PageTemplate
+      title={t("Designations")}
       url="/hr/designations"
       actions={pageActions}
       breadcrumbs={breadcrumbs}
@@ -342,13 +324,12 @@ export default function Designations() {
           onSearch={handleSearch}
           filters={[
             {
-              name: 'department',
-              label: t('Department'),
+              name: 'status',
+              label: t('Status'),
               type: 'select',
-              value: selectedDepartment,
-              searchable: true,
-              onChange: setSelectedDepartment,
-              options: departmentOptions
+              value: selectedStatus,
+              onChange: setSelectedStatus,
+              options: statusOptions
             }
           ]}
           showFilters={showFilters}
@@ -359,11 +340,11 @@ export default function Designations() {
           onApplyFilters={applyFilters}
           currentPerPage={pageFilters.per_page?.toString() || "10"}
           onPerPageChange={(value) => {
-            router.get(route('hr.designations.index'), { 
-              page: 1, 
+            router.get(route('hr.designations.index'), {
+              page: 1,
               per_page: parseInt(value),
               search: searchTerm || undefined,
-              department: selectedDepartment !== 'all' ? selectedDepartment : undefined
+              status: selectedStatus !== 'all' ? selectedStatus : undefined
             }, { preserveState: true, preserveScroll: true });
           }}
         />
@@ -409,21 +390,10 @@ export default function Designations() {
           fields: [
             { name: 'name', label: t('Designation Name'), type: 'text', required: true },
             { name: 'description', label: t('Description'), type: 'textarea' },
-            { 
-              name: 'department_id', 
-              label: t('Department'), 
-              type: 'select', 
-              searchable: true,
-              options: departments ? departments.map((department: any) => ({
-                value: department.id.toString(),
-                label: `${department.name} (${department.branch?.name || t('No Branch')})`
-              })) : [],
-              required: true
-            },
-            { 
-              name: 'status', 
-              label: t('Status'), 
-              type: 'select', 
+            {
+              name: 'status',
+              label: t('Status'),
+              type: 'select',
               options: [
                 { value: 'active', label: t('Active') },
                 { value: 'inactive', label: t('Inactive') }
@@ -435,10 +405,10 @@ export default function Designations() {
         }}
         initialData={currentItem}
         title={
-          formMode === 'create' 
-            ? t('Add New Designation') 
-            : formMode === 'edit' 
-              ? t('Edit Designation') 
+          formMode === 'create'
+            ? t('Add New Designation')
+            : formMode === 'edit'
+              ? t('Edit Designation')
               : t('View Designation')
         }
         mode={formMode}

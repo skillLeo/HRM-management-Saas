@@ -658,6 +658,7 @@ class RoleSeeder extends Seeder
             'edit-payroll-runs',
             'delete-payroll-runs',
             'process-payroll-runs',
+            'approve-payroll-runs',
             'import-payroll-runs',
             'export-payroll-runs',
             'manage-payslips',

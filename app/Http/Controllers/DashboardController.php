@@ -204,14 +204,13 @@ class DashboardController extends Controller
 
         $departmentStats = Department::whereIn('created_by', $companyUserIds)
             ->withCount('employees')
-            ->with('branch')
             ->orderBy('employees_count', 'desc')
             ->when(config('app.is_demo') == true, function ($query) {
                 return $query->take(6);
             })
             ->get()
             ->map(function ($dept, $index) use ($predefinedColors) {
-                $displayName = $dept->name.' ('.$dept->branch->name.')';
+                $displayName = $dept->name;
 
                 return [
                     'name' => $displayName,

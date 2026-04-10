@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Department;
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class DesignationController extends Controller
@@ -14,20 +12,15 @@ class DesignationController extends Controller
     public function index(Request $request)
     {
         if (Auth::user()->can('manage-designations')) {
-            $query = Designation::with(['department', 'department.branch'])->where(function ($q) {
+            $query = Designation::with(['creator'])->where(function ($q) {
                 if (Auth::user()->can('manage-any-designations')) {
-                    $q->whereIn('created_by',  getCompanyAndUsersId());
+                    $q->whereIn('created_by', getCompanyAndUsersId());
                 } elseif (Auth::user()->can('manage-own-designations')) {
                     $q->where('created_by', Auth::id());
                 } else {
                     $q->whereRaw('1 = 0');
                 }
             });
-
-            // Handle department filter
-            if ($request->has('department') && $request->department !== 'all') {
-                $query->where('department_id', $request->department);
-            }
 
             // Handle search
             if ($request->has('search') && !empty($request->search)) {
@@ -37,30 +30,28 @@ class DesignationController extends Controller
                 });
             }
 
+            // Handle status filter
+            if ($request->has('status') && !empty($request->status) && $request->status !== 'all') {
+                $query->where('status', $request->status);
+            }
+
             // Handle sorting
             $sortField = $request->get('sort_field', 'created_at');
             $sortDirection = $request->get('sort_direction', 'desc');
-            
+
             // Validate sort field
             $allowedSortFields = ['name', 'created_at', 'id'];
             if (!in_array($sortField, $allowedSortFields)) {
                 $sortField = 'created_at';
             }
-            
+
             $query->orderBy($sortField, $sortDirection);
 
             $designations = $query->paginate($request->per_page ?? 10);
 
-            // Get departments for dropdown
-            $departments = Department::with('branch')
-                ->whereIn('created_by', getCompanyAndUsersId())
-                ->where('status', 'active')
-                ->get();
-
             return Inertia::render('hr/designations/index', [
                 'designations' => $designations,
-                'departments' => $departments,
-                'filters' => $request->all(['search', 'sort_field', 'sort_direction', 'per_page', 'department']),
+                'filters' => $request->all(['search', 'status', 'sort_field', 'sort_direction', 'per_page']),
             ]);
         } else {
             return redirect()->back()->with('error', __('Permission Denied.'));
@@ -74,19 +65,18 @@ class DesignationController extends Controller
                 $validated = $request->validate([
                     'name' => 'required|string|max:255',
                     'description' => 'nullable|string',
-                    'department_id' => 'required|exists:departments,id',
                     'status' => 'nullable|in:active,inactive',
                 ]);
 
                 $validated['created_by'] = creatorId();
 
-                // Check if department belongs to current company
-                $department = Department::where('id', $validated['department_id'])
+                // Check if designation with same name already exists
+                $exists = Designation::where('name', $validated['name'])
                     ->whereIn('created_by', getCompanyAndUsersId())
-                    ->first();
+                    ->exists();
 
-                if (!$department) {
-                    return redirect()->back()->with('error', __('Selected department does not belong to your company'));
+                if ($exists) {
+                    return redirect()->back()->with('error', __('Designation with this name already exists.'));
                 }
 
                 Designation::create($validated);
@@ -112,17 +102,17 @@ class DesignationController extends Controller
                     $validated = $request->validate([
                         'name' => 'required|string|max:255',
                         'description' => 'nullable|string',
-                        'department_id' => 'required|exists:departments,id',
                         'status' => 'nullable|in:active,inactive',
                     ]);
 
-                    // Check if department belongs to current company
-                    $department = Department::where('id', $validated['department_id'])
+                    // Check if designation with same name already exists (excluding current)
+                    $exists = Designation::where('name', $validated['name'])
                         ->whereIn('created_by', getCompanyAndUsersId())
-                        ->first();
+                        ->where('id', '!=', $designationId)
+                        ->exists();
 
-                    if (!$department) {
-                        return redirect()->back()->with('error', __('Selected department does not belong to your company.'));
+                    if ($exists) {
+                        return redirect()->back()->with('error', __('Designation with this name already exists.'));
                     }
 
                     $designation->update($validated);

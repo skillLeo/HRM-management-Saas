@@ -13,8 +13,11 @@ class LeavePolicy extends BaseModel
         'name',
         'description',
         'leave_type_id',
+        'allocation_type',
         'accrual_type',
         'accrual_rate',
+        'fixed_days',
+        'fixed_days_unit',
         'carry_forward_limit',
         'min_days_per_application',
         'max_days_per_application',
@@ -25,6 +28,7 @@ class LeavePolicy extends BaseModel
 
     protected $casts = [
         'accrual_rate' => 'decimal:2',
+        'fixed_days'   => 'decimal:2',
         'requires_approval' => 'boolean',
     ];
 

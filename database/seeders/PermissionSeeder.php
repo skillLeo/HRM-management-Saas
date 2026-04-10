@@ -882,6 +882,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'edit-payroll-runs', 'module' => 'payroll_runs', 'label' => 'Edit Payroll Runs', 'description' => 'Can edit payroll runs'],
             ['name' => 'delete-payroll-runs', 'module' => 'payroll_runs', 'label' => 'Delete Payroll Runs', 'description' => 'Can delete payroll runs'],
             ['name' => 'process-payroll-runs', 'module' => 'payroll_runs', 'label' => 'Process Payroll Runs', 'description' => 'Can process payroll runs'],
+            ['name' => 'approve-payroll-runs', 'module' => 'payroll_runs', 'label' => 'Approve Payroll Runs', 'description' => 'Can approve and finalize payroll runs'],
             ['name' => 'import-payroll-runs', 'module' => 'payroll_runs', 'label' => 'Import Payroll Runs', 'description' => 'Can Import Payroll Runs'],
             ['name' => 'export-payroll-runs', 'module' => 'payroll_runs', 'label' => 'Export Payroll Runs', 'description' => 'Can Export Payroll Runs'],
 

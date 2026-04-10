@@ -286,15 +286,13 @@ class CandidateController extends Controller
                     ->where('status', 'active')
                     ->get(['id', 'name']);
 
-                $departments = Department::with('branch')
-                    ->whereIn('created_by', getCompanyAndUsersId())
+                $departments = Department::whereIn('created_by', getCompanyAndUsersId())
                     ->where('status', 'active')
-                    ->get(['id', 'name', 'branch_id']);
+                    ->get(['id', 'name']);
 
-                $designations = Designation::with('department')
-                    ->whereIn('created_by', getCompanyAndUsersId())
+                $designations = Designation::whereIn('created_by', getCompanyAndUsersId())
                     ->where('status', 'active')
-                    ->get(['id', 'name', 'department_id']);
+                    ->get(['id', 'name']);
 
                 $documentTypes = DocumentType::whereIn('created_by', getCompanyAndUsersId())
                     ->get(['id', 'name', 'is_required']);

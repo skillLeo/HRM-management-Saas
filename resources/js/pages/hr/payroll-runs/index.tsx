@@ -586,7 +586,7 @@ export default function PayrollRuns() {
     { label: t('Submit for Approval'), icon: 'Send',        action: 'submit-final',      className: 'text-orange-500', requiredPermission: 'process-payroll-runs',  condition: (item: any) => item.status === 'completed' },
     { label: t('Approve Final'),       icon: 'CheckCircle', action: 'approve-final',     className: 'text-blue-600',   requiredPermission: 'approve-payroll-runs',  condition: (item: any) => item.status === 'pending_approval' },
     { label: t('Unlock'),              icon: 'Unlock',      action: 'unlock',            className: 'text-purple-500', requiredPermission: 'edit-payroll-runs',     condition: (item: any) => ['completed', 'pending_approval', 'final'].includes(item.status) },
-    { label: t('Generate Payslips'),   icon: 'FileText',    action: 'generate-payslips', className: 'text-purple-500', requiredPermission: 'create-payslips',       condition: (item: any) => item.status === 'completed' || item.status === 'final' },
+    { label: t('Generate Payslips'),   icon: 'FileText',    action: 'generate-payslips', className: 'text-purple-500', requiredPermission: 'create-payslips',       condition: (item: any) => ['completed', 'pending_approval', 'final'].includes(item.status) },
     { label: t('Delete'),              icon: 'Trash2',      action: 'delete',            className: 'text-red-500',    requiredPermission: 'delete-payroll-runs',   condition: (item: any) => item.status === 'draft' },
     { label: t('Download Reports'),    icon: 'FileDown',    action: 'download-reports',  className: 'text-slate-600',  requiredPermission: 'view-payroll-runs',     condition: (item: any) => ['completed', 'pending_approval', 'final'].includes(item.status) },
   ];

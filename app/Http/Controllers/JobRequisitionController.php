@@ -48,10 +48,9 @@ class JobRequisitionController extends Controller
                 ->select('id', 'name')
                 ->get();
 
-            $departments = Department::with('branch')
-                ->whereIn('created_by', getCompanyAndUsersId())
+            $departments = Department::whereIn('created_by', getCompanyAndUsersId())
                 ->where('status', 'active')
-                ->select('id', 'name', 'branch_id')
+                ->select('id', 'name')
                 ->get();
 
             return Inertia::render('hr/recruitment/job-requisitions/index', [

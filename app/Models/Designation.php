@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
 class Designation extends BaseModel
 {
@@ -12,7 +11,6 @@ class Designation extends BaseModel
     protected $fillable = [
         'name',
         'description',
-        'department_id',
         'status',
         'created_by',
     ];
@@ -21,13 +19,8 @@ class Designation extends BaseModel
         'status' => 'string',
     ];
 
-    public function company()
+    public function creator()
     {
-        return $this->belongsTo(User::class, 'company_id');
-    }
-
-    public function department()
-    {
-        return $this->belongsTo(Department::class);
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

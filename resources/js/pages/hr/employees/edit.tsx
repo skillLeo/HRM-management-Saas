@@ -15,7 +15,6 @@ import { getImagePath } from '@/utils/helpers';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-// FIX #5: Zambian banks list
 const ZAMBIAN_BANKS = [
     'Zanaco (Zambia National Commercial Bank)',
     'FNB Zambia (First National Bank)',
@@ -34,29 +33,18 @@ const ZAMBIAN_BANKS = [
     'Bank of Zambia',
 ];
 
-// FIX #3: Relationship options
 const RELATIONSHIP_OPTIONS = [
-    'Father',
-    'Mother',
-    'Son',
-    'Daughter',
-    'Sister',
-    'Brother',
-    'Wife',
-    'Husband',
-    'Grandparent',
-    'Other',
+    'Father', 'Mother', 'Son', 'Daughter', 'Sister',
+    'Brother', 'Wife', 'Husband', 'Grandparent', 'Other',
 ];
 
 export default function EmployeeEdit() {
     const { t } = useTranslation();
     const { employee, branches, departments, designations, documentTypes, shifts, attendancePolicies } = usePage().props as any;
 
-    // Detect if existing relationship value is a custom "Other" value
     const existingRelationship = employee.employee?.emergency_contact_relationship || '';
     const isOtherRelationship = existingRelationship !== '' && !RELATIONSHIP_OPTIONS.includes(existingRelationship);
 
-    // State
     const [formData, setFormData] = useState<Record<string, any>>({
         name:           employee.name || '',
         title:          employee.employee?.title || '',
@@ -86,25 +74,23 @@ export default function EmployeeEdit() {
         date_of_joining:      employee.employee?.date_of_joining || '',
         employment_type:      employee.employee?.employment_type || 'Full-time',
         employee_status:      employee.employee?.employee_status || 'active',
-        // FIX: NAPSA, NHIMA, Salary moved to Employment Details
         napsa_number:         employee.employee?.napsa_number || '',
         nhima_number:         employee.employee?.nhima_number || '',
         salary:               employee.employee?.base_salary || '',
 
         // Contact
-        address_line_1:                  employee.employee?.address_line_1 || '',
-        address_line_2:                  employee.employee?.address_line_2 || '',
-        city:                            employee.employee?.city || '',
-        state:                           employee.employee?.state || '',
-        country:                         employee.employee?.country || '',
-        postal_code:                     employee.employee?.postal_code || '',
-        emergency_contact_name:          employee.employee?.emergency_contact_name || '',
-        // FIX #3: If old value is not in dropdown options, treat as Other
-        emergency_contact_relationship:  isOtherRelationship ? 'Other' : existingRelationship,
+        address_line_1:                      employee.employee?.address_line_1 || '',
+        address_line_2:                      employee.employee?.address_line_2 || '',
+        city:                                employee.employee?.city || '',
+        state:                               employee.employee?.state || '',
+        country:                             employee.employee?.country || '',
+        postal_code:                         employee.employee?.postal_code || '',
+        emergency_contact_name:              employee.employee?.emergency_contact_name || '',
+        emergency_contact_relationship:      isOtherRelationship ? 'Other' : existingRelationship,
         emergency_contact_relationship_other: isOtherRelationship ? existingRelationship : '',
-        emergency_contact_number:        employee.employee?.emergency_contact_number || '',
+        emergency_contact_number:            employee.employee?.emergency_contact_number || '',
 
-        // Banking — FIX #4: payment_method added
+        // Banking
         payment_method:       employee.employee?.payment_method || '',
         bank_name:            employee.employee?.bank_name || '',
         account_holder_name:  employee.employee?.account_holder_name || '',
@@ -122,24 +108,17 @@ export default function EmployeeEdit() {
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [profileImage, setProfileImage] = useState<File | null>(null);
-    const [profileImagePreview, setProfileImagePreview] = useState<string | null>(employee.avatar ? employee.avatar : null);
     const [existingDocuments, setExistingDocuments] = useState<any[]>(employee.employee?.documents || []);
     const [newDocuments, setNewDocuments] = useState<any[]>([]);
 
-    // FIX #1: Designation NOT linked to department — track branch changes only for department filter
-    const [branchChanged, setBranchChanged] = useState(false);
+    // Departments are global — no branch filter needed (same as create)
+    const filteredDepartments = departments;
 
-    const filteredDepartments = branchChanged && formData.branch_id
-        ? departments.filter((dept: any) => String(dept.branch_id) === String(formData.branch_id))
-        : departments;
-
-    // FIX #1: All designations always shown — no department filter
+    // Designations are global — no department filter needed (same as create)
     const allDesignations = designations;
 
     const handleChange = (name: string, value: any) => {
         setFormData((prev) => ({ ...prev, [name]: value }));
-
         if (errors[name]) {
             setErrors((prev) => {
                 const newErrors = { ...prev };
@@ -147,41 +126,13 @@ export default function EmployeeEdit() {
                 return newErrors;
             });
         }
-
-        // FIX #1: Branch change resets department only — NOT designation
-        if (name === 'branch_id') {
-            setBranchChanged(true);
-            setFormData((prev) => ({
-                ...prev,
-                branch_id:    value,
-                department_id: '',
-                // designation_id intentionally NOT reset
-            }));
-        }
-
-        // FIX #1: Department change does NOT reset designation
-    };
-
-    const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            setProfileImage(file);
-            setProfileImagePreview(URL.createObjectURL(file));
-            if (errors['profile_image']) {
-                setErrors((prev) => {
-                    const newErrors = { ...prev };
-                    delete newErrors['profile_image'];
-                    return newErrors;
-                });
-            }
-        }
     };
 
     const handleNewDocumentChange = (index: number, field: string, value: any) => {
         const updatedDocuments = [...newDocuments];
         updatedDocuments[index] = { ...updatedDocuments[index], [field]: value };
         setNewDocuments(updatedDocuments);
-        const errorKey = `new_documents.${index}.${field}`;
+        const errorKey = `documents.${index}.${field}`;
         if (errors[errorKey]) {
             setErrors((prev) => {
                 const newErrors = { ...prev };
@@ -201,7 +152,7 @@ export default function EmployeeEdit() {
         setNewDocuments(updatedDocuments);
         const newErrors = { ...errors };
         Object.keys(newErrors).forEach((key) => {
-            if (key.startsWith(`new_documents.${index}.`)) delete newErrors[key];
+            if (key.startsWith(`documents.${index}.`)) delete newErrors[key];
         });
         setErrors(newErrors);
     };
@@ -233,7 +184,6 @@ export default function EmployeeEdit() {
         const submitData = new FormData();
         submitData.append('_method', 'PUT');
 
-        // FIX #3: If "Other" selected, send the custom text as the relationship value
         const relationshipValue =
             formData.emergency_contact_relationship === 'Other'
                 ? formData.emergency_contact_relationship_other
@@ -250,7 +200,9 @@ export default function EmployeeEdit() {
             }
         });
 
-        if (profileImage) submitData.append('profile_image', profileImage);
+        if (formData.profile_image) {
+            submitData.append('profile_image', formData.profile_image);
+        }
 
         newDocuments.forEach((doc: any, index: number) => {
             if (doc.document_type_id) submitData.append(`documents[${index}][document_type_id]`, doc.document_type_id);
@@ -259,6 +211,7 @@ export default function EmployeeEdit() {
         });
 
         router.post(route('hr.employees.update', employee.employee?.id), submitData, {
+            forceFormData: true,
             onSuccess: (page) => {
                 setIsSubmitting(false);
                 if (page.props.flash.success) toast.success(t(page.props.flash.success));
@@ -299,7 +252,7 @@ export default function EmployeeEdit() {
         >
             <form onSubmit={handleSubmit} className="space-y-6">
 
-                {/* ── Basic Information Card ─────────────────────────────── */}
+                {/* Basic Information */}
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('Basic Information')}</CardTitle>
@@ -328,75 +281,36 @@ export default function EmployeeEdit() {
                             {/* First Name */}
                             <div className="space-y-2">
                                 <Label htmlFor="first_name" required>{t('First Name')}</Label>
-                                <Input
-                                    id="first_name"
-                                    required
-                                    value={formData.first_name}
+                                <Input id="first_name" required value={formData.first_name}
                                     onChange={(e) => handleChange('first_name', e.target.value)}
-                                    className={errors.first_name ? 'border-red-500' : ''}
-                                />
+                                    className={errors.first_name ? 'border-red-500' : ''} />
                                 {errors.first_name && <p className="text-xs text-red-500">{errors.first_name}</p>}
                             </div>
 
                             {/* Middle Name */}
                             <div className="space-y-2">
                                 <Label htmlFor="middle_name">{t('Middle Name')}</Label>
-                                <Input
-                                    id="middle_name"
-                                    value={formData.middle_name}
+                                <Input id="middle_name" value={formData.middle_name}
                                     onChange={(e) => handleChange('middle_name', e.target.value)}
-                                    className={errors.middle_name ? 'border-red-500' : ''}
-                                />
+                                    className={errors.middle_name ? 'border-red-500' : ''} />
                                 {errors.middle_name && <p className="text-xs text-red-500">{errors.middle_name}</p>}
                             </div>
 
                             {/* Last Name */}
                             <div className="space-y-2">
                                 <Label htmlFor="last_name" required>{t('Last Name')}</Label>
-                                <Input
-                                    id="last_name"
-                                    required
-                                    value={formData.last_name}
+                                <Input id="last_name" required value={formData.last_name}
                                     onChange={(e) => handleChange('last_name', e.target.value)}
-                                    className={errors.last_name ? 'border-red-500' : ''}
-                                />
+                                    className={errors.last_name ? 'border-red-500' : ''} />
                                 {errors.last_name && <p className="text-xs text-red-500">{errors.last_name}</p>}
-                            </div>
-
-                            {/* Employee ID — read-only */}
-                            <div className="space-y-2">
-                                <Label htmlFor="employee_id">{t('Employee ID')}</Label>
-                                <Input id="employee_id" value={formData.employee_id} readOnly className="bg-muted" />
-                                <p className="text-muted-foreground text-sm">{t('Employee ID cannot be changed')}</p>
-                            </div>
-
-                            {/* Employee Code */}
-                            <div className="space-y-2">
-                                <Label htmlFor="biometric_emp_id" required>{t('Employee Code')}</Label>
-                                <Input
-                                    id="biometric_emp_id"
-                                    required
-                                    value={formData.biometric_emp_id || ''}
-                                    onChange={(e) => handleChange('biometric_emp_id', e.target.value)}
-                                    className={errors.biometric_emp_id ? 'border-red-500' : ''}
-                                />
-                                <p className="text-muted-foreground text-sm">
-                                    {t('This ID will be used to map employee with biometric device.')}
-                                </p>
-                                {errors.biometric_emp_id && <p className="text-xs text-red-500">{errors.biometric_emp_id}</p>}
                             </div>
 
                             {/* Email */}
                             <div className="space-y-2">
                                 <Label htmlFor="email" required>{t('Email')}</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    required
-                                    value={formData.email}
+                                <Input id="email" type="email" required value={formData.email}
                                     onChange={(e) => handleChange('email', e.target.value)}
-                                    className={errors.email ? 'border-red-500' : ''}
-                                />
+                                    className={errors.email ? 'border-red-500' : ''} />
                                 {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
                             </div>
 
@@ -406,63 +320,46 @@ export default function EmployeeEdit() {
                                     {t('Password')}{' '}
                                     <span className="text-muted-foreground text-sm">{t('(Leave blank to keep current)')}</span>
                                 </Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    value={formData.password}
+                                <Input id="password" type="password" value={formData.password}
                                     onChange={(e) => handleChange('password', e.target.value)}
-                                    className={errors.password ? 'border-red-500' : ''}
-                                />
+                                    className={errors.password ? 'border-red-500' : ''} />
                                 {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
                             </div>
 
                             {/* Phone */}
                             <div className="space-y-2">
                                 <Label htmlFor="phone" required>{t('Phone Number')}</Label>
-                                <Input
-                                    id="phone"
-                                    required
-                                    value={formData.phone}
+                                <Input id="phone" required value={formData.phone}
                                     onChange={(e) => handleChange('phone', e.target.value)}
-                                    className={errors.phone ? 'border-red-500' : ''}
-                                />
+                                    className={errors.phone ? 'border-red-500' : ''} />
                                 {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
                             </div>
 
-                            {/* Date of Birth — 18+ */}
+                            {/* Date of Birth */}
                             <div className="space-y-2">
                                 <Label htmlFor="date_of_birth" required>
                                     {t('Date of Birth')}{' '}
                                     <span className="text-muted-foreground text-xs">(Must be 18+)</span>
                                 </Label>
-                                <div
-                                    className="cursor-pointer"
-                                    onClick={(e) => {
-                                        const input = (e.currentTarget as HTMLElement).querySelector('input');
-                                        try { (input as any)?.showPicker?.(); } catch { input?.focus(); }
-                                    }}
-                                >
-                                    <Input
-                                        id="date_of_birth"
-                                        type="date"
-                                        required
+                                <div className="cursor-pointer" onClick={(e) => {
+                                    const input = (e.currentTarget as HTMLElement).querySelector('input');
+                                    try { (input as any)?.showPicker?.(); } catch { input?.focus(); }
+                                }}>
+                                    <Input id="date_of_birth" type="date" required
                                         max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
                                         value={formData.date_of_birth}
                                         onChange={(e) => handleChange('date_of_birth', e.target.value)}
-                                        className={`cursor-pointer ${errors.date_of_birth ? 'border-red-500' : ''}`}
-                                    />
+                                        className={`cursor-pointer ${errors.date_of_birth ? 'border-red-500' : ''}`} />
                                 </div>
                                 {errors.date_of_birth && <p className="text-xs text-red-500">{errors.date_of_birth}</p>}
                             </div>
 
-                            {/* Gender — "Other" removed */}
+                            {/* Gender */}
                             <div className="space-y-2">
                                 <Label required>{t('Gender')}</Label>
-                                <RadioGroup
-                                    value={formData.gender}
+                                <RadioGroup value={formData.gender}
                                     onValueChange={(value) => handleChange('gender', value)}
-                                    className="flex space-x-4"
-                                >
+                                    className="flex space-x-4">
                                     <div className="flex items-center space-x-2">
                                         <RadioGroupItem value="male" id="gender-male" />
                                         <Label htmlFor="gender-male">{t('Male')}</Label>
@@ -475,7 +372,7 @@ export default function EmployeeEdit() {
                                 {errors.gender && <p className="text-xs text-red-500">{errors.gender}</p>}
                             </div>
 
-                            {/* Nationality — REQUIRED */}
+                            {/* Nationality */}
                             <div className="space-y-2">
                                 <Label htmlFor="nationality" required>{t('Nationality')}</Label>
                                 <Select value={formData.nationality} onValueChange={(value) => handleChange('nationality', value)}>
@@ -520,7 +417,7 @@ export default function EmployeeEdit() {
                                 {errors.nationality && <p className="text-xs text-red-500">{errors.nationality}</p>}
                             </div>
 
-                            {/* Marital Status — REQUIRED */}
+                            {/* Marital Status */}
                             <div className="space-y-2">
                                 <Label htmlFor="marital_status" required>{t('Marital Status')}</Label>
                                 <Select value={formData.marital_status} onValueChange={(value) => handleChange('marital_status', value)}>
@@ -537,71 +434,74 @@ export default function EmployeeEdit() {
                                 {errors.marital_status && <p className="text-xs text-red-500">{errors.marital_status}</p>}
                             </div>
 
-                            {/* NRC — Zambian only; Passport+Permit for non-Zambian */}
+                            {/* NRC / Passport */}
                             {formData.nationality === 'Zambian' ? (
-                            <div className="space-y-2">
-                                <Label htmlFor="nrc" required>{t('NRC (National Registration Card)')}</Label>
-                                <Input
-                                    id="nrc"
-                                    value={formData.nrc}
-                                    onChange={(e) => {
-                                        let val = e.target.value.replace(/[^0-9]/g, '');
-                                        if (val.length > 6) val = val.slice(0, 6) + '/' + val.slice(6);
-                                        if (val.length > 9) val = val.slice(0, 9) + '/' + val.slice(9);
-                                        if (val.length > 11) val = val.slice(0, 11);
-                                        handleChange('nrc', val);
-                                    }}
-                                    placeholder="e.g. 123456/78/9"
-                                    maxLength={11}
-                                    className={errors.nrc ? 'border-red-500' : ''}
-                                />
-                                <p className="text-muted-foreground text-xs">{t('Format: XXXXXX/XX/X')}</p>
-                                {errors.nrc && <p className="text-xs text-red-500">{errors.nrc}</p>}
-                            </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="nrc" required>{t('NRC (National Registration Card)')}</Label>
+                                    <Input id="nrc" value={formData.nrc}
+                                        onChange={(e) => {
+                                            let val = e.target.value.replace(/[^0-9]/g, '');
+                                            if (val.length > 6) val = val.slice(0, 6) + '/' + val.slice(6);
+                                            if (val.length > 9) val = val.slice(0, 9) + '/' + val.slice(9);
+                                            if (val.length > 11) val = val.slice(0, 11);
+                                            handleChange('nrc', val);
+                                        }}
+                                        placeholder="e.g. 123456/78/9" maxLength={11}
+                                        className={errors.nrc ? 'border-red-500' : ''} />
+                                    <p className="text-muted-foreground text-xs">{t('Format: XXXXXX/XX/X')}</p>
+                                    {errors.nrc && <p className="text-xs text-red-500">{errors.nrc}</p>}
+                                </div>
                             ) : formData.nationality ? (
-                            <>
-                                {/* Passport No — non-Zambian employees */}
-                                <div className="space-y-2">
-                                    <Label htmlFor="passport_no" required>{t('Passport No')}</Label>
-                                    <Input
-                                        id="passport_no"
-                                        value={formData.passport_no}
-                                        onChange={(e) => handleChange('passport_no', e.target.value)}
-                                        placeholder={t('Enter passport number')}
-                                        className={errors.passport_no ? 'border-red-500' : ''}
-                                    />
-                                    {errors.passport_no && <p className="text-xs text-red-500">{errors.passport_no}</p>}
-                                </div>
-
-                                {/* Permit No — non-Zambian employees */}
-                                <div className="space-y-2">
-                                    <Label htmlFor="permit_no">{t('Permit No')}</Label>
-                                    <Input
-                                        id="permit_no"
-                                        value={formData.permit_no}
-                                        onChange={(e) => handleChange('permit_no', e.target.value)}
-                                        placeholder={t('Enter permit number')}
-                                        className={errors.permit_no ? 'border-red-500' : ''}
-                                    />
-                                    {errors.permit_no && <p className="text-xs text-red-500">{errors.permit_no}</p>}
-                                </div>
-                            </>
+                                <>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="passport_no" required>{t('Passport No')}</Label>
+                                        <Input id="passport_no" value={formData.passport_no}
+                                            onChange={(e) => handleChange('passport_no', e.target.value)}
+                                            placeholder={t('Enter passport number')}
+                                            className={errors.passport_no ? 'border-red-500' : ''} />
+                                        {errors.passport_no && <p className="text-xs text-red-500">{errors.passport_no}</p>}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="permit_no">{t('Permit No')}</Label>
+                                        <Input id="permit_no" value={formData.permit_no}
+                                            onChange={(e) => handleChange('permit_no', e.target.value)}
+                                            placeholder={t('Enter permit number')}
+                                            className={errors.permit_no ? 'border-red-500' : ''} />
+                                        {errors.permit_no && <p className="text-xs text-red-500">{errors.permit_no}</p>}
+                                    </div>
+                                </>
                             ) : null}
 
-                            {/* TPIN — REQUIRED */}
+                            {/* TPIN */}
                             <div className="space-y-2">
                                 <Label htmlFor="tpin" required>{t('TPIN (Tax ID)')}</Label>
-                                <Input
-                                    id="tpin"
-                                    value={formData.tpin}
+                                <Input id="tpin" value={formData.tpin}
                                     onChange={(e) => handleChange('tpin', e.target.value)}
                                     placeholder="e.g. 1234567890"
-                                    className={errors.tpin ? 'border-red-500' : ''}
-                                />
+                                    className={errors.tpin ? 'border-red-500' : ''} />
                                 {errors.tpin && <p className="text-xs text-red-500">{errors.tpin}</p>}
                             </div>
 
-                            {/* Profile Image — not mandatory */}
+                            {/* Employee Code */}
+                            <div className="space-y-2">
+                                <Label htmlFor="biometric_emp_id" required>{t('Employee Code')}</Label>
+                                <Input id="biometric_emp_id" required value={formData.biometric_emp_id || ''}
+                                    onChange={(e) => handleChange('biometric_emp_id', e.target.value)}
+                                    className={errors.biometric_emp_id ? 'border-red-500' : ''} />
+                                <p className="text-muted-foreground text-sm">
+                                    {t('This ID will be used to map employee with biometric device.')}
+                                </p>
+                                {errors.biometric_emp_id && <p className="text-xs text-red-500">{errors.biometric_emp_id}</p>}
+                            </div>
+
+                            {/* Employee ID — read-only */}
+                            <div className="space-y-2">
+                                <Label htmlFor="employee_id">{t('Employee ID')}</Label>
+                                <Input id="employee_id" value={formData.employee_id} readOnly className="bg-muted" />
+                                <p className="text-muted-foreground text-sm">{t('Employee ID cannot be changed')}</p>
+                            </div>
+
+                            {/* Profile Image */}
                             <div className="space-y-2">
                                 <Label>{t('Profile Image')}</Label>
                                 <div className="flex flex-col gap-3">
@@ -636,11 +536,7 @@ export default function EmployeeEdit() {
                     </CardContent>
                 </Card>
 
-                {/* ── Employment Details Card ────────────────────────────── */}
-                {/* FIX #1: Designation NOT linked to department             */}
-                {/* FIX #2: Suspension added to Employee Status              */}
-                {/* FIX #8: All fields NOT mandatory                         */}
-                {/* FIX: NAPSA No, NHIMA No, Base Salary moved HERE          */}
+                {/* Employment Details */}
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('Employment Details')}</CardTitle>
@@ -648,7 +544,7 @@ export default function EmployeeEdit() {
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 
-                            {/* Branch — optional */}
+                            {/* Branch */}
                             <div className="space-y-2">
                                 <Label htmlFor="branch_id">{t('Branch')}</Label>
                                 <Select value={formData.branch_id} onValueChange={(value) => handleChange('branch_id', value)}>
@@ -657,76 +553,72 @@ export default function EmployeeEdit() {
                                     </SelectTrigger>
                                     <SelectContent searchable={true}>
                                         {branches.map((branch: any) => (
-                                            <SelectItem key={branch.id} value={branch.id.toString()}>{branch.name}</SelectItem>
+                                            <SelectItem key={branch.id} value={branch.id.toString()}>
+                                                {branch.name}
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                                 {errors.branch_id && <p className="text-xs text-red-500">{errors.branch_id}</p>}
                             </div>
 
-                            {/* Department — optional, filtered by branch if changed */}
+                            {/* Department — global, no branch filter */}
                             <div className="space-y-2">
                                 <Label htmlFor="department_id">{t('Department')}</Label>
-                                <Select
-                                    value={formData.department_id}
-                                    onValueChange={(value) => handleChange('department_id', value)}
-                                >
+                                <Select value={formData.department_id}
+                                    onValueChange={(value) => handleChange('department_id', value)}>
                                     <SelectTrigger className={errors.department_id ? 'border-red-500' : ''}>
                                         <SelectValue placeholder={t('Select Department')} />
                                     </SelectTrigger>
                                     <SelectContent searchable={true}>
                                         {filteredDepartments.map((department: any) => (
-                                            <SelectItem key={department.id} value={department.id.toString()}>{department.name}</SelectItem>
+                                            <SelectItem key={department.id} value={department.id.toString()}>
+                                                {department.name}
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                                 {errors.department_id && <p className="text-xs text-red-500">{errors.department_id}</p>}
                             </div>
 
-                            {/* FIX #1: Designation — all designations, no department link, not disabled */}
+                            {/* Designation — global, no department filter */}
                             <div className="space-y-2">
                                 <Label htmlFor="designation_id">{t('Designation')}</Label>
-                                <Select
-                                    value={formData.designation_id}
-                                    onValueChange={(value) => handleChange('designation_id', value)}
-                                >
+                                <Select value={formData.designation_id}
+                                    onValueChange={(value) => handleChange('designation_id', value)}>
                                     <SelectTrigger className={errors.designation_id ? 'border-red-500' : ''}>
                                         <SelectValue placeholder={t('Select Designation')} />
                                     </SelectTrigger>
                                     <SelectContent searchable={true}>
                                         {allDesignations.map((designation: any) => (
-                                            <SelectItem key={designation.id} value={designation.id.toString()}>{designation.name}</SelectItem>
+                                            <SelectItem key={designation.id} value={designation.id.toString()}>
+                                                {designation.name}
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                                 {errors.designation_id && <p className="text-xs text-red-500">{errors.designation_id}</p>}
                             </div>
 
-                            {/* Date of Joining — optional */}
+                            {/* Date of Joining */}
                             <div className="space-y-2">
                                 <Label htmlFor="date_of_joining">{t('Date of Joining')}</Label>
-                                <div
-                                    className="cursor-pointer"
-                                    onClick={(e) => {
-                                        const input = (e.currentTarget as HTMLElement).querySelector('input');
-                                        try { (input as any)?.showPicker?.(); } catch { input?.focus(); }
-                                    }}
-                                >
-                                    <Input
-                                        id="date_of_joining"
-                                        type="date"
-                                        value={formData.date_of_joining}
+                                <div className="cursor-pointer" onClick={(e) => {
+                                    const input = (e.currentTarget as HTMLElement).querySelector('input');
+                                    try { (input as any)?.showPicker?.(); } catch { input?.focus(); }
+                                }}>
+                                    <Input id="date_of_joining" type="date" value={formData.date_of_joining}
                                         onChange={(e) => handleChange('date_of_joining', e.target.value)}
-                                        className={`cursor-pointer ${errors.date_of_joining ? 'border-red-500' : ''}`}
-                                    />
+                                        className={`cursor-pointer ${errors.date_of_joining ? 'border-red-500' : ''}`} />
                                 </div>
                                 {errors.date_of_joining && <p className="text-xs text-red-500">{errors.date_of_joining}</p>}
                             </div>
 
-                            {/* Employment Type — optional */}
+                            {/* Employment Type */}
                             <div className="space-y-2">
                                 <Label htmlFor="employment_type">{t('Employment Type')}</Label>
-                                <Select value={formData.employment_type} onValueChange={(value) => handleChange('employment_type', value)}>
+                                <Select value={formData.employment_type}
+                                    onValueChange={(value) => handleChange('employment_type', value)}>
                                     <SelectTrigger className={errors.employment_type ? 'border-red-500' : ''}>
                                         <SelectValue placeholder={t('Select Employment Type')} />
                                     </SelectTrigger>
@@ -741,10 +633,11 @@ export default function EmployeeEdit() {
                                 {errors.employment_type && <p className="text-xs text-red-500">{errors.employment_type}</p>}
                             </div>
 
-                            {/* FIX #2: Employee Status — Suspended added */}
+                            {/* Employee Status */}
                             <div className="space-y-2">
                                 <Label htmlFor="employee_status">{t('Employee Status')}</Label>
-                                <Select value={formData.employee_status} onValueChange={(value) => handleChange('employee_status', value)}>
+                                <Select value={formData.employee_status}
+                                    onValueChange={(value) => handleChange('employee_status', value)}>
                                     <SelectTrigger className={errors.employee_status ? 'border-red-500' : ''}>
                                         <SelectValue placeholder={t('Select Employee Status')} />
                                     </SelectTrigger>
@@ -759,10 +652,11 @@ export default function EmployeeEdit() {
                                 {errors.employee_status && <p className="text-xs text-red-500">{errors.employee_status}</p>}
                             </div>
 
-                            {/* Shift — optional */}
+                            {/* Shift */}
                             <div className="space-y-2">
                                 <Label htmlFor="shift_id">{t('Shift')}</Label>
-                                <Select value={formData.shift_id} onValueChange={(value) => handleChange('shift_id', value)}>
+                                <Select value={formData.shift_id}
+                                    onValueChange={(value) => handleChange('shift_id', value)}>
                                     <SelectTrigger className={errors.shift_id ? 'border-red-500' : ''}>
                                         <SelectValue placeholder={t('Select Shift (Optional)')} />
                                     </SelectTrigger>
@@ -777,59 +671,51 @@ export default function EmployeeEdit() {
                                 {errors.shift_id && <p className="text-xs text-red-500">{errors.shift_id}</p>}
                             </div>
 
-                            {/* Attendance Policy — optional */}
+                            {/* Attendance Policy */}
                             <div className="space-y-2">
                                 <Label htmlFor="attendance_policy_id">{t('Attendance Policy')}</Label>
-                                <Select value={formData.attendance_policy_id} onValueChange={(value) => handleChange('attendance_policy_id', value)}>
+                                <Select value={formData.attendance_policy_id}
+                                    onValueChange={(value) => handleChange('attendance_policy_id', value)}>
                                     <SelectTrigger className={errors.attendance_policy_id ? 'border-red-500' : ''}>
                                         <SelectValue placeholder={t('Select Attendance Policy (Optional)')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {attendancePolicies?.map((policy: any) => (
-                                            <SelectItem key={policy.id} value={policy.id.toString()}>{policy.name}</SelectItem>
+                                            <SelectItem key={policy.id} value={policy.id.toString()}>
+                                                {policy.name}
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                                 {errors.attendance_policy_id && <p className="text-xs text-red-500">{errors.attendance_policy_id}</p>}
                             </div>
 
-                            {/* FIX: NAPSA Registration Number — moved from Banking */}
+                            {/* NAPSA */}
                             <div className="space-y-2">
                                 <Label htmlFor="napsa_number">{t('NAPSA Registration Number')}</Label>
-                                <Input
-                                    id="napsa_number"
-                                    value={formData.napsa_number}
+                                <Input id="napsa_number" value={formData.napsa_number}
                                     onChange={(e) => handleChange('napsa_number', e.target.value)}
                                     placeholder="e.g. NAPSA-000123"
-                                    className={errors.napsa_number ? 'border-red-500' : ''}
-                                />
+                                    className={errors.napsa_number ? 'border-red-500' : ''} />
                                 {errors.napsa_number && <p className="text-xs text-red-500">{errors.napsa_number}</p>}
                             </div>
 
-                            {/* FIX: NHIMA Registration Number — moved from Banking */}
+                            {/* NHIMA */}
                             <div className="space-y-2">
                                 <Label htmlFor="nhima_number">{t('NHIMA Registration Number')}</Label>
-                                <Input
-                                    id="nhima_number"
-                                    value={formData.nhima_number}
+                                <Input id="nhima_number" value={formData.nhima_number}
                                     onChange={(e) => handleChange('nhima_number', e.target.value)}
                                     placeholder="e.g. NHIMA-000123"
-                                    className={errors.nhima_number ? 'border-red-500' : ''}
-                                />
+                                    className={errors.nhima_number ? 'border-red-500' : ''} />
                                 {errors.nhima_number && <p className="text-xs text-red-500">{errors.nhima_number}</p>}
                             </div>
 
-                            {/* FIX: Base Salary — moved from Banking, not mandatory */}
+                            {/* Base Salary */}
                             <div className="space-y-2">
                                 <Label htmlFor="salary">{t('Base Salary')}</Label>
-                                <Input
-                                    id="salary"
-                                    type="number"
-                                    step="0.01"
-                                    value={formData.salary}
+                                <Input id="salary" type="number" step="0.01" value={formData.salary}
                                     onChange={(e) => handleChange('salary', e.target.value)}
-                                    className={errors.salary ? 'border-red-500' : ''}
-                                />
+                                    className={errors.salary ? 'border-red-500' : ''} />
                                 {errors.salary && <p className="text-xs text-red-500">{errors.salary}</p>}
                             </div>
 
@@ -837,7 +723,7 @@ export default function EmployeeEdit() {
                     </CardContent>
                 </Card>
 
-                {/* ── Contact Information Card ───────────────────────────── */}
+                {/* Contact Information */}
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('Contact Information')}</CardTitle>
@@ -846,71 +732,49 @@ export default function EmployeeEdit() {
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div className="space-y-2">
                                 <Label htmlFor="address_line_1" required>{t('Address Line 1')}</Label>
-                                <Input
-                                    id="address_line_1"
-                                    required
-                                    value={formData.address_line_1}
+                                <Input id="address_line_1" required value={formData.address_line_1}
                                     onChange={(e) => handleChange('address_line_1', e.target.value)}
-                                    className={errors.address_line_1 ? 'border-red-500' : ''}
-                                />
+                                    className={errors.address_line_1 ? 'border-red-500' : ''} />
                                 {errors.address_line_1 && <p className="text-xs text-red-500">{errors.address_line_1}</p>}
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="address_line_2">{t('Address Line 2')}</Label>
-                                <Input
-                                    id="address_line_2"
-                                    value={formData.address_line_2}
+                                <Input id="address_line_2" value={formData.address_line_2}
                                     onChange={(e) => handleChange('address_line_2', e.target.value)}
-                                    className={errors.address_line_2 ? 'border-red-500' : ''}
-                                />
+                                    className={errors.address_line_2 ? 'border-red-500' : ''} />
                                 {errors.address_line_2 && <p className="text-xs text-red-500">{errors.address_line_2}</p>}
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="city" required>{t('City')}</Label>
-                                <Input
-                                    id="city"
-                                    required
-                                    value={formData.city}
+                                <Input id="city" required value={formData.city}
                                     onChange={(e) => handleChange('city', e.target.value)}
-                                    className={errors.city ? 'border-red-500' : ''}
-                                />
+                                    className={errors.city ? 'border-red-500' : ''} />
                                 {errors.city && <p className="text-xs text-red-500">{errors.city}</p>}
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="state" required>{t('State/Province')}</Label>
-                                <Input
-                                    id="state"
-                                    required
-                                    value={formData.state}
+                                <Input id="state" required value={formData.state}
                                     onChange={(e) => handleChange('state', e.target.value)}
-                                    className={errors.state ? 'border-red-500' : ''}
-                                />
+                                    className={errors.state ? 'border-red-500' : ''} />
                                 {errors.state && <p className="text-xs text-red-500">{errors.state}</p>}
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="country" required>{t('Country')}</Label>
-                                <Input
-                                    id="country"
-                                    required
-                                    value={formData.country}
+                                <Input id="country" required value={formData.country}
                                     onChange={(e) => handleChange('country', e.target.value)}
-                                    className={errors.country ? 'border-red-500' : ''}
-                                />
+                                    className={errors.country ? 'border-red-500' : ''} />
                                 {errors.country && <p className="text-xs text-red-500">{errors.country}</p>}
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="postal_code">{t('Postal/Zip Code')}</Label>
-                                <Input
-                                    id="postal_code"
-                                    value={formData.postal_code}
+                                <Input id="postal_code" value={formData.postal_code}
                                     onChange={(e) => handleChange('postal_code', e.target.value)}
-                                    className={errors.postal_code ? 'border-red-500' : ''}
-                                />
+                                    className={errors.postal_code ? 'border-red-500' : ''} />
                                 {errors.postal_code && <p className="text-xs text-red-500">{errors.postal_code}</p>}
                             </div>
                         </div>
@@ -921,23 +785,16 @@ export default function EmployeeEdit() {
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="emergency_contact_name" required>{t('Name')}</Label>
-                                    <Input
-                                        id="emergency_contact_name"
-                                        required
-                                        value={formData.emergency_contact_name}
+                                    <Input id="emergency_contact_name" required value={formData.emergency_contact_name}
                                         onChange={(e) => handleChange('emergency_contact_name', e.target.value)}
-                                        className={errors.emergency_contact_name ? 'border-red-500' : ''}
-                                    />
+                                        className={errors.emergency_contact_name ? 'border-red-500' : ''} />
                                     {errors.emergency_contact_name && <p className="text-xs text-red-500">{errors.emergency_contact_name}</p>}
                                 </div>
 
-                                {/* FIX #3: Relationship — dropdown with Other + text box */}
                                 <div className="space-y-2">
                                     <Label htmlFor="emergency_contact_relationship" required>{t('Relationship')}</Label>
-                                    <Select
-                                        value={formData.emergency_contact_relationship}
-                                        onValueChange={(value) => handleChange('emergency_contact_relationship', value)}
-                                    >
+                                    <Select value={formData.emergency_contact_relationship}
+                                        onValueChange={(value) => handleChange('emergency_contact_relationship', value)}>
                                         <SelectTrigger className={errors.emergency_contact_relationship ? 'border-red-500' : ''}>
                                             <SelectValue placeholder={t('Select Relationship')} />
                                         </SelectTrigger>
@@ -950,26 +807,19 @@ export default function EmployeeEdit() {
                                     {errors.emergency_contact_relationship && (
                                         <p className="text-xs text-red-500">{errors.emergency_contact_relationship}</p>
                                     )}
-                                    {/* Show text input when "Other" is selected */}
                                     {formData.emergency_contact_relationship === 'Other' && (
-                                        <Input
-                                            className="mt-2"
+                                        <Input className="mt-2"
                                             placeholder={t('Please specify relationship')}
                                             value={formData.emergency_contact_relationship_other}
-                                            onChange={(e) => handleChange('emergency_contact_relationship_other', e.target.value)}
-                                        />
+                                            onChange={(e) => handleChange('emergency_contact_relationship_other', e.target.value)} />
                                     )}
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="emergency_contact_number" required>{t('Phone Number')}</Label>
-                                    <Input
-                                        id="emergency_contact_number"
-                                        required
-                                        value={formData.emergency_contact_number}
+                                    <Input id="emergency_contact_number" required value={formData.emergency_contact_number}
                                         onChange={(e) => handleChange('emergency_contact_number', e.target.value)}
-                                        className={errors.emergency_contact_number ? 'border-red-500' : ''}
-                                    />
+                                        className={errors.emergency_contact_number ? 'border-red-500' : ''} />
                                     {errors.emergency_contact_number && <p className="text-xs text-red-500">{errors.emergency_contact_number}</p>}
                                 </div>
                             </div>
@@ -977,21 +827,16 @@ export default function EmployeeEdit() {
                     </CardContent>
                 </Card>
 
-                {/* ── Banking Information Card ───────────────────────────── */}
-                {/* FIX #4: Payment method — Cash / Mobile Money / EFT       */}
-                {/* FIX #5: Bank Name = Zambian banks dropdown                */}
-                {/* FIX: NAPSA, NHIMA, Salary REMOVED (moved to Employment)  */}
-                {/* FIX #10: tax_payer_id removed                            */}
+                {/* Banking Information */}
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('Banking Information')}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-
-                        {/* FIX #4: Payment Method selector */}
                         <div className="space-y-2">
                             <Label htmlFor="payment_method" required>{t('Payment Method')}</Label>
-                            <Select value={formData.payment_method} onValueChange={(value) => handleChange('payment_method', value)}>
+                            <Select value={formData.payment_method}
+                                onValueChange={(value) => handleChange('payment_method', value)}>
                                 <SelectTrigger className={errors.payment_method ? 'border-red-500' : ''}>
                                     <SelectValue placeholder={t('Select Payment Method')} />
                                 </SelectTrigger>
@@ -1004,14 +849,12 @@ export default function EmployeeEdit() {
                             {errors.payment_method && <p className="text-xs text-red-500">{errors.payment_method}</p>}
                         </div>
 
-                        {/* FIX #4: Banking detail fields only visible when EFT selected */}
                         {formData.payment_method === 'EFT' && (
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-
-                                {/* FIX #5: Bank Name — Zambian banks dropdown */}
                                 <div className="space-y-2">
                                     <Label htmlFor="bank_name" required>{t('Bank Name')}</Label>
-                                    <Select value={formData.bank_name} onValueChange={(value) => handleChange('bank_name', value)}>
+                                    <Select value={formData.bank_name}
+                                        onValueChange={(value) => handleChange('bank_name', value)}>
                                         <SelectTrigger className={errors.bank_name ? 'border-red-500' : ''}>
                                             <SelectValue placeholder={t('Select Bank')} />
                                         </SelectTrigger>
@@ -1026,56 +869,41 @@ export default function EmployeeEdit() {
 
                                 <div className="space-y-2">
                                     <Label htmlFor="account_holder_name" required>{t('Account Holder Name')}</Label>
-                                    <Input
-                                        id="account_holder_name"
-                                        required
-                                        value={formData.account_holder_name}
+                                    <Input id="account_holder_name" required value={formData.account_holder_name}
                                         onChange={(e) => handleChange('account_holder_name', e.target.value)}
-                                        className={errors.account_holder_name ? 'border-red-500' : ''}
-                                    />
+                                        className={errors.account_holder_name ? 'border-red-500' : ''} />
                                     {errors.account_holder_name && <p className="text-xs text-red-500">{errors.account_holder_name}</p>}
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="account_number" required>{t('Account Number')}</Label>
-                                    <Input
-                                        id="account_number"
-                                        required
-                                        value={formData.account_number}
+                                    <Input id="account_number" required value={formData.account_number}
                                         onChange={(e) => handleChange('account_number', e.target.value)}
-                                        className={errors.account_number ? 'border-red-500' : ''}
-                                    />
+                                        className={errors.account_number ? 'border-red-500' : ''} />
                                     {errors.account_number && <p className="text-xs text-red-500">{errors.account_number}</p>}
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="bank_identifier_code">{t('Bank Identifier Code (BIC/SWIFT)')}</Label>
-                                    <Input
-                                        id="bank_identifier_code"
-                                        value={formData.bank_identifier_code}
+                                    <Input id="bank_identifier_code" value={formData.bank_identifier_code}
                                         onChange={(e) => handleChange('bank_identifier_code', e.target.value)}
-                                        className={errors.bank_identifier_code ? 'border-red-500' : ''}
-                                    />
+                                        className={errors.bank_identifier_code ? 'border-red-500' : ''} />
                                     {errors.bank_identifier_code && <p className="text-xs text-red-500">{errors.bank_identifier_code}</p>}
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="bank_branch">{t('Bank Branch')}</Label>
-                                    <Input
-                                        id="bank_branch"
-                                        value={formData.bank_branch}
+                                    <Input id="bank_branch" value={formData.bank_branch}
                                         onChange={(e) => handleChange('bank_branch', e.target.value)}
-                                        className={errors.bank_branch ? 'border-red-500' : ''}
-                                    />
+                                        className={errors.bank_branch ? 'border-red-500' : ''} />
                                     {errors.bank_branch && <p className="text-xs text-red-500">{errors.bank_branch}</p>}
                                 </div>
-
                             </div>
                         )}
                     </CardContent>
                 </Card>
 
-                {/* ── Statutory Exemptions Card ──────────────────────────── */}
+                {/* Statutory Exemptions */}
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('Statutory Exemptions')}</CardTitle>
@@ -1085,16 +913,11 @@ export default function EmployeeEdit() {
                             {t('Check the boxes below if this employee is exempt from specific statutory contributions. Exemptions apply to employees who have reached retirement age or based on specific contract terms.')}
                         </p>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-
-                            {/* Exempt from NAPSA */}
                             <div className="bg-muted/20 flex items-start space-x-3 rounded-md border p-4">
-                                <input
-                                    type="checkbox"
-                                    id="exempt_from_napsa"
+                                <input type="checkbox" id="exempt_from_napsa"
                                     checked={formData.exempt_from_napsa}
                                     onChange={(e) => handleChange('exempt_from_napsa', e.target.checked)}
-                                    className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300"
-                                />
+                                    className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300" />
                                 <div>
                                     <Label htmlFor="exempt_from_napsa" className="cursor-pointer font-medium">
                                         {t('Exempt from NAPSA')}
@@ -1105,15 +928,11 @@ export default function EmployeeEdit() {
                                 </div>
                             </div>
 
-                            {/* Exempt from NHIMA */}
                             <div className="bg-muted/20 flex items-start space-x-3 rounded-md border p-4">
-                                <input
-                                    type="checkbox"
-                                    id="exempt_from_nhima"
+                                <input type="checkbox" id="exempt_from_nhima"
                                     checked={formData.exempt_from_nhima}
                                     onChange={(e) => handleChange('exempt_from_nhima', e.target.checked)}
-                                    className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300"
-                                />
+                                    className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300" />
                                 <div>
                                     <Label htmlFor="exempt_from_nhima" className="cursor-pointer font-medium">
                                         {t('Exempt from NHIMA')}
@@ -1124,15 +943,11 @@ export default function EmployeeEdit() {
                                 </div>
                             </div>
 
-                            {/* Exempt from SDL */}
                             <div className="bg-muted/20 flex items-start space-x-3 rounded-md border p-4">
-                                <input
-                                    type="checkbox"
-                                    id="exempt_from_sdl"
+                                <input type="checkbox" id="exempt_from_sdl"
                                     checked={formData.exempt_from_sdl}
                                     onChange={(e) => handleChange('exempt_from_sdl', e.target.checked)}
-                                    className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300"
-                                />
+                                    className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300" />
                                 <div>
                                     <Label htmlFor="exempt_from_sdl" className="cursor-pointer font-medium">
                                         {t('Exempt from SDL')}
@@ -1142,12 +957,11 @@ export default function EmployeeEdit() {
                                     </p>
                                 </div>
                             </div>
-
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* ── Documents Card ─────────────────────────────────────── */}
+                {/* Documents */}
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('Documents')}</CardTitle>
@@ -1187,14 +1001,12 @@ export default function EmployeeEdit() {
                                                         </div>
                                                     </div>
                                                     <div className="flex space-x-2">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => window.open(`${document.file_path}`, '_blank')}
-                                                        >
+                                                        <Button variant="outline" size="sm"
+                                                            onClick={() => window.open(`${document.file_path}`, '_blank')}>
                                                             <Plus className="h-4 w-4" />
                                                         </Button>
-                                                        <Button variant="outline" size="sm" onClick={() => removeExistingDocument(document.id)}>
+                                                        <Button variant="outline" size="sm"
+                                                            onClick={() => removeExistingDocument(document.id)}>
                                                             <Trash2 className="h-4 w-4 text-red-500" />
                                                         </Button>
                                                     </div>
@@ -1223,11 +1035,9 @@ export default function EmployeeEdit() {
                                             <Label htmlFor={`document_type_${index}`}>
                                                 {t('Document Type')} <span className="text-red-500">*</span>
                                             </Label>
-                                            <Select
-                                                value={document.document_type_id}
-                                                onValueChange={(value) => handleNewDocumentChange(index, 'document_type_id', value)}
-                                            >
-                                                <SelectTrigger className={errors[`new_documents.${index}.document_type_id`] ? 'border-red-500' : ''}>
+                                            <Select value={document.document_type_id}
+                                                onValueChange={(value) => handleNewDocumentChange(index, 'document_type_id', value)}>
+                                                <SelectTrigger className={errors[`documents.${index}.document_type_id`] ? 'border-red-500' : ''}>
                                                     <SelectValue placeholder={t('Select Document Type')} />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -1238,23 +1048,18 @@ export default function EmployeeEdit() {
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                            {errors[`new_documents.${index}.document_type_id`] && (
-                                                <p className="text-xs text-red-500">{errors[`new_documents.${index}.document_type_id`]}</p>
+                                            {errors[`documents.${index}.document_type_id`] && (
+                                                <p className="text-xs text-red-500">{errors[`documents.${index}.document_type_id`]}</p>
                                             )}
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label>
-                                                {t('File')} <span className="text-red-500">*</span>
-                                            </Label>
+                                            <Label>{t('File')} <span className="text-red-500">*</span></Label>
                                             <div className="flex flex-col gap-3">
                                                 <div className="bg-muted/30 flex h-20 items-center justify-center rounded-md border p-4">
                                                     {document.file_path ? (
-                                                        <img
-                                                            src={getImagePath(document.file_path)}
-                                                            alt="Document Preview"
-                                                            className="max-h-full max-w-full object-contain"
-                                                        />
+                                                        <img src={getImagePath(document.file_path)} alt="Document Preview"
+                                                            className="max-h-full max-w-full object-contain" />
                                                     ) : (
                                                         <div className="text-muted-foreground flex flex-col items-center gap-1">
                                                             <div className="bg-muted flex h-8 w-8 items-center justify-center rounded border border-dashed">
@@ -1264,38 +1069,28 @@ export default function EmployeeEdit() {
                                                         </div>
                                                     )}
                                                 </div>
-                                                <MediaPicker
-                                                    label=""
-                                                    value={document.file_path || ''}
+                                                <MediaPicker label="" value={document.file_path || ''}
                                                     onChange={(url) => handleNewDocumentChange(index, 'file_path', url)}
-                                                    placeholder="Select document file..."
-                                                    showPreview={false}
-                                                />
+                                                    placeholder="Select document file..." showPreview={false} />
                                             </div>
-                                            {errors[`new_documents.${index}.file`] && (
-                                                <p className="text-xs text-red-500">{errors[`new_documents.${index}.file`]}</p>
+                                            {errors[`documents.${index}.file`] && (
+                                                <p className="text-xs text-red-500">{errors[`documents.${index}.file`]}</p>
                                             )}
                                         </div>
 
                                         <div className="space-y-2">
                                             <Label htmlFor={`document_expiry_${index}`}>{t('Expiry Date')}</Label>
-                                            <div
-                                                className="cursor-pointer"
-                                                onClick={(e) => {
-                                                    const input = (e.currentTarget as HTMLElement).querySelector('input');
-                                                    try { (input as any)?.showPicker?.(); } catch { input?.focus(); }
-                                                }}
-                                            >
-                                                <Input
-                                                    id={`document_expiry_${index}`}
-                                                    type="date"
+                                            <div className="cursor-pointer" onClick={(e) => {
+                                                const input = (e.currentTarget as HTMLElement).querySelector('input');
+                                                try { (input as any)?.showPicker?.(); } catch { input?.focus(); }
+                                            }}>
+                                                <Input id={`document_expiry_${index}`} type="date"
                                                     value={document.expiry_date}
                                                     onChange={(e) => handleNewDocumentChange(index, 'expiry_date', e.target.value)}
-                                                    className={`cursor-pointer ${errors[`new_documents.${index}.expiry_date`] ? 'border-red-500' : ''}`}
-                                                />
+                                                    className={`cursor-pointer ${errors[`documents.${index}.expiry_date`] ? 'border-red-500' : ''}`} />
                                             </div>
-                                            {errors[`new_documents.${index}.expiry_date`] && (
-                                                <p className="text-xs text-red-500">{errors[`new_documents.${index}.expiry_date`]}</p>
+                                            {errors[`documents.${index}.expiry_date`] && (
+                                                <p className="text-xs text-red-500">{errors[`documents.${index}.expiry_date`]}</p>
                                             )}
                                         </div>
                                     </div>
@@ -1310,7 +1105,7 @@ export default function EmployeeEdit() {
                     </CardContent>
                 </Card>
 
-                {/* Submit Buttons */}
+                {/* Submit */}
                 <div className="flex justify-end space-x-4">
                     <Button type="button" variant="outline" onClick={() => router.get(route('hr.employees.index'))}>
                         {t('Cancel')}

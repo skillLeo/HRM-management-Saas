@@ -3,10 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Department;
-use App\Models\Branch;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Faker\Factory as Faker;
 
 class DepartmentSeeder extends Seeder
 {
@@ -15,8 +13,6 @@ class DepartmentSeeder extends Seeder
      */
     public function run(): void
     {
-        $faker = Faker::create();
-
         // Get all companies
         $companies = User::where('type', 'company')->get();
 
@@ -40,40 +36,29 @@ class DepartmentSeeder extends Seeder
         ];
 
         foreach ($companies as $company) {
-            // Get all branches for this company
-            $branches = Branch::where('created_by', $company->id)->get();
+            // Create 3 departments per company
+            $departmentCount = rand(2, 3);
 
-            if ($branches->isEmpty()) {
-                $this->command->warn('No branches found for company: ' . $company->name . '. Please run BranchSeeder first.');
-                continue;
-            }
+            for ($i = 0; $i < $departmentCount; $i++) {
+                $department = $departments[$i];
 
-            foreach ($branches as $branch) {
-                // Create 5-8 departments for each branch
-                $departmentCount = rand(2,3);
+                // Check if department already exists for this company
+                if (Department::where('name', $department['name'])
+                    ->where('created_by', $company->id)
+                    ->exists()) {
+                    continue;
+                }
 
-                for ($i = 0; $i < $departmentCount; $i++) {
-                    $department = $departments[$i];
-                    $departmentName = $department['name'];
-                    $departmentDescription = $department['description'];
-
-                    // Check if department already exists for this branch
-                    if (Department::where('name', $departmentName)->where('branch_id', $branch->id)->exists()) {
-                        continue;
-                    }
-
-                    try {
-                        Department::create([
-                            'name' => $departmentName,
-                            'branch_id' => $branch->id,
-                            'description' => $departmentDescription,
-                            'status' => 'active',
-                            'created_by' => $company->id,
-                        ]);
-                    } catch (\Exception $e) {
-                        $this->command->error('Failed to create department: ' . $departmentName . ' for branch: ' . $branch->name);
-                        continue;
-                    }
+                try {
+                    Department::create([
+                        'name' => $department['name'],
+                        'description' => $department['description'],
+                        'status' => 'active',
+                        'created_by' => $company->id,
+                    ]);
+                } catch (\Exception $e) {
+                    $this->command->error('Failed to create department: ' . $department['name'] . ' for company: ' . $company->name);
+                    continue;
                 }
             }
         }

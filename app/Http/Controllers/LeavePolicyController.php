@@ -81,14 +81,26 @@ class LeavePolicyController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'leave_type_id' => 'required|exists:leave_types,id',
-            'accrual_type' => 'required|in:monthly,yearly',
-            'accrual_rate' => 'required|numeric|min:0',
+            'allocation_type' => 'required|in:accrual,fixed',
+            'accrual_type' => 'required_if:allocation_type,accrual|nullable|in:monthly,yearly',
+            'accrual_rate' => 'required_if:allocation_type,accrual|nullable|numeric|min:0',
+            'fixed_days' => 'required_if:allocation_type,fixed|nullable|numeric|min:0.5',
+            'fixed_days_unit' => 'required_if:allocation_type,fixed|nullable|in:days,weeks',
             'carry_forward_limit' => 'required|integer|min:0',
             'min_days_per_application' => 'required|integer|min:1',
             'max_days_per_application' => 'required|integer|min:1',
             'requires_approval' => 'boolean',
             'status' => 'nullable|in:active,inactive',
         ]);
+
+        // Clear fields that don't apply to the chosen allocation type
+        if ($validated['allocation_type'] === 'fixed') {
+            $validated['accrual_type'] = null;
+            $validated['accrual_rate'] = null;
+        } else {
+            $validated['fixed_days'] = null;
+            $validated['fixed_days_unit'] = null;
+        }
 
         $validated['created_by'] = creatorId();
         $validated['status'] = $validated['status'] ?? 'active';
@@ -120,14 +132,25 @@ class LeavePolicyController extends Controller
                     'name' => 'required|string|max:255',
                     'description' => 'nullable|string',
                     'leave_type_id' => 'required|exists:leave_types,id',
-                    'accrual_type' => 'required|in:monthly,yearly',
-                    'accrual_rate' => 'required|numeric|min:0',
+                    'allocation_type' => 'required|in:accrual,fixed',
+                    'accrual_type' => 'required_if:allocation_type,accrual|nullable|in:monthly,yearly',
+                    'accrual_rate' => 'required_if:allocation_type,accrual|nullable|numeric|min:0',
+                    'fixed_days' => 'required_if:allocation_type,fixed|nullable|numeric|min:0.5',
+                    'fixed_days_unit' => 'required_if:allocation_type,fixed|nullable|in:days,weeks',
                     'carry_forward_limit' => 'required|integer|min:0',
                     'min_days_per_application' => 'required|integer|min:1',
                     'max_days_per_application' => 'required|integer|min:1',
                     'requires_approval' => 'boolean',
                     'status' => 'nullable|in:active,inactive',
                 ]);
+
+                if ($validated['allocation_type'] === 'fixed') {
+                    $validated['accrual_type'] = null;
+                    $validated['accrual_rate'] = null;
+                } else {
+                    $validated['fixed_days'] = null;
+                    $validated['fixed_days_unit'] = null;
+                }
 
                 // Check if leave type belongs to the current user's company
                 $leaveType = LeaveType::where('id', $validated['leave_type_id'])
