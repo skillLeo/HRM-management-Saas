@@ -280,6 +280,37 @@ class PayrollRunController extends Controller
                 return redirect()->back()->with('error', __('Only completed payroll runs can be submitted for final approval.'));
             }
 
+            // ── Block if any active/probation employee has not been processed ─────
+            $allActiveUserIds = \App\Models\Employee::whereIn('created_by', getCompanyAndUsersId())
+                ->whereIn('employee_status', ['active', 'probation'])
+                ->pluck('user_id');
+
+            $processedUserIds = $payrollRun->payrollEntries()->pluck('employee_id');
+            $unprocessedIds   = $allActiveUserIds->diff($processedUserIds);
+
+            if ($unprocessedIds->isNotEmpty()) {
+                $unprocessedEmps = \App\Models\Employee::whereIn('user_id', $unprocessedIds)
+                    ->with('branch')
+                    ->get();
+
+                $branches = $unprocessedEmps
+                    ->pluck('branch.name')
+                    ->filter()
+                    ->unique()
+                    ->sort()
+                    ->values()
+                    ->implode(', ');
+
+                return redirect()->back()->with('error', __(
+                    ':count active employee(s) have not been processed in this payroll run. Unprocessed branches: :branches. Please process all employees before submitting.',
+                    [
+                        'count'    => $unprocessedIds->count(),
+                        'branches' => $branches ?: 'Unassigned',
+                    ]
+                ));
+            }
+            // ──────────────────────────────────────────────────────────────────────
+
             $payrollRun->update([
                 'status'                  => 'pending_approval',
                 'submitted_for_final_at'  => now(),

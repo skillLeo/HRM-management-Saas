@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use App\Models\AttendancePolicy;
 use App\Models\Branch;
 use App\Models\Candidate;
@@ -767,6 +768,52 @@ class EmployeeController extends Controller
         return response()->download($filePath);
     }
 
+    public function downloadTemplate()
+    {
+        try {
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $headers = [
+                'name', 'email', 'password', 'employee_id', 'biometric_emp_id',
+                'phone', 'department', 'designation', 'branch', 'base_salary',
+                'date_of_joining', 'date_of_birth', 'gender', 'shift',
+                'attendance_policy', 'employment_type', 'employee_status',
+                'city', 'state', 'country', 'postal_code', 'address',
+                'bank_name', 'account_number', 'bank_identifier_code', 'bank_branch',
+            ];
+
+            foreach ($headers as $colIndex => $header) {
+                $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1);
+                $sheet->setCellValue($col . '1', $header);
+            }
+
+            $sampleRow = [
+                'John Doe', 'john.doe@example.com', 'Password123', 'EMP001', '',
+                '+260971234567', 'Sales', 'Sales Manager', 'Lusaka', '5000',
+                date('Y-m-d'), '1990-01-15', 'male', '',
+                '', 'full-time', 'active',
+                'Lusaka', 'Lusaka', 'Zambia', '10101', '123 Example Street',
+                '', '', '', '',
+            ];
+
+            foreach ($sampleRow as $colIndex => $value) {
+                $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1);
+                $sheet->setCellValue($col . '2', $value);
+            }
+
+            $writer = new Xlsx($spreadsheet);
+            $tempFile = tempnam(sys_get_temp_dir(), 'emp_template_') . '.xlsx';
+            $writer->save($tempFile);
+
+            return response()->download($tempFile, 'sample-employee.xlsx')->deleteFileAfterSend(true);
+
+        } catch (\Exception $e) {
+            \Log::error('Template download failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', __('Failed to download template: :message', ['message' => $e->getMessage()]));
+        }
+    }
+
     public function downloadJoiningLetter($employeeId, $format = 'pdf')
     {
         if (!Auth::user()->can('download-joining-letter')) {
@@ -1026,46 +1073,6 @@ class EmployeeController extends Controller
         }
     }
 
-    public function downloadTemplate()
-    {
-        // Generate dynamic template with exact column headers that match auto-mapping
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-
-        $headers = [
-            'name', 'email', 'password', 'employee_id', 'biometric_emp_id',
-            'phone', 'department', 'designation', 'branch', 'base_salary',
-            'date_of_joining', 'date_of_birth', 'gender', 'shift',
-            'attendance_policy', 'employment_type', 'employee_status',
-            'city', 'state', 'country', 'postal_code', 'address',
-            'bank_name', 'account_number', 'bank_identifier_code', 'bank_branch',
-        ];
-
-        foreach ($headers as $colIndex => $header) {
-            $sheet->setCellValueByColumnAndRow($colIndex + 1, 1, $header);
-        }
-
-        // Add a sample row
-        $sampleRow = [
-            'John Doe', 'john.doe@example.com', 'Password123', 'EMP001', '',
-            '+260971234567', 'Sales', 'Sales Manager', 'Lusaka', '5000',
-            date('Y-m-d'), '1990-01-15', 'male', '',
-            '', 'full-time', 'active',
-            'Lusaka', 'Lusaka', 'Zambia', '10101', '123 Example Street',
-            '', '', '', '',
-        ];
-
-        foreach ($sampleRow as $colIndex => $value) {
-            $sheet->setCellValueByColumnAndRow($colIndex + 1, 2, $value);
-        }
-
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $tempFile = tempnam(sys_get_temp_dir(), 'emp_template_') . '.xlsx';
-        $writer->save($tempFile);
-
-        return response()->download($tempFile, 'sample-employee.xlsx')->deleteFileAfterSend(true);
-    }
-
     public function parseFile(Request $request)
     {
         if (Auth::user()->can('import-employee')) {
@@ -1145,7 +1152,6 @@ class EmployeeController extends Controller
                             $password = Hash::make($row['password']);
                         }
 
-                        // Find branch by name
                         $branchId = null;
                         if (!empty($row['branch'])) {
                             $branch = Branch::whereIn('created_by', getCompanyAndUsersId())
@@ -1154,7 +1160,6 @@ class EmployeeController extends Controller
                             $branchId = $branch ? $branch->id : null;
                         }
 
-                        // Find department by name only (no branch link)
                         $departmentId = null;
                         if (!empty($row['department'])) {
                             $department = Department::whereIn('created_by', getCompanyAndUsersId())
@@ -1163,7 +1168,6 @@ class EmployeeController extends Controller
                             $departmentId = $department ? $department->id : null;
                         }
 
-                        // Find designation by name only (no department link)
                         $designationId = null;
                         if (!empty($row['designation'])) {
                             $designation = Designation::whereIn('created_by', getCompanyAndUsersId())
@@ -1172,7 +1176,6 @@ class EmployeeController extends Controller
                             $designationId = $designation ? $designation->id : null;
                         }
 
-                        // Find shift by name
                         $shiftId = null;
                         if (!empty($row['shift'])) {
                             $shift = Shift::whereIn('created_by', getCompanyAndUsersId())
@@ -1181,7 +1184,6 @@ class EmployeeController extends Controller
                             $shiftId = $shift ? $shift->id : null;
                         }
 
-                        // Find attendance policy by name
                         $attendancePolicyId = null;
                         if (!empty($row['attendance_policy'])) {
                             $attendancePolicy = AttendancePolicy::whereIn('created_by', getCompanyAndUsersId())
@@ -1190,7 +1192,6 @@ class EmployeeController extends Controller
                             $attendancePolicyId = $attendancePolicy ? $attendancePolicy->id : null;
                         }
 
-                        // Handle date of joining - support multiple column name variations
                         $dateOfJoining = null;
                         $joinedDateValue = $row['date_of_joining']
                             ?? $row['joined_date']
@@ -1213,7 +1214,6 @@ class EmployeeController extends Controller
                             $dateOfJoining = now()->format('Y-m-d');
                         }
 
-                        // Handle employee_id - use from import if provided, else generate
                         $employeeIdValue = $row['employee_id']
                             ?? $row['Employee ID']
                             ?? $row['employee_no']
@@ -1227,7 +1227,6 @@ class EmployeeController extends Controller
                             $employeeId = Employee::generateEmployeeId();
                         }
 
-                        // Create user and employee record atomically
                         DB::transaction(function () use ($row, $password, $branchId, $departmentId, $designationId, $shiftId, $attendancePolicyId, $dateOfJoining, $employeeId, &$imported) {
                             $user = User::create([
                                 'name' => $row['name'],
@@ -1238,7 +1237,6 @@ class EmployeeController extends Controller
                                 'created_by' => creatorId(),
                             ]);
 
-                            // Assign role
                             if (isSaaS()) {
                                 $employeeRole = Role::whereIn('created_by', getCompanyAndUsersId())
                                     ->where('name', 'employee')
@@ -1251,7 +1249,6 @@ class EmployeeController extends Controller
                                 $user->assignRole($employeeRole);
                             }
 
-                            // Create employee record
                             Employee::create([
                                 'user_id' => $user->id,
                                 'employee_id' => $employeeId,

@@ -96,48 +96,84 @@ function LeavePolicyFormModal({
     });
   };
 
+  const safeLeaveTypes = Array.isArray(leaveTypes) ? leaveTypes : [];
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+    // KEY FIX: modal={false} stops Radix Dialog from setting pointer-events:none on body,
+    // which was blocking the portal-rendered SelectContent from receiving clicks.
+    // We manually add the backdrop overlay below.
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()} modal={false}>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto z-50">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+
           {/* Policy Name */}
           <div className="space-y-1">
             <Label>{t('Policy Name')} <span className="text-red-500">*</span></Label>
-            <Input value={form.name} onChange={e => set('name', e.target.value)}
-              required disabled={isView} placeholder={t('e.g. Annual Leave Policy')} />
+            <Input
+              value={form.name}
+              onChange={e => set('name', e.target.value)}
+              required
+              disabled={isView}
+              placeholder={t('e.g. Annual Leave Policy')}
+            />
           </div>
 
           {/* Description */}
           <div className="space-y-1">
             <Label>{t('Description')}</Label>
-            <Textarea value={form.description} onChange={e => set('description', e.target.value)}
-              disabled={isView} rows={2} />
+            <Textarea
+              value={form.description}
+              onChange={e => set('description', e.target.value)}
+              disabled={isView}
+              rows={2}
+            />
           </div>
 
           {/* Leave Type */}
           <div className="space-y-1">
             <Label>{t('Leave Type')} <span className="text-red-500">*</span></Label>
-            <Select value={form.leave_type_id} onValueChange={v => set('leave_type_id', v)} disabled={isView}>
-              <SelectTrigger><SelectValue placeholder={t('Select Leave Type')} /></SelectTrigger>
-              <SelectContent>
-                {(leaveTypes || []).map((lt: any) => (
-                  <SelectItem key={lt.id} value={lt.id.toString()}>{lt.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {safeLeaveTypes.length > 0 ? (
+              <Select
+                value={form.leave_type_id}
+                onValueChange={v => set('leave_type_id', v)}
+                disabled={isView}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('Select Leave Type')} />
+                </SelectTrigger>
+                <SelectContent className="z-[9999]">
+                  {safeLeaveTypes.map((lt: any) => (
+                    <SelectItem key={lt.id} value={lt.id.toString()}>
+                      {lt.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 text-sm text-muted-foreground">
+                {t('No leave types available — please create one first')}
+              </div>
+            )}
           </div>
 
-          {/* Allocation Type — the key new field */}
+          {/* Allocation Type */}
           <div className="space-y-2">
             <Label>{t('Allocation Type')} <span className="text-red-500">*</span></Label>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { value: 'accrual', label: t('Accrual'), desc: t('Leave accrues over time (monthly or yearly)') },
-                { value: 'fixed', label: t('Fixed'),   desc: t('Set number of days/weeks per financial year') },
+                { value: 'fixed',   label: t('Fixed'),   desc: t('Set number of days/weeks per financial year') },
               ].map(opt => (
                 <button
                   key={opt.value}
@@ -157,49 +193,75 @@ function LeavePolicyFormModal({
             </div>
           </div>
 
-          {/* Accrual fields — shown only when allocation_type = accrual */}
+          {/* Accrual fields */}
           {form.allocation_type === 'accrual' && (
-            <div className="grid grid-cols-2 gap-4 p-3 bg-gray-50 rounded-lg border">
+            <div className="p-3 bg-gray-50 rounded-lg border space-y-3">
               <div className="space-y-1">
                 <Label>{t('Accrual Type')} <span className="text-red-500">*</span></Label>
-                <Select value={form.accrual_type} onValueChange={v => set('accrual_type', v)} disabled={isView}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="yearly">{t('Yearly')}</SelectItem>
+                <Select
+                  value={form.accrual_type}
+                  onValueChange={v => set('accrual_type', v)}
+                  disabled={isView}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t('Select accrual type')} />
+                  </SelectTrigger>
+                  <SelectContent className="z-[9999]">
                     <SelectItem value="monthly">{t('Monthly')}</SelectItem>
+                    <SelectItem value="yearly">{t('Yearly')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
               <div className="space-y-1">
                 <Label>{t('Accrual Rate (Days)')} <span className="text-red-500">*</span></Label>
-                <Input type="number" min="0" step="0.5" value={form.accrual_rate}
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={form.accrual_rate}
                   onChange={e => set('accrual_rate', e.target.value)}
-                  required={form.allocation_type === 'accrual'} disabled={isView}
-                  placeholder="e.g. 1.75" />
+                  required={form.allocation_type === 'accrual'}
+                  disabled={isView}
+                  placeholder="e.g. 1.75"
+                />
               </div>
             </div>
           )}
 
-          {/* Fixed fields — shown only when allocation_type = fixed */}
+          {/* Fixed fields */}
           {form.allocation_type === 'fixed' && (
-            <div className="p-3 bg-gray-50 rounded-lg border">
-              <Label className="block mb-2">
+            <div className="p-3 bg-gray-50 rounded-lg border space-y-2">
+              <Label className="block">
                 {t('Entitlement per Financial Year')} <span className="text-red-500">*</span>
               </Label>
-              <div className="flex gap-2">
-                <Input type="number" min="0.5" step="0.5" value={form.fixed_days}
+              <div className="flex gap-2 items-center">
+                <Input
+                  type="number"
+                  min="0.5"
+                  step="0.5"
+                  value={form.fixed_days}
                   onChange={e => set('fixed_days', e.target.value)}
-                  required={form.allocation_type === 'fixed'} disabled={isView}
-                  placeholder="e.g. 14" className="flex-1" />
-                <Select value={form.fixed_days_unit} onValueChange={v => set('fixed_days_unit', v)} disabled={isView}>
-                  <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-                  <SelectContent>
+                  required={form.allocation_type === 'fixed'}
+                  disabled={isView}
+                  placeholder="e.g. 14"
+                  className="flex-1"
+                />
+                <Select
+                  value={form.fixed_days_unit}
+                  onValueChange={v => set('fixed_days_unit', v)}
+                  disabled={isView}
+                >
+                  <SelectTrigger className="w-28">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-[9999]">
                     <SelectItem value="days">{t('Days')}</SelectItem>
                     <SelectItem value="weeks">{t('Weeks')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500">
                 {t('e.g. 14 weeks for Maternity Leave, 10 days for Sick Leave')}
               </p>
             </div>
@@ -208,24 +270,39 @@ function LeavePolicyFormModal({
           {/* Carry Forward */}
           <div className="space-y-1">
             <Label>{t('Carry Forward Limit (Days)')} <span className="text-red-500">*</span></Label>
-            <Input type="number" min="0" value={form.carry_forward_limit}
+            <Input
+              type="number"
+              min="0"
+              value={form.carry_forward_limit}
               onChange={e => set('carry_forward_limit', e.target.value)}
-              required disabled={isView} />
+              required
+              disabled={isView}
+            />
           </div>
 
           {/* Min / Max days */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>{t('Min Days Per Application')} <span className="text-red-500">*</span></Label>
-              <Input type="number" min="1" value={form.min_days_per_application}
+              <Input
+                type="number"
+                min="1"
+                value={form.min_days_per_application}
                 onChange={e => set('min_days_per_application', e.target.value)}
-                required disabled={isView} />
+                required
+                disabled={isView}
+              />
             </div>
             <div className="space-y-1">
               <Label>{t('Max Days Per Application')} <span className="text-red-500">*</span></Label>
-              <Input type="number" min="1" value={form.max_days_per_application}
+              <Input
+                type="number"
+                min="1"
+                value={form.max_days_per_application}
                 onChange={e => set('max_days_per_application', e.target.value)}
-                required disabled={isView} />
+                required
+                disabled={isView}
+              />
             </div>
           </div>
 
@@ -233,10 +310,13 @@ function LeavePolicyFormModal({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>{t('Requires Approval')}</Label>
-              <Select value={form.requires_approval ? 'yes' : 'no'}
-                onValueChange={v => set('requires_approval', v === 'yes')} disabled={isView}>
+              <Select
+                value={form.requires_approval ? 'yes' : 'no'}
+                onValueChange={v => set('requires_approval', v === 'yes')}
+                disabled={isView}
+              >
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[9999]">
                   <SelectItem value="yes">{t('Yes')}</SelectItem>
                   <SelectItem value="no">{t('No')}</SelectItem>
                 </SelectContent>
@@ -244,9 +324,13 @@ function LeavePolicyFormModal({
             </div>
             <div className="space-y-1">
               <Label>{t('Status')}</Label>
-              <Select value={form.status} onValueChange={v => set('status', v)} disabled={isView}>
+              <Select
+                value={form.status}
+                onValueChange={v => set('status', v)}
+                disabled={isView}
+              >
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[9999]">
                   <SelectItem value="active">{t('Active')}</SelectItem>
                   <SelectItem value="inactive">{t('Inactive')}</SelectItem>
                 </SelectContent>
@@ -316,9 +400,9 @@ export default function LeavePolicies() {
   const handleAction = (action: string, item: any) => {
     setCurrentItem(item);
     switch (action) {
-      case 'view':   setFormMode('view');  setIsFormModalOpen(true); break;
-      case 'edit':   setFormMode('edit');  setIsFormModalOpen(true); break;
-      case 'delete': setIsDeleteModalOpen(true); break;
+      case 'view':          setFormMode('view');  setIsFormModalOpen(true); break;
+      case 'edit':          setFormMode('edit');  setIsFormModalOpen(true); break;
+      case 'delete':        setIsDeleteModalOpen(true); break;
       case 'toggle-status': handleToggleStatus(item); break;
     }
   };
@@ -328,10 +412,6 @@ export default function LeavePolicies() {
   const handleFormSubmit = (formData: any) => {
     const isCreate = formMode === 'create';
     if (!globalSettings?.is_demo) toast.loading(t(isCreate ? 'Creating leave policy...' : 'Updating leave policy...'));
-
-    const action = isCreate
-      ? router.post(route('hr.leave-policies.store'), formData, opts())
-      : router.put(route('hr.leave-policies.update', currentItem.id), formData, opts());
 
     function opts() {
       return {
@@ -346,6 +426,12 @@ export default function LeavePolicies() {
           toast.error(typeof errors === 'string' ? errors : Object.values(errors).join(', '));
         }
       };
+    }
+
+    if (isCreate) {
+      router.post(route('hr.leave-policies.store'), formData, opts());
+    } else {
+      router.put(route('hr.leave-policies.update', currentItem.id), formData, opts());
     }
   };
 
@@ -469,15 +555,15 @@ export default function LeavePolicies() {
   ];
 
   const actions = [
-    { label: t('View'),          icon: 'Eye',   action: 'view',          className: 'text-blue-500',  requiredPermission: 'view-leave-policies' },
-    { label: t('Edit'),          icon: 'Edit',  action: 'edit',          className: 'text-amber-500', requiredPermission: 'edit-leave-policies' },
-    { label: t('Toggle Status'), icon: 'Lock',  action: 'toggle-status', className: 'text-amber-500', requiredPermission: 'edit-leave-policies' },
-    { label: t('Delete'),        icon: 'Trash2',action: 'delete',        className: 'text-red-500',   requiredPermission: 'delete-leave-policies' }
+    { label: t('View'),          icon: 'Eye',    action: 'view',          className: 'text-blue-500',  requiredPermission: 'view-leave-policies' },
+    { label: t('Edit'),          icon: 'Edit',   action: 'edit',          className: 'text-amber-500', requiredPermission: 'edit-leave-policies' },
+    { label: t('Toggle Status'), icon: 'Lock',   action: 'toggle-status', className: 'text-amber-500', requiredPermission: 'edit-leave-policies' },
+    { label: t('Delete'),        icon: 'Trash2', action: 'delete',        className: 'text-red-500',   requiredPermission: 'delete-leave-policies' }
   ];
 
   const leaveTypeOptions = [
     { value: 'all', label: t('All Leave Types'), disabled: true },
-    ...(leaveTypes || []).map((type: any) => ({ value: type.id.toString(), label: type.name }))
+    ...(Array.isArray(leaveTypes) ? leaveTypes : []).map((type: any) => ({ value: type.id.toString(), label: type.name }))
   ];
 
   const statusOptions = [
@@ -534,7 +620,7 @@ export default function LeavePolicies() {
         isOpen={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
         onSubmit={handleFormSubmit}
-        leaveTypes={leaveTypes || []}
+        leaveTypes={Array.isArray(leaveTypes) ? leaveTypes : []}
         initialData={currentItem}
         mode={formMode}
         title={formMode === 'create' ? t('Add New Leave Policy') : formMode === 'edit' ? t('Edit Leave Policy') : t('View Leave Policy')}
