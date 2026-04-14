@@ -120,7 +120,7 @@ class EmployeeTransferController extends Controller
 
             // Get departments for filter dropdown
             $departments = Department::whereIn('created_by', getCompanyAndUsersId())
-                ->select('id', 'name', 'branch_id')
+                ->select('id', 'name')
                 ->get();
 
             // Get designations for form dropdown
