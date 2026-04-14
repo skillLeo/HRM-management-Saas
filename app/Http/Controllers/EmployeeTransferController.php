@@ -125,8 +125,7 @@ class EmployeeTransferController extends Controller
 
             // Get designations for form dropdown
             $designations = \App\Models\Designation::whereIn('created_by', getCompanyAndUsersId())
-                ->with('department:id,name,branch_id')
-                ->select('id', 'name', 'department_id')
+                ->select('id', 'name')
                 ->get();
 
             return Inertia::render('hr/transfers/index', [

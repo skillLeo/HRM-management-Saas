@@ -1,5 +1,5 @@
 // pages/hr/transfers/index.tsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { PageTemplate } from '@/components/page-template';
 import { usePage, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
@@ -36,35 +36,6 @@ export default function Transfers() {
   const [currentItem, setCurrentItem] = useState<any>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit' | 'view'>('create');
 
-  // State for cascading form dropdowns
-  const [selectedFormBranch, setSelectedFormBranch] = useState<string>('_none_');
-  const [selectedFormDepartment, setSelectedFormDepartment] = useState<string>('_none_');
-  const [filteredFormDepartments, setFilteredFormDepartments] = useState<any[]>([]);
-  const [filteredFormDesignations, setFilteredFormDesignations] = useState<any[]>([]);
-
-  // Filter departments based on selected branch for form
-  useEffect(() => {
-    if (selectedFormBranch === '_none_') {
-      setFilteredFormDepartments([]);
-    } else {
-      const depts = departments.filter((dept: any) => dept.branch_id.toString() === selectedFormBranch);
-      setFilteredFormDepartments(depts);
-    }
-    setSelectedFormDepartment('_none_');
-    setFilteredFormDesignations([]);
-  }, [selectedFormBranch, departments]);
-
-  // Filter designations based on selected department for form
-  useEffect(() => {
-    if (selectedFormDepartment === '_none_') {
-      setFilteredFormDesignations([]);
-    } else {
-      const filteredDesignations = (designations || []).filter((desig: any) => {
-        return desig.department_id.toString() === selectedFormDepartment;
-      });
-      setFilteredFormDesignations(filteredDesignations);
-    }
-  }, [selectedFormDepartment, designations]);
 
   // Check if any filters are active
   const hasActiveFilters = () => {
@@ -632,59 +603,34 @@ export default function Transfers() {
 
             {
               name: 'to_branch_id',
-              type: 'dependent-dropdown',
-              // searchable:true,
-              dependentConfig: [
-                {
-                  name: 'to_branch_id',
-                  label: t('To Branch'),
-                  required: true,
-                  options: branchOptions ? branchOptions
-                    .filter(opt => opt.value !== '_none_')
-                    .map(opt => ({
-                      value: opt.value,
-                      label: opt.label
-                    })) : []
-                },
-                {
-                  name: 'to_department_id',
-                  label: t('To Department'),
-                  apiEndpoint: '/hr/transfers/get-department/{to_branch_id}',
-                  showCurrentValue: true
-                },
-                {
-                  name: 'to_designation_id',
-                  label: t('To Designation'),
-                  apiEndpoint: '/hr/transfers/get-designation/{to_department_id}',
-                  showCurrentValue: true
-                }
+              label: t('To Branch'),
+              type: 'select',
+              options: [
+                { value: '_none_', label: t('No Change') },
+                ...branchOptions.filter(opt => opt.value !== '_none_')
               ]
             },
-            // {
-            //   name: 'to_branch_id',
-            //   label: t('To Branch'),
-            //   type: 'select',
-            //   options: [{ value: '_none_', label: t('No Change') }, ...branchOptions.filter(opt => opt.value !== '_none_')]
-            // },
-            // {
-            //   name: 'to_department_id',
-            //   label: t('To Department'),
-            //   type: 'select',
-            //   options: [{ value: '_none_', label: t('No Change') }, ...departmentOptions.filter(opt => opt.value !== '_none_')]
-            // },   
-
-            // { 
-            //   name: 'to_designation_id', 
-            //   label: t('To Designation'), 
-            //   type: 'select',
-            //   options: [
-            //     { value: '_none_', label: t('No Change') },
-            //     ...(designations || []).map((desig: any) => ({
-            //       value: desig.id.toString(),
-            //       label: desig.name
-            //     }))
-            //   ]
-            // },
+            {
+              name: 'to_department_id',
+              label: t('To Department'),
+              type: 'select',
+              options: [
+                { value: '_none_', label: t('No Change') },
+                ...departmentOptions.filter(opt => opt.value !== '_none_')
+              ]
+            },
+            {
+              name: 'to_designation_id',
+              label: t('To Designation'),
+              type: 'select',
+              options: [
+                { value: '_none_', label: t('No Change') },
+                ...(designations || []).map((desig: any) => ({
+                  value: desig.id.toString(),
+                  label: desig.name
+                }))
+              ]
+            },
             {
               name: 'transfer_date',
               label: t('Transfer Date'),

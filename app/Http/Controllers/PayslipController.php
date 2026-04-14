@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\PayrollEntry;
+use App\Models\PayrollRun;
 use App\Models\Payslip;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class PayslipController extends Controller
@@ -25,8 +25,19 @@ class PayslipController extends Controller
                 }
             });
 
+            // Get latest processed payroll run period for default filter
+            $latestPayrollRun = PayrollRun::whereIn('created_by', getCompanyAndUsersId())
+                ->whereIn('status', ['completed', 'pending_approval', 'final'])
+                ->orderBy('pay_date', 'desc')
+                ->first();
+
+            $defaultPeriod = $latestPayrollRun ? [
+                'from' => $latestPayrollRun->pay_period_start,
+                'to'   => $latestPayrollRun->pay_period_end,
+            ] : null;
+
             // Handle search
-            if ($request->has('search') && ! empty($request->search)) {
+            if ($request->has('search') && !empty($request->search)) {
                 $query->where(function ($q) use ($request) {
                     $q->where('payslip_number', 'like', '%' . $request->search . '%')
                         ->orWhere('employee_name', 'like', '%' . $request->search . '%')
@@ -37,26 +48,30 @@ class PayslipController extends Controller
             }
 
             // Handle employee filter
-            if ($request->has('employee_id') && ! empty($request->employee_id) && $request->employee_id !== 'all') {
+            if ($request->has('employee_id') && !empty($request->employee_id) && $request->employee_id !== 'all') {
                 $query->where('employee_id', $request->employee_id);
             }
 
             // Handle status filter
-            if ($request->has('status') && ! empty($request->status) && $request->status !== 'all') {
+            if ($request->has('status') && !empty($request->status) && $request->status !== 'all') {
                 $query->where('status', $request->status);
             }
 
             // Handle date range filter
-            if ($request->has('date_from') && ! empty($request->date_from)) {
-                $query->where('pay_period_start', '>=', $request->date_from);
+            // If no dates passed in request → fallback to latest payroll run period
+            $dateFrom = !empty($request->date_from) ? $request->date_from : ($defaultPeriod['from'] ?? null);
+            $dateTo   = !empty($request->date_to)   ? $request->date_to   : ($defaultPeriod['to']   ?? null);
+
+            if ($dateFrom) {
+                $query->where('pay_period_start', '>=', $dateFrom);
             }
-            if ($request->has('date_to') && ! empty($request->date_to)) {
-                $query->where('pay_period_end', '<=', $request->date_to);
+            if ($dateTo) {
+                $query->where('pay_period_end', '<=', $dateTo);
             }
 
             // Handle sorting
-            if ($request->has('sort_field') && ! empty($request->sort_field)) {
-                $sortField = $request->sort_field;
+            if ($request->has('sort_field') && !empty($request->sort_field)) {
+                $sortField     = $request->sort_field;
                 $sortDirection = $request->sort_direction ?? 'asc';
 
                 if (in_array($sortField, ['pay_date', 'created_at'])) {
@@ -76,9 +91,10 @@ class PayslipController extends Controller
                 ->get(['id', 'name']);
 
             return Inertia::render('hr/payslips/index', [
-                'payslips' => $payslips,
-                'employees' => $employees,
-                'filters' => $request->all(['search', 'employee_id', 'status', 'date_from', 'date_to', 'sort_field', 'sort_direction', 'per_page']),
+                'payslips'      => $payslips,
+                'employees'     => $employees,
+                'filters'       => $request->all(['search', 'employee_id', 'status', 'date_from', 'date_to', 'sort_field', 'sort_direction', 'per_page']),
+                'defaultPeriod' => $defaultPeriod,
             ]);
         } else {
             return redirect()->back()->with('error', __('Permission Denied.'));
@@ -88,46 +104,49 @@ class PayslipController extends Controller
     public function generate(Request $request)
     {
         $validated = $request->validate([
-            'payroll_entry_ids' => 'required|array',
+            'payroll_entry_ids'   => 'required|array',
             'payroll_entry_ids.*' => 'exists:payroll_entries,id',
         ]);
 
         $generatedCount = 0;
-        $errors = [];
+        $errors         = [];
 
         foreach ($validated['payroll_entry_ids'] as $entryId) {
             try {
                 $payrollEntry = PayrollEntry::whereIn('created_by', getCompanyAndUsersId())
                     ->find($entryId);
 
-                if (! $payrollEntry) {
+                if (!$payrollEntry) {
                     continue;
                 }
 
-                // Check if payslip already exists
-                $exists = Payslip::where('payroll_entry_id', $entryId)->exists();
-                if ($exists) {
-                    continue;
-                }
-
+                // Generate payslip number first so we can check for duplicates
                 $payslipNumber = Payslip::generatePayslipNumber(
                     $payrollEntry->employee_id,
                     $payrollEntry->payrollRun->pay_date
                 );
 
+                // Check if payslip already exists by entry ID or payslip number
+                $exists = Payslip::where('payroll_entry_id', $entryId)
+                    ->orWhere('payslip_number', $payslipNumber)
+                    ->exists();
+
+                if ($exists) {
+                    continue;
+                }
+
                 $payslip = Payslip::create([
                     'payroll_entry_id' => $entryId,
-                    'employee_id' => $payrollEntry->employee_id,
-                    'employee_name' => $payrollEntry->employee?->name ?? null,
-                    'payslip_number' => $payslipNumber,
+                    'employee_id'      => $payrollEntry->employee_id,
+                    'employee_name'    => $payrollEntry->employee?->name ?? null,
+                    'payslip_number'   => $payslipNumber,
                     'pay_period_start' => $payrollEntry->payrollRun->pay_period_start,
-                    'pay_period_end' => $payrollEntry->payrollRun->pay_period_end,
-                    'pay_date' => $payrollEntry->payrollRun->pay_date,
-                    'status' => 'generated',
-                    'created_by' => creatorId(),
+                    'pay_period_end'   => $payrollEntry->payrollRun->pay_period_end,
+                    'pay_date'         => $payrollEntry->payrollRun->pay_date,
+                    'status'           => 'generated',
+                    'created_by'       => creatorId(),
                 ]);
 
-                // Generate PDF
                 $payslip->generatePDF();
                 $generatedCount++;
             } catch (\Exception $e) {
@@ -137,39 +156,14 @@ class PayslipController extends Controller
 
         if ($generatedCount > 0) {
             $message = "Generated {$generatedCount} payslip(s) successfully.";
-            if (! empty($errors)) {
+            if (!empty($errors)) {
                 $message .= ' Some errors occurred: ' . implode(', ', $errors);
             }
-
             return redirect()->back()->with('success', __($message));
         } else {
             return redirect()->back()->with('error', __('No payslips were generated. :errors', ['errors' => implode(', ', $errors)]));
         }
     }
-
-    // public function download($payslipId)
-    // {
-    //     $payslip = Payslip::where('id', $payslipId)
-    //         ->whereIn('created_by', getCompanyAndUsersId())
-    //         ->first();
-
-    //     if (!$payslip) {
-    //         return redirect()->back()->with('error', __('Payslip not found.'));
-    //     }
-
-    //     if (!$payslip->file_path || !Storage::disk('public')->exists($payslip->file_path)) {
-    //         // Generate PDF if not exists
-    //         try {
-    //             $payslip->generatePDF();
-    //         } catch (\Exception $e) {
-    //             return redirect()->back()->with('error', __('Failed to generate payslip PDF: :message', ['message' => $e->getMessage()]));
-    //         }
-    //     }
-
-    //     $payslip->markAsDownloaded();
-
-    //     return Storage::disk('public')->download($payslip->file_path, 'payslip-' . $payslip->payslip_number . '.pdf');
-    // }
 
     public function download($payslipId)
     {
@@ -177,7 +171,7 @@ class PayslipController extends Controller
             $payslip = Payslip::with([
                 'employee',
                 'payrollEntry.payrollRun',
-                'payrollEntry.employee.employee'
+                'payrollEntry.employee.employee',
             ])
                 ->where('id', $payslipId)
                 ->whereIn('created_by', getCompanyAndUsersId())
@@ -189,14 +183,13 @@ class PayslipController extends Controller
 
             $payrollEntry = $payslip->payrollEntry;
 
-            // Force-load the employee relation if not already loaded
-            $userModel = $payrollEntry->employee; // This is the User model
+            $userModel = $payrollEntry->employee;
             if ($userModel && !$userModel->relationLoaded('employee')) {
                 $userModel->load('employee');
             }
 
             $companySettings = settings();
-            $companyUser = User::find(getCompanyId(Auth::user()->id));
+            $companyUser     = User::find(getCompanyId(Auth::user()->id));
 
             if ($companyUser) {
                 $companySettings = array_merge($companySettings, [
@@ -237,16 +230,20 @@ class PayslipController extends Controller
             $generatedCount = 0;
 
             foreach ($payrollEntries as $entry) {
-                // Check if payslip already exists
-                $exists = Payslip::where('payroll_entry_id', $entry->id)->exists();
-                if ($exists) {
-                    continue;
-                }
-
+                // Generate payslip number first so we can check for duplicates
                 $payslipNumber = Payslip::generatePayslipNumber(
                     $entry->employee_id,
                     $entry->payrollRun->pay_date
                 );
+
+                // Check if payslip already exists by entry ID or payslip number
+                $exists = Payslip::where('payroll_entry_id', $entry->id)
+                    ->orWhere('payslip_number', $payslipNumber)
+                    ->exists();
+
+                if ($exists) {
+                    continue;
+                }
 
                 $payslip = Payslip::create([
                     'payroll_entry_id' => $entry->id,
@@ -263,8 +260,9 @@ class PayslipController extends Controller
                 try {
                     $payslip->generatePDF();
                 } catch (\Exception $pdfEx) {
-                    // PDF generation failed; payslip record still created, download will render on-the-fly
+                    // PDF generation failed; payslip record still created
                 }
+
                 $generatedCount++;
             }
 
