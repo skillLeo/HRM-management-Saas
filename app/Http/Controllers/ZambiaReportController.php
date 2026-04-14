@@ -1019,25 +1019,42 @@ class ZambiaReportController extends Controller
 
     private function exportSectionsPdf(string $filename, array $sections): mixed
     {
-        $html = $this->buildSectionsPdfHtml($sections);
-        return Pdf::loadHTML($html)->setPaper('a4', 'landscape')->download($filename);
+        // Detect max column count to pick paper size
+        $maxCols = 0;
+        foreach ($sections as $s) {
+            if (($s['type'] ?? '') === 'table' && !empty($s['headers'])) {
+                $maxCols = max($maxCols, count($s['headers']));
+            }
+        }
+
+        // Use A3 landscape for wide tables (>10 cols), A4 landscape otherwise
+        $paper = $maxCols > 10 ? 'a3' : 'a4';
+
+        $html = $this->buildSectionsPdfHtml($sections, $maxCols);
+        return Pdf::loadHTML($html)->setPaper($paper, 'landscape')->download($filename);
     }
 
-    private function buildSectionsPdfHtml(array $sections): string
+    private function buildSectionsPdfHtml(array $sections, int $maxCols = 0): string
     {
+        // Scale down font/padding when many columns to prevent overflow
+        $dataFontSize  = $maxCols > 12 ? '6pt'  : ($maxCols > 8 ? '7pt'  : '8pt');
+        $headFontSize  = $maxCols > 12 ? '6pt'  : ($maxCols > 8 ? '7pt'  : '8pt');
+        $cellPadding   = $maxCols > 12 ? '2px 3px' : ($maxCols > 8 ? '3px 4px' : '4px 6px');
+        $headPadding   = $maxCols > 12 ? '3px 3px' : ($maxCols > 8 ? '4px 4px' : '5px 6px');
+
         $styles = '
-            body  { font-family: DejaVu Sans, Arial, sans-serif; font-size: 9pt; margin: 15px; color: #111827; }
-            h1    { font-size: 13pt; color: #1f2937; margin: 0 0 6px 0; }
-            h3    { font-size: 10pt; color: #374151; margin: 14px 0 4px 0; }
-            .info-tbl { border-collapse: collapse; margin-bottom: 10px; }
-            .info-tbl td { padding: 2px 14px 2px 0; border: none; }
+            body  { font-family: DejaVu Sans, Arial, sans-serif; font-size: 9pt; margin: 12px; color: #111827; }
+            h1    { font-size: 12pt; color: #1f2937; margin: 0 0 5px 0; }
+            h3    { font-size: 9pt; color: #374151; margin: 12px 0 4px 0; }
+            .info-tbl { border-collapse: collapse; margin-bottom: 8px; }
+            .info-tbl td { padding: 2px 12px 2px 0; border: none; }
             .info-tbl td.lbl { font-weight: bold; }
-            table.dt { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
-            table.dt thead th { background: #4338ca; color: #fff; padding: 5px 6px; text-align: left; font-size: 8pt; }
-            table.dt tbody td { padding: 4px 6px; border-bottom: 1px solid #e5e7eb; }
+            table.dt { width: 100%; border-collapse: collapse; margin-bottom: 10px; table-layout: fixed; }
+            table.dt thead th { background: #4338ca; color: #fff; padding: ' . $headPadding . '; text-align: left; font-size: ' . $headFontSize . '; word-wrap: break-word; overflow-wrap: break-word; }
+            table.dt tbody td { padding: ' . $cellPadding . '; border-bottom: 1px solid #e5e7eb; font-size: ' . $dataFontSize . '; word-wrap: break-word; overflow-wrap: break-word; }
             table.dt tbody tr.alt { background: #f9fafb; }
-            table.dt tfoot td  { font-weight: bold; background: #e5e7eb; padding: 4px 6px; border-top: 2px solid #9ca3af; }
-            .sep { border: none; border-top: 1px solid #d1d5db; margin: 10px 0; }
+            table.dt tfoot td  { font-weight: bold; background: #e5e7eb; padding: ' . $cellPadding . '; border-top: 2px solid #9ca3af; font-size: ' . $dataFontSize . '; }
+            .sep { border: none; border-top: 1px solid #d1d5db; margin: 8px 0; }
         ';
 
         $html = '<html><head><meta charset="UTF-8"><style>' . $styles . '</style></head><body>';
