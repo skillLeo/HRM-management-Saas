@@ -126,10 +126,6 @@ export default function Transfers() {
   const handleAddNew = () => {
     setCurrentItem(null);
     setFormMode('create');
-    setSelectedFormBranch('_none_');
-    setSelectedFormDepartment('_none_');
-    setFilteredFormDepartments([]);
-    setFilteredFormDesignations([]);
     setIsFormModalOpen(true);
   };
 
