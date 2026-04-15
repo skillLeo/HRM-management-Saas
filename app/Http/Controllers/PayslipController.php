@@ -8,6 +8,7 @@ use App\Models\Payslip;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 use Inertia\Inertia;
 
 class PayslipController extends Controller
@@ -31,10 +32,14 @@ class PayslipController extends Controller
                 ->orderBy('pay_date', 'desc')
                 ->first();
 
+            // Fallback to current calendar month when no completed run exists
             $defaultPeriod = $latestPayrollRun ? [
                 'from' => $latestPayrollRun->pay_period_start,
                 'to'   => $latestPayrollRun->pay_period_end,
-            ] : null;
+            ] : [
+                'from' => Carbon::now()->startOfMonth()->toDateString(),
+                'to'   => Carbon::now()->endOfMonth()->toDateString(),
+            ];
 
             // Handle search
             if ($request->has('search') && !empty($request->search)) {

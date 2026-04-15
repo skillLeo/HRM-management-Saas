@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { PageTemplate } from '@/components/page-template';
 import { usePage, router } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { Plus, Info } from 'lucide-react';
 import { hasPermission } from '@/utils/authorization';
 import { CrudTable } from '@/components/CrudTable';
 import { CrudDeleteModal } from '@/components/CrudDeleteModal';
@@ -231,76 +231,78 @@ function LeavePolicyFormModal({
 
           {/* Fixed fields */}
           {form.allocation_type === 'fixed' && (
-            <div className="p-3 bg-gray-50 rounded-lg border space-y-2">
-              <Label className="block">
-                {t('Entitlement per Financial Year')} <span className="text-red-500">*</span>
-              </Label>
-              <div className="flex gap-2 items-center">
-                <Input
-                  type="number"
-                  min="0.5"
-                  step="0.5"
-                  value={form.fixed_days}
-                  onChange={e => set('fixed_days', e.target.value)}
-                  required={form.allocation_type === 'fixed'}
-                  disabled={isView}
-                  placeholder="e.g. 14"
-                  className="flex-1"
-                />
-                <Select
-                  value={form.fixed_days_unit}
-                  onValueChange={v => set('fixed_days_unit', v)}
-                  disabled={isView}
-                >
-                  <SelectTrigger className="w-28">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="z-[9999]">
-                    <SelectItem value="days">{t('Days')}</SelectItem>
-                    <SelectItem value="weeks">{t('Weeks')}</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="space-y-3">
+             
+
+              <div className="p-3 bg-gray-50 rounded-lg border space-y-2">
+                <Label className="block">
+                  {t('Entitlement per Financial Year')} <span className="text-red-500">*</span>
+                </Label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="number"
+                    min="0.5"
+                    step="0.5"
+                    value={form.fixed_days}
+                    onChange={e => set('fixed_days', e.target.value)}
+                    required={form.allocation_type === 'fixed'}
+                    disabled={isView}
+                    placeholder="e.g. 14"
+                    className="flex-1"
+                  />
+                  <Select
+                    value={form.fixed_days_unit}
+                    onValueChange={v => set('fixed_days_unit', v)}
+                    disabled={isView}
+                  >
+                    <SelectTrigger className="w-28">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-[9999]">
+                      <SelectItem value="days">{t('Days')}</SelectItem>
+                      <SelectItem value="weeks">{t('Weeks')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-gray-500">
+                  {t('e.g. 14 weeks for Maternity Leave, 10 days for Sick Leave')}
+                </p>
               </div>
-              <p className="text-xs text-gray-500">
-                {t('e.g. 14 weeks for Maternity Leave, 10 days for Sick Leave')}
-              </p>
             </div>
           )}
 
           {/* Carry Forward */}
           <div className="space-y-1">
-            <Label>{t('Carry Forward Limit (Days)')} <span className="text-red-500">*</span></Label>
+            <Label>{t('Carry Forward Limit (Days)')}</Label>
             <Input
               type="number"
               min="0"
               value={form.carry_forward_limit}
               onChange={e => set('carry_forward_limit', e.target.value)}
-              required
               disabled={isView}
+              placeholder="0"
             />
           </div>
 
           {/* Min / Max days */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label>{t('Min Days Per Application')} <span className="text-red-500">*</span></Label>
+              <Label>{t('Min Days Per Application')}</Label>
               <Input
                 type="number"
                 min="1"
                 value={form.min_days_per_application}
                 onChange={e => set('min_days_per_application', e.target.value)}
-                required
                 disabled={isView}
               />
             </div>
             <div className="space-y-1">
-              <Label>{t('Max Days Per Application')} <span className="text-red-500">*</span></Label>
+              <Label>{t('Max Days Per Application')}</Label>
               <Input
                 type="number"
                 min="1"
                 value={form.max_days_per_application}
                 onChange={e => set('max_days_per_application', e.target.value)}
-                required
                 disabled={isView}
               />
             </div>
