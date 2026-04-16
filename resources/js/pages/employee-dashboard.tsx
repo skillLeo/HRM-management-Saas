@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PageTemplate } from '@/components/page-template';
-import { RefreshCw, Bell, Users } from 'lucide-react';
+import { RefreshCw, Bell, Users, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useTranslation } from 'react-i18next';
@@ -9,12 +9,21 @@ import { toast } from '@/components/custom-toast';
 import { format } from 'date-fns';
 import { hasPermission } from '@/utils/authorization';
 
+interface LeaveBalance {
+  leave_type: string;
+  allocated_days: number;
+  used_days: number;
+  remaining_days: number;
+  color: string;
+}
+
 interface EmployeeDashboardData {
   stats: {
     totalAwards: number;
     totalWarnings: number;
     totalComplaints: number;
   };
+  leaveBalances: LeaveBalance[];
   recentActivities: {
     announcements: Array<any>;
     meetings: Array<any>;
@@ -180,56 +189,53 @@ export default function EmployeeDashboard({ dashboardData }: { dashboardData: Em
           </CardContent>
         </Card>
 
-        {/* Employee Stats */}
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{t('Total Awards')}</p>
-                  <p className="mt-2 text-2xl font-bold">{stats.totalAwards}</p>
-                </div>
-                <div className="rounded-full bg-green-100 p-3 dark:bg-green-900">
-                  <svg className="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                  </svg>
-                </div>
+        {/* Leave Balance Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+              <Calendar className="h-5 w-5" />
+              {t('Leave Balance')} — {new Date().getFullYear()}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {dashboardData?.leaveBalances?.length > 0 ? (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {dashboardData.leaveBalances.map((balance, index) => {
+                  const usedPct = balance.allocated_days > 0
+                    ? Math.min(100, Math.round((balance.used_days / balance.allocated_days) * 100))
+                    : 0;
+                  return (
+                    <div key={index} className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="font-medium text-sm">{balance.leave_type}</p>
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full font-semibold text-white"
+                          style={{ backgroundColor: balance.color || '#4F46E5' }}
+                        >
+                          {balance.remaining_days} {t('days left')}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div
+                          className="h-2 rounded-full transition-all"
+                          style={{ width: `${usedPct}%`, backgroundColor: balance.color || '#4F46E5' }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{t('Used')}: {balance.used_days}</span>
+                        <span>{t('Total')}: {balance.allocated_days}</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{t('Total Warnings')}</p>
-                  <p className="mt-2 text-2xl font-bold">{stats.totalWarnings}</p>
-                </div>
-                <div className="rounded-full bg-yellow-100 p-3 dark:bg-yellow-900">
-                  <svg className="h-5 w-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                {t('No leave balances allocated for this year')}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{t('Total Complaints')}</p>
-                  <p className="mt-2 text-2xl font-bold">{stats.totalComplaints}</p>
-                </div>
-                <div className="rounded-full bg-red-100 p-3 dark:bg-red-900">
-                  <svg className="h-5 w-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Clock In/Out Card */}
         <Card>

@@ -155,8 +155,10 @@ class DashboardController extends Controller
 
         $companyUserIds = $this->getCompanyUserIds();
 
-        // Core HR Statistics
-        $totalEmployees = User::where('type', 'employee')->whereIn('created_by', $companyUserIds)->count();
+        // Core HR Statistics — exclude terminated employees from the active count
+        $totalEmployees = Employee::whereIn('created_by', $companyUserIds)
+            ->whereNotIn('employee_status', ['terminated'])
+            ->count();
         $totalBranches = Branch::whereIn('created_by', $companyUserIds)->count();
         $totalDepartments = Department::whereIn('created_by', $companyUserIds)->count();
 
@@ -416,6 +418,23 @@ class DashboardController extends Controller
         $totalWarnings = \App\Models\Warning::where('employee_id', $user->id)->count();
         $totalComplaints = \App\Models\Complaint::where('against_employee_id', $user->id)->count();
 
+        // Leave Balances for the current year
+        $leaveBalances = \App\Models\LeaveBalance::where('employee_id', $user->id)
+            ->where('year', now()->year)
+            ->with('leaveType')
+            ->get()
+            ->map(function ($balance) {
+                return [
+                    'leave_type'      => $balance->leaveType->name ?? 'Unknown',
+                    'allocated_days'  => (float) $balance->allocated_days,
+                    'used_days'       => (float) $balance->used_days,
+                    'remaining_days'  => (float) $balance->remaining_days,
+                    'color'           => $balance->leaveType->color ?? '#4F46E5',
+                ];
+            })
+            ->values()
+            ->toArray();
+
         // Get shifts and attendance policies for clock in functionality
         $shifts = \App\Models\Shift::whereIn('created_by', $companyUserIds)
             ->where('status', 'active')
@@ -483,6 +502,7 @@ class DashboardController extends Controller
                 'totalWarnings' => $totalWarnings,
                 'totalComplaints' => $totalComplaints,
             ],
+            'leaveBalances' => $leaveBalances,
             'recentActivities' => [
                 'announcements' => $recentAnnouncements,
                 'meetings' => $recentMeetings,

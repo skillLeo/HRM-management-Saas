@@ -999,10 +999,11 @@ class ZambiaReportController extends Controller
             }
         }
 
-        // Auto-size all used columns
-        $maxCol = $sheet->getHighestColumnIndex();
-        for ($c = 1; $c <= $maxCol; $c++) {
-            $sheet->getColumnDimensionByColumn($c)->setAutoSize(true);
+        // Auto-size all used columns (getHighestColumnIndex removed in PhpSpreadsheet 5.x)
+        $highestCol  = $sheet->getHighestColumn();
+        $maxColIndex = Coordinate::columnIndexFromString($highestCol);
+        for ($c = 1; $c <= $maxColIndex; $c++) {
+            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($c))->setAutoSize(true);
         }
 
         return response()->streamDownload(function () use ($spreadsheet) {

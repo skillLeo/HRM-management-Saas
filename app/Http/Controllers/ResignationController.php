@@ -19,6 +19,17 @@ class ResignationController extends Controller
     public function index(Request $request)
     {
         if (Auth::user()->can('manage-resignations')) {
+            // Auto-sync: any completed resignation whose employee is not yet terminated
+            $completedEmployeeIds = Resignation::whereIn('created_by', getCompanyAndUsersId())
+                ->where('status', 'completed')
+                ->pluck('employee_id');
+
+            if ($completedEmployeeIds->isNotEmpty()) {
+                \App\Models\Employee::whereIn('user_id', $completedEmployeeIds)
+                    ->whereNotIn('employee_status', ['terminated'])
+                    ->update(['employee_status' => 'terminated']);
+            }
+
             $query = Resignation::with(['employee', 'approver'])->where(function ($q) {
                 if (Auth::user()->can('manage-any-resignations')) {
                     $q->whereIn('created_by',  getCompanyAndUsersId());
@@ -242,6 +253,14 @@ class ResignationController extends Controller
 
         $resignation->update($resignationData);
 
+        // Sync employee status based on final resignation status (handles existing + newly completed)
+        if ($resignation->status === 'completed') {
+            $emp = \App\Models\Employee::where('user_id', $resignation->employee_id)->first();
+            if ($emp && $emp->employee_status !== 'terminated') {
+                $emp->update(['employee_status' => 'terminated']);
+            }
+        }
+
         return redirect()->back()->with('success', __('Resignation updated successfully'));
         } else {
             return redirect()->back()->with('error', __('Permission Denied.'));
@@ -322,6 +341,14 @@ class ResignationController extends Controller
         }
 
         $resignation->update($updateData);
+
+        // When resignation is completed, update the employee's status to terminated
+        if ($request->status === 'completed') {
+            $emp = \App\Models\Employee::where('user_id', $resignation->employee_id)->first();
+            if ($emp) {
+                $emp->update(['employee_status' => 'terminated']);
+            }
+        }
 
         return redirect()->back()->with('success', __('Resignation status updated successfully'));
         } else {
