@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,10 +10,9 @@ import { useSidebarSettings } from '@/contexts/SidebarContext';
 import { useBrand } from '@/contexts/BrandContext';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Palette, Save, Upload, Check, Layout, Moon, FileText, Sidebar as SidebarIcon } from 'lucide-react';
+import { Palette, Save, Upload, Check, Layout, Moon, FileText, Sidebar as SidebarIcon, X } from 'lucide-react';
 import { SettingsSection } from '@/components/settings-section';
 import { SidebarPreview } from '@/components/sidebar-preview';
-import MediaPicker from '@/components/MediaPicker';
 import { useTranslation } from 'react-i18next';
 import { usePage, router } from '@inertiajs/react';
 import { getImagePath } from '@/utils/helpers';
@@ -129,6 +128,94 @@ export const getBrandSettings = (userSettings?: Record<string, string>, globalSe
   return DEFAULT_BRAND_SETTINGS;
 };
 
+interface LogoUploadFieldProps {
+  label: string;
+  currentPath: string;
+  newFile?: File;
+  onFileChange: (file: File) => void;
+  onRemove: () => void;
+  hint: string;
+  bgClass?: string;
+  containerHeight?: string;
+}
+
+function LogoUploadField({ label, currentPath, newFile, onFileChange, onRemove, hint, bgClass = 'bg-muted/30', containerHeight = 'h-32' }: LogoUploadFieldProps) {
+  const { t } = useTranslation();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+
+  useEffect(() => {
+    if (newFile) {
+      const url = URL.createObjectURL(newFile);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreviewUrl('');
+    }
+  }, [newFile]);
+
+  const displayUrl = previewUrl || (currentPath ? getImagePath(currentPath) : '');
+
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium leading-none">{label}</label>
+      <div className={`border-2 border-dashed rounded-lg flex items-center justify-center relative overflow-hidden ${bgClass} ${containerHeight}`}
+        style={{ minHeight: containerHeight === 'h-20' ? '5rem' : '8rem' }}
+      >
+        {displayUrl ? (
+          <>
+            <img
+              src={displayUrl}
+              alt={label}
+              className="max-h-full max-w-full object-contain p-2"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            />
+            <button
+              type="button"
+              className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:opacity-80 z-10"
+              onClick={onRemove}
+              title="Remove logo"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </>
+        ) : (
+          <div className="text-muted-foreground flex flex-col items-center gap-1 py-4">
+            <Upload className="h-6 w-6 opacity-40" />
+            <span className="text-xs">{t('No image selected')}</span>
+          </div>
+        )}
+      </div>
+      {newFile && (
+        <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+          <Check className="h-3 w-3" />
+          <span>{newFile.name} — {t('ready to save')}</span>
+        </div>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/jpg,image/gif,image/svg+xml,image/webp,image/x-icon"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onFileChange(f);
+          e.target.value = '';
+        }}
+      />
+      <button
+        type="button"
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm border border-input rounded-md bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+        onClick={() => inputRef.current?.click()}
+      >
+        <Upload className="h-4 w-4" />
+        {displayUrl ? t('Change Image') : t('Upload Image')}
+      </button>
+      <p className="text-xs text-muted-foreground">{hint}</p>
+    </div>
+  );
+}
+
 interface BrandSettingsProps {
   settings?: Record<string, string>;
 }
@@ -143,6 +230,7 @@ export default function BrandSettings({ settings }: BrandSettingsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeSection, setActiveSection] = useState<'logos' | 'text' | 'theme'>('logos');
+  const [logoFiles, setLogoFiles] = useState<{ logoDark?: File; logoLight?: File; favicon?: File }>({});
 
   // Get theme hooks
   const {
@@ -283,22 +371,31 @@ export default function BrandSettings({ settings }: BrandSettingsProps) {
     // Individual update functions already handled storage (cookies in demo mode, localStorage in normal mode)
     // Only save to database in normal mode
 
-    // Save to database using Inertia
-    router.post(route('settings.brand.update'), {
-      settings: brandSettings
-    }, {
+    // Build the request data — include logo File objects if selected
+    const requestData: Record<string, any> = { settings: brandSettings };
+    if (logoFiles.logoDark)  requestData.logoDarkFile  = logoFiles.logoDark;
+    if (logoFiles.logoLight) requestData.logoLightFile = logoFiles.logoLight;
+    if (logoFiles.favicon)   requestData.faviconFile   = logoFiles.favicon;
+
+    // Save to database using Inertia (auto-converts to multipart when Files detected)
+    router.post(route('settings.brand.update'), requestData, {
       preserveScroll: true,
+      forceFormData: true,
       onSuccess: (page) => {
         setIsLoading(false);
-        const successMessage = page.props.flash?.success;
-        const errorMessage = page.props.flash?.error;
+        const successMessage = (page.props as any).flash?.success;
+        const errorMessage   = (page.props as any).flash?.error;
 
         if (successMessage) {
           toast.success(successMessage);
-          // Reset saving state after success
+          // Clear uploaded file state after successful save
+          setLogoFiles({});
           setTimeout(() => setIsSaving(false), 500);
         } else if (errorMessage) {
           toast.error(errorMessage);
+          setIsSaving(false);
+        } else {
+          setTimeout(() => setIsSaving(false), 500);
         }
       },
       onError: (errors) => {
@@ -356,102 +453,70 @@ export default function BrandSettings({ settings }: BrandSettingsProps) {
           {/* Logos Section */}
           {activeSection === 'logos' && (
             <div className="space-y-6">
+              <p className="text-sm text-muted-foreground">
+                {t('Upload your logos directly. The old file will be removed automatically when you upload a new one.')}
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label>{t("Logo Dark")}</Label>
-                  <div className="flex flex-col gap-3">
-                    <div className="border rounded-md p-4 flex items-center justify-center bg-muted/30 dark:bg-white h-32">
-                      {brandSettings.logoDark ? (
-                        <img
-                          src={getImagePath(brandSettings.logoDark)}
-                          alt="Dark Logo"
-                          className="max-h-full max-w-full object-contain"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = 'images/default/image-not-found.jpg';
-                          }}
-                        />
-                      ) : (
-                        <div className="text-muted-foreground flex flex-col items-center gap-2">
-                          <div className="h-12 w-24 bg-muted flex items-center justify-center rounded border border-dashed">
-                            <span className="font-semibold text-muted-foreground">{t("Logo")}</span>
-                          </div>
-                          <span className="text-xs">No logo selected</span>
-                        </div>
-                      )}
-                    </div>
-                    <MediaPicker
-                      label=""
-                      value={brandSettings.logoDark}
-                      onChange={(url) => handleMediaSelect('logoDark', url)}
-                      placeholder="Select dark mode logo..."
-                      showPreview={false}
-                    />
-                  </div>
-                </div>
+                <LogoUploadField
+                  label={t('Logo (Dark Background)')}
+                  currentPath={brandSettings.logoDark}
+                  newFile={logoFiles.logoDark}
+                  bgClass="bg-slate-800"
+                  containerHeight="h-32"
+                  hint={t('Recommended: PNG or SVG, 300×80 px, transparent background. Used on dark sidebars.')}
+                  onFileChange={(file) => {
+                    setLogoFiles(prev => ({ ...prev, logoDark: file }));
+                    updateBrandSettings({ logoDark: brandSettings.logoDark });
+                  }}
+                  onRemove={() => {
+                    if (logoFiles.logoDark) {
+                      setLogoFiles(prev => ({ ...prev, logoDark: undefined }));
+                    } else {
+                      setBrandSettings(prev => ({ ...prev, logoDark: '' }));
+                      updateBrandSettings({ logoDark: '' });
+                    }
+                  }}
+                />
 
-                <div className="space-y-3">
-                  <Label>{t("Logo Light")}</Label>
-                  <div className="flex flex-col gap-3">
-                    <div className="border rounded-md p-4 flex items-center justify-center bg-black h-32">
-                      {brandSettings.logoLight ? (
-                        <img
-                          src={getImagePath(brandSettings.logoLight)}
-                          alt="Light Logo"
-                          className="max-h-full max-w-full object-contain"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = 'images/default/image-not-found.jpg';
-                          }}
-                        />
-                      ) : (
-                        <div className="text-muted-foreground flex flex-col items-center gap-2">
-                          <div className="h-12 w-24 bg-muted flex items-center justify-center rounded border border-dashed">
-                            <span className="font-semibold text-muted-foreground">{t("Logo")}</span>
-                          </div>
-                          <span className="text-xs">No logo selected</span>
-                        </div>
-                      )}
-                    </div>
-                    <MediaPicker
-                      label=""
-                      value={brandSettings.logoLight}
-                      onChange={(url) => handleMediaSelect('logoLight', url)}
-                      placeholder="Select light mode logo..."
-                      showPreview={false}
-                    />
-                  </div>
-                </div>
+                <LogoUploadField
+                  label={t('Logo (Light Background)')}
+                  currentPath={brandSettings.logoLight}
+                  newFile={logoFiles.logoLight}
+                  bgClass="bg-white"
+                  containerHeight="h-32"
+                  hint={t('Recommended: PNG or SVG, 300×80 px, transparent background. Used on light sidebars.')}
+                  onFileChange={(file) => {
+                    setLogoFiles(prev => ({ ...prev, logoLight: file }));
+                    updateBrandSettings({ logoLight: brandSettings.logoLight });
+                  }}
+                  onRemove={() => {
+                    if (logoFiles.logoLight) {
+                      setLogoFiles(prev => ({ ...prev, logoLight: undefined }));
+                    } else {
+                      setBrandSettings(prev => ({ ...prev, logoLight: '' }));
+                      updateBrandSettings({ logoLight: '' });
+                    }
+                  }}
+                />
 
-                <div className="space-y-3">
-                  <Label>{t("Favicon")}</Label>
-                  <div className="flex flex-col gap-3">
-                    <div className="border rounded-md p-4 flex items-center justify-center bg-muted/30 h-20">
-                      {brandSettings.favicon ? (
-                        <img
-                          src={getImagePath(brandSettings.favicon)}
-                          alt="Favicon"
-                          className="h-16 w-16 object-contain"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = 'images/default/image-not-found.jpg';
-                          }}
-                        />
-                      ) : (
-                        <div className="text-muted-foreground flex flex-col items-center gap-1">
-                          <div className="h-10 w-10 bg-muted flex items-center justify-center rounded border border-dashed">
-                            <span className="font-semibold text-xs text-muted-foreground">{t("Icon")}</span>
-                          </div>
-                          <span className="text-xs">No favicon selected</span>
-                        </div>
-                      )}
-                    </div>
-                    <MediaPicker
-                      label=""
-                      value={brandSettings.favicon}
-                      onChange={(url) => handleMediaSelect('favicon', url)}
-                      placeholder="Select favicon..."
-                      showPreview={false}
-                    />
-                  </div>
-                </div>
+                <LogoUploadField
+                  label={t('Favicon')}
+                  currentPath={brandSettings.favicon}
+                  newFile={logoFiles.favicon}
+                  bgClass="bg-muted/30"
+                  containerHeight="h-20"
+                  hint={t('Recommended: ICO, PNG or SVG, 32×32 px or 64×64 px square. Shown in browser tabs.')}
+                  onFileChange={(file) => {
+                    setLogoFiles(prev => ({ ...prev, favicon: file }));
+                  }}
+                  onRemove={() => {
+                    if (logoFiles.favicon) {
+                      setLogoFiles(prev => ({ ...prev, favicon: undefined }));
+                    } else {
+                      setBrandSettings(prev => ({ ...prev, favicon: '' }));
+                    }
+                  }}
+                />
               </div>
             </div>
           )}

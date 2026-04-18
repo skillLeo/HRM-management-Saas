@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Services\StorageConfigService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class SystemSettingsController extends Controller
 {
@@ -54,26 +55,72 @@ class SystemSettingsController extends Controller
     public function updateBrand(Request $request)
     {
         try {
+            $userId = auth()->id();
+
+            // Ensure the logo storage directory exists
+            Storage::disk('public')->makeDirectory('media/logo');
+
+            // Handle logo file uploads (logoDarkFile, logoLightFile, faviconFile)
+            $logoUploadMap = [
+                'logoDark'  => 'logoDarkFile',
+                'logoLight' => 'logoLightFile',
+                'favicon'   => 'faviconFile',
+            ];
+
+            $fileUploaded = [];
+            foreach ($logoUploadMap as $settingKey => $fileKey) {
+                if ($request->hasFile($fileKey)) {
+                    $file = $request->file($fileKey);
+
+                    // Validate image type
+                    $request->validate([
+                        $fileKey => 'file|mimes:jpeg,jpg,png,gif,svg,webp,ico|max:5120',
+                    ]);
+
+                    // Delete old logo if stored in our managed directory
+                    $oldPath = getSetting($settingKey, null, $userId);
+                    if ($oldPath && str_contains($oldPath, 'media/logo/')) {
+                        $diskRelativePath = preg_replace('#^storage/#', '', $oldPath);
+                        Storage::disk('public')->delete($diskRelativePath);
+                    }
+
+                    // Store new logo
+                    $extension = strtolower($file->getClientOriginalExtension());
+                    $filename  = $settingKey . '_' . time() . '.' . $extension;
+                    $storedPath = $file->storeAs('media/logo', $filename, 'public');
+
+                    // Save as 'storage/media/logo/filename.ext' so getImagePath resolves correctly
+                    updateSetting($settingKey, 'storage/' . $storedPath, $userId);
+                    $fileUploaded[] = $settingKey;
+                }
+            }
+
+            // Handle remaining text/theme settings
             $validated = $request->validate([
-                'settings' => 'required|array',
-                'settings.logoDark' => 'nullable|string',
-                'settings.logoLight' => 'nullable|string',
-                'settings.favicon' => 'nullable|string',
-                'settings.titleText' => 'nullable|string|max:255',
-                'settings.footerText' => 'nullable|string|max:500',
-                'settings.companyMobile' => 'nullable|string|max:20',
-                'settings.companyAddress' => 'nullable',
-                'settings.themeColor' => 'nullable|string|in:blue,green,purple,orange,red,custom',
-                'settings.customColor' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
+                'settings'                => 'sometimes|array',
+                'settings.logoDark'       => 'nullable|string',
+                'settings.logoLight'      => 'nullable|string',
+                'settings.favicon'        => 'nullable|string',
+                'settings.titleText'      => 'nullable|string|max:255',
+                'settings.footerText'     => 'nullable|string|max:500',
+                'settings.companyMobile'  => 'nullable|string|max:20',
+                'settings.companyAddress' => 'nullable|string',
+                'settings.themeColor'     => 'nullable|string|in:blue,green,purple,orange,red,custom',
+                'settings.customColor'    => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
                 'settings.sidebarVariant' => 'nullable|string|in:inset,floating,minimal',
-                'settings.sidebarStyle' => 'nullable|string|in:plain,colored,gradient',
-                'settings.layoutDirection' => 'nullable|string|in:left,right',
-                'settings.themeMode' => 'nullable|string|in:light,dark,system',
+                'settings.sidebarStyle'   => 'nullable|string|in:plain,colored,gradient',
+                'settings.layoutDirection'=> 'nullable|string|in:left,right',
+                'settings.themeMode'      => 'nullable|string|in:light,dark,system',
             ]);
 
-            $userId = auth()->id();
-            foreach ($validated['settings'] as $key => $value) {
-                updateSetting($key, $value, $userId);
+            if (!empty($validated['settings'])) {
+                foreach ($validated['settings'] as $key => $value) {
+                    // Skip logo fields that were already saved via file upload
+                    if (in_array($key, $fileUploaded)) {
+                        continue;
+                    }
+                    updateSetting($key, $value, $userId);
+                }
             }
 
             return redirect()->back()->with('success', __('Brand settings updated successfully.'));

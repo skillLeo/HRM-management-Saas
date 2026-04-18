@@ -72,49 +72,44 @@ createInertiaApp({
             initializeGlobalSettings(globalSettings);
         }
 
-        // Create a memoized render function to prevent unnecessary re-renders
-        const renderApp = (appProps: any) => {
-            const currentGlobalSettings = appProps.initialPage.props.globalSettings || {};
-            const user = appProps.initialPage.props.auth?.user;
-            
-            return (
-                <ModalStackProvider>
-                    <LayoutProvider>
-                        <SidebarProvider>
-                            <BrandProvider globalSettings={currentGlobalSettings} user={user}>
-                                <Suspense fallback={<div className="flex h-screen w-full items-center justify-center">Loading...</div>}>
-                                    <App {...appProps} />
-                                </Suspense>
-                                <CustomToast />
-                            </BrandProvider>
-                        </SidebarProvider>
-                    </LayoutProvider>
-                </ModalStackProvider>
-            );
-        };
-        
-        // Wait for i18n to be ready before initial render
-        i18n.on('initialized', () => {
-            root.render(renderApp(props));
-        });
-        
+        const initialGlobalSettings = props.initialPage.props.globalSettings || {};
+        const initialUser = props.initialPage.props.auth?.user;
+
+        const renderApp = (appProps: any) => (
+            <ModalStackProvider>
+                <LayoutProvider>
+                    <SidebarProvider>
+                        <BrandProvider globalSettings={initialGlobalSettings} user={initialUser}>
+                            <Suspense fallback={<div className="flex h-screen w-full items-center justify-center">Loading...</div>}>
+                                <App {...appProps} />
+                            </Suspense>
+                            <CustomToast />
+                        </BrandProvider>
+                    </SidebarProvider>
+                </LayoutProvider>
+            </ModalStackProvider>
+        );
+
+        // Render once — Inertia's App component handles all subsequent navigation internally
+        const doRender = () => root.render(renderApp(props));
+
         if (i18n.isInitialized) {
-            root.render(renderApp(props));
+            doRender();
+        } else {
+            i18n.on('initialized', doRender);
         }
-        
-        // Update global page data on navigation and re-render with new settings
+
+        // Keep the global page reference in sync for non-React consumers (no re-render needed)
         router.on('navigate', (event) => {
             try {
                 (window as any).page = event.detail.page;
-                // Re-render with updated props including globalSettings
-                root.render(renderApp({ initialPage: event.detail.page }));
-                
-                // Force dark mode check on navigation
+
+                // Reapply dark-mode class on navigation without a full re-render
                 const savedTheme = localStorage.getItem('themeSettings');
                 if (savedTheme) {
                     const themeSettings = JSON.parse(savedTheme);
-                    const isDark = themeSettings.appearance === 'dark' || 
-                        (themeSettings.appearance === 'system' && 
+                    const isDark = themeSettings.appearance === 'dark' ||
+                        (themeSettings.appearance === 'system' &&
                          window.matchMedia('(prefers-color-scheme: dark)').matches);
                     document.documentElement.classList.toggle('dark', isDark);
                     document.body.classList.toggle('dark', isDark);

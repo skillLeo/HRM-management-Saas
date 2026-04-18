@@ -13,7 +13,8 @@
       "Bash(mkdir -p c:/xampp/htdocs/HRM-management-Saas/storage/app/public/media/logo)",
       "Bash(cp \"c:/xampp/htdocs/HRM-management-Saas/public/images/logos/Afripay HR Logo_page-0001.jpg\" \"c:/xampp/htdocs/HRM-management-Saas/storage/app/public/media/logo/afripay-logo-light.jpg\")",
       "Bash(cp \"c:/xampp/htdocs/HRM-management-Saas/public/images/logos/Afripay HR Logo_page-0004.jpg\" \"c:/xampp/htdocs/HRM-management-Saas/storage/app/public/media/logo/afripay-logo-dark.jpg\")",
-      "Bash(php -r ' *)"
+      "Bash(php -r ' *)",
+      "Bash(npx tsc *)"
     ]
   }
 }

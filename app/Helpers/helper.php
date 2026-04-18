@@ -942,7 +942,7 @@ if (! function_exists('defaultSettings')) {
             'logoLight' => 'images/logos/Afripay HR Logo_page-0001.jpg',
             'favicon' => 'logo/favicon.png',
             'titleText' => $productName,
-            'footerText' => '© 2026 '.$productName.'. All rights reserved.',
+            'footerText' => '© 2026 '.$productName.'. A product of Aromerc & Co. Ltd',
             'themeColor' => 'green',
             'customColor' => '#10b77f',
             'sidebarVariant' => 'inset',
