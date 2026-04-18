@@ -27,15 +27,15 @@ export function ThemePreview() {
     if (logoError) return '';
     
     if (appearance === 'dark') {
-      return getImagePath(logoLight || 'logo/logo-light.png');
+      return getImagePath(logoLight || 'images/logos/Afripay HR Logo_page-0001.jpg');
     } else {
-      return getImagePath(logoDark || 'logo/logo-dark.png');
+      return getImagePath(logoDark || 'images/logos/Afripay HR Logo_page-0004.jpg');
     }
   };
   
   // Get title text
   const getTitleText = () => {
-    return 'WorkDo';
+    return 'AfriPay HR';
   };
   
   return (

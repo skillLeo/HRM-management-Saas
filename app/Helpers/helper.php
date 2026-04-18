@@ -927,7 +927,7 @@ if (! function_exists('handlePaymentError')) {
 if (! function_exists('defaultSettings')) {
     function defaultSettings()
     {
-        $productName = isSaas() ? 'HRM SaaS' : 'HRM';
+        $productName = 'AfriPay HR';
         $settings = [
             'defaultLanguage' => 'en',
             'dateFormat' => 'Y-m-d',
@@ -938,8 +938,8 @@ if (! function_exists('defaultSettings')) {
             'landingPageEnabled' => true,
             'userRegistrationEnabled' => true,
 
-            'logoDark' => 'logo/logo-dark.png',
-            'logoLight' => 'logo/logo-light.png',
+            'logoDark' => 'images/logos/Afripay HR Logo_page-0004.jpg',
+            'logoLight' => 'images/logos/Afripay HR Logo_page-0001.jpg',
             'favicon' => 'logo/favicon.png',
             'titleText' => $productName,
             'footerText' => '© 2026 '.$productName.'. All rights reserved.',

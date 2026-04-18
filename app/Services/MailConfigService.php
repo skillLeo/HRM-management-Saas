@@ -41,7 +41,7 @@ class MailConfigService
             'password' => $getSettings['email_password'] ?? '',
             'encryption' => $getSettings['email_encryption'] ?? 'tls',
             'fromAddress' => $getSettings['email_from_address'] ?? 'noreply@example.com',
-            'fromName' => $getSettings['email_from_name'] ?? 'WorkDo System'
+            'fromName' => $getSettings['email_from_name'] ?? 'AfriPay HR System'
         ];
 
 

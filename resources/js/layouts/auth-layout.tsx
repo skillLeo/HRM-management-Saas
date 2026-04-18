@@ -251,7 +251,7 @@ export default function AuthLayout({
                     {/* Footer */}
                     <div className="text-center mt-6">
                             <div className="inline-flex items-center space-x-2 bg-white backdrop-blur-sm rounded-md px-4 py-2 border border-gray-200">
-                                <p className="text-sm text-gray-500">{globalSettings?.footerText || '© 2026 HRM SaaS'}</p>
+                                <p className="text-sm text-gray-500">{globalSettings?.footerText || '© 2026 AfriPay HR. A product of Aromerc & Co. Ltd'}</p>
                             </div>
                     </div>
                 </div>

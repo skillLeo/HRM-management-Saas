@@ -1024,12 +1024,12 @@ export function AppSidebar() {
                                         key={`${currentLogo}-${Date.now()}`}
                                         src={displayUrl}
                                         alt="Logo"
-                                        className="w-auto transition-all duration-200"
+                                        className="h-20 w-auto max-w-[220px] object-contain transition-all duration-200"
                                         onError={() => updateBrandSettings({ [isDark ? 'logoLight' : 'logoDark']: '' })}
                                     />
                                 ) : (
                                     <div className="h-12 text-inherit font-semibold flex items-center text-lg tracking-tight">
-                                        WorkDo
+                                        AfriPay HR
                                     </div>
                                 );
                             })()}
@@ -1050,7 +1050,7 @@ export function AppSidebar() {
                                     />
                                 ) : (
                                     <div className="h-8 w-8 bg-primary text-white rounded flex items-center justify-center font-bold shadow-sm">
-                                        W
+                                        A
                                     </div>
                                 );
                             })()}

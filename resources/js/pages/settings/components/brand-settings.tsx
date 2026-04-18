@@ -55,11 +55,11 @@ export interface BrandSettings {
 
 // Default brand settings
 export const DEFAULT_BRAND_SETTINGS: BrandSettings = {
-  logoDark: 'logo/logo-dark.png',
-  logoLight: 'logo/logo-light.png',
+  logoDark: 'images/logos/Afripay HR Logo_page-0004.jpg',
+  logoLight: 'images/logos/Afripay HR Logo_page-0001.jpg',
   favicon: 'logo/favicon.png',
-  titleText: 'WorkDo',
-  footerText: '© 2024 WorkDo. All rights reserved.',
+  titleText: 'AfriPay HR',
+  footerText: '© 2026 AfriPay HR. A product of Aromerc & Co. Ltd',
   companyMobile: '',
   companyAddress: '',
   themeColor: 'green',
@@ -467,7 +467,7 @@ export default function BrandSettings({ settings }: BrandSettingsProps) {
                     name="titleText"
                     value={brandSettings.titleText}
                     onChange={handleInputChange}
-                    placeholder="WorkDo"
+                    placeholder="AfriPay HR"
                   />
                   <p className="text-xs text-muted-foreground">
                     {t("Application title displayed in the browser tab")}
@@ -481,7 +481,7 @@ export default function BrandSettings({ settings }: BrandSettingsProps) {
                     name="footerText"
                     value={brandSettings.footerText}
                     onChange={handleInputChange}
-                    placeholder="© 2024 WorkDo. All rights reserved."
+                    placeholder="© 2026 AfriPay HR. A product of Aromerc &amp; Co. Ltd"
                   />
                   <p className="text-xs text-muted-foreground">
                     {t("Text displayed in the footer")}

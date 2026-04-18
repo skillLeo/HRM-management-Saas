@@ -283,13 +283,13 @@ export default function SalaryComponents() {
       key: 'amount',
       label: t('Amount/Percentage'),
       render: (value: any, row: any) => (
-        <span className="font-mono">
-          {row.calculation_type === 'fixed' 
-            ? window.appSettings?.formatCurrency(row.default_amount) 
-            : `${row.percentage_of_basic}%`
-          }
-        </span>
-      )
+  <span className="font-mono">
+    {row.calculation_type === 'fixed' 
+      ? `ZK ${parseFloat(row.default_amount).toLocaleString('en-ZM', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      : `${row.percentage_of_basic}%`
+    }
+  </span>
+)
     },
     // {
     //   key: 'is_taxable',

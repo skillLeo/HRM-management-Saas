@@ -107,6 +107,10 @@ const getImagePath = (path: string, pageProps?: any): string => {
   if (path.includes('storage/media')) {
     return path.startsWith('/') ? `${window.location.origin}${path}` : `${window.location.origin}/${path}`;
   }
+  // Public directory assets (images/logos, etc.) — serve directly without storage prefix
+  if (path.startsWith('images/') || path.startsWith('/images/')) {
+    return path.startsWith('/') ? `${window.location.origin}${path}` : `${window.location.origin}/${path}`;
+  }
 
   try {
     const props = pageProps || usePage().props;
