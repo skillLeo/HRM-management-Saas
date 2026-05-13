@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
 
@@ -203,7 +204,7 @@ class EmployeeController extends Controller
                     'passport_no' => 'nullable|string|max:100',
                     'permit_no' => 'nullable|string|max:100',
                     'tpin' => 'required|string|max:50',
-                    'biometric_emp_id' => 'nullable|string|max:255|unique:employees,biometric_emp_id',
+                    'biometric_emp_id' => ['nullable', 'string', 'max:255', Rule::unique('employees', 'biometric_emp_id')->where('created_by', creatorId())],
                     'email' => 'required|email|max:255|unique:users,email',
                     'password' => 'required|string|min:8',
                     'phone' => 'required|string|max:20',
@@ -449,7 +450,7 @@ class EmployeeController extends Controller
                     'passport_no' => 'nullable|string|max:100',
                     'permit_no' => 'nullable|string|max:100',
                     'tpin' => 'required|string|max:50',
-                    'biometric_emp_id' => 'nullable|string|max:255|unique:employees,biometric_emp_id,' . $employee->id,
+                    'biometric_emp_id' => ['nullable', 'string', 'max:255', Rule::unique('employees', 'biometric_emp_id')->where('created_by', creatorId())->ignore($employee->id)],
                     'email' => 'required|email|max:255|unique:users,email,' . $employee->user_id,
                     'password' => 'nullable|string|min:8',
                     'phone' => 'required|string|max:20',
@@ -773,28 +774,44 @@ class EmployeeController extends Controller
         try {
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Employee Import');
 
             $headers = [
-                'name', 'email', 'password', 'employee_id', 'biometric_emp_id',
-                'phone', 'department', 'designation', 'branch', 'base_salary',
-                'date_of_joining', 'date_of_birth', 'gender', 'shift',
-                'attendance_policy', 'employment_type', 'employee_status',
-                'city', 'state', 'country', 'postal_code', 'address',
-                'bank_name', 'account_number', 'bank_identifier_code', 'bank_branch',
+                'Title', 'First Name', 'Middle Name', 'Last Name', 'Employee ID',
+                'Biometric Emp ID', 'Phone', 'Email', 'Date of Birth', 'Gender', 'Nationality',
+                'Marital Status', 'Department', 'Designation', 'Branch', 'Shift',
+                'Attendance Policy', 'Date of Joining', 'Base Salary',
+                'Employment Type', 'Employee Status',
+                'Address Line 1', 'Address Line 2', 'City', 'State', 'Country', 'Postal Code',
+                'Bank Name', 'Account Holder Name', 'Account Number', 'Bank Identifier Code', 'Bank Branch',
+                'Payment Method', 'TPIN', 'NRC', 'Passport No', 'Permit No',
+                'NAPSA Number', 'NHIMA Number', 'Exempt From NAPSA', 'Exempt From NHIMA', 'Exempt From SDL',
             ];
 
             foreach ($headers as $colIndex => $header) {
                 $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1);
                 $sheet->setCellValue($col . '1', $header);
+                $sheet->getColumnDimensionByColumn($colIndex + 1)->setWidth(18);
             }
 
+            // Style header row
+            $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers));
+            $headerRange = 'A1:' . $lastCol . '1';
+            $sheet->getStyle($headerRange)->applyFromArray([
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '1E3A5F']],
+            ]);
+
             $sampleRow = [
-                'John Doe', 'john.doe@example.com', 'Password123', 'EMP001', '',
-                '+260971234567', 'Sales', 'Sales Manager', 'Lusaka', '5000',
-                date('Y-m-d'), '1990-01-15', 'male', '',
-                '', 'full-time', 'active',
-                'Lusaka', 'Lusaka', 'Zambia', '10101', '123 Example Street',
-                '', '', '', '',
+                'Mr', 'John', '', 'Banda', 'EMP001',
+                '', '+260971234567', 'john.banda@example.com', '1990-01-15', 'male', 'Zambian',
+                'married', 'Finance', 'Accountant', 'Lusaka', '',
+                '', date('Y-m-d'), '8500',
+                'Full-time', 'active',
+                '123 Cairo Road', '', 'Lusaka', 'Lusaka', 'Zambia', '10101',
+                'Zanaco (Zambia National Commercial Bank)', 'John Banda', '0123456789', '', '',
+                'EFT', '1234567890', '123456/10/1', '', '',
+                '', '', '0', '0', '0',
             ];
 
             foreach ($sampleRow as $colIndex => $value) {
@@ -802,13 +819,63 @@ class EmployeeController extends Controller
                 $sheet->setCellValue($col . '2', $value);
             }
 
+            // Style sample row in light yellow so HR knows it is example data to delete
+            $sheet->getStyle('A2:' . $lastCol . '2')->applyFromArray([
+                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => 'FFF9C4']],
+                'font' => ['italic' => true, 'color' => ['rgb' => '7B6C00']],
+            ]);
+            $sheet->getComment('A2')->getText()->createTextRun('SAMPLE ROW — delete this row before importing real data.');
+
+            $sheet->getColumnDimensionByColumn(28)->setWidth(40);
+
+            // Bank Reference sheet
+            $bankSheet = $spreadsheet->createSheet();
+            $bankSheet->setTitle('Bank Reference');
+
+            $bankSheet->setCellValue('A1', 'Valid Bank Names');
+            $bankSheet->getStyle('A1')->applyFromArray([
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '1E3A5F']],
+            ]);
+            $bankSheet->getColumnDimension('A')->setWidth(45);
+
+            $banks = [
+                'Zanaco (Zambia National Commercial Bank)',
+                'FNB Zambia (First National Bank)',
+                'Stanbic Bank Zambia',
+                'Absa Bank Zambia',
+                'Atlas Mara Bank Zambia',
+                'Citibank Zambia',
+                'Bank of China Zambia',
+                'Indo Zambia Bank',
+                'United Bank for Africa (UBA) Zambia',
+                'Access Bank Zambia',
+                'First Alliance Bank Zambia',
+                'Madison Finance',
+                'Investrust Bank Zambia',
+                'Development Bank of Zambia',
+                'Bank of Zambia',
+            ];
+
+            foreach ($banks as $i => $bank) {
+                $row = $i + 2;
+                $bankSheet->setCellValue('A' . $row, $bank);
+                $bg = ($i % 2 === 0) ? 'F8F9FA' : 'FFFFFF';
+                $bankSheet->getStyle('A' . $row)->applyFromArray([
+                    'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => $bg]],
+                ]);
+            }
+
+            // Return focus to the main sheet
+            $spreadsheet->setActiveSheetIndex(0);
+
             $writer = new Xlsx($spreadsheet);
             $tempFile = tempnam(sys_get_temp_dir(), 'emp_template_') . '.xlsx';
             $writer->save($tempFile);
 
-            return response()->download($tempFile, 'sample-employee.xlsx')->deleteFileAfterSend(true);
+            return response()->download($tempFile, 'Employee_Import_Template.xlsx')->deleteFileAfterSend(true);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Log::error('Template download failed: ' . $e->getMessage());
             return redirect()->back()->with('error', __('Failed to download template: :message', ['message' => $e->getMessage()]));
         }
@@ -1087,32 +1154,67 @@ class EmployeeController extends Controller
                 $file = $request->file('file');
                 $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
                 $worksheet = $spreadsheet->getActiveSheet();
-                $highestColumn = $worksheet->getHighestColumn();
-                $highestRow = $worksheet->getHighestRow();
-                $headers = [];
+                $highestColumn = $worksheet->getHighestDataColumn();
+                $highestRow    = $worksheet->getHighestDataRow();
+                $highestColIdx = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
 
-                for ($col = 'A'; $col <= $highestColumn; $col++) {
-                    $value = $worksheet->getCell($col . '1')->getValue();
-                    if ($value) {
-                        $headers[] = (string) $value;
+                $getCell = function (int $col, int $row) use ($worksheet) {
+                    $coord = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col) . $row;
+                    return $worksheet->getCell($coord)->getValue();
+                };
+
+                // Find the actual header row: first row with 3+ non-empty cells (skips title/banner rows)
+                $headerRowNum = 1;
+                for ($r = 1; $r <= min(10, $highestRow); $r++) {
+                    $nonEmpty = 0;
+                    for ($c = 1; $c <= $highestColIdx; $c++) {
+                        $val = $getCell($c, $r);
+                        if ($val !== null && $val !== '') $nonEmpty++;
                     }
+                    if ($nonEmpty >= 3) {
+                        $headerRowNum = $r;
+                        break;
+                    }
+                }
+
+                $headers = [];
+                for ($c = 1; $c <= $highestColIdx; $c++) {
+                    $value = $getCell($c, $headerRowNum);
+                    if ($value !== null && $value !== '') {
+                        $headers[] = trim((string) $value);
+                    }
+                }
+
+                // Skip hint rows right after header (e.g. "e.g. Ahmed", "YYYY-MM-DD", "Must match existing")
+                $dataStartRow   = $headerRowNum + 1;
+                $firstCellNext  = trim((string) $getCell(1, $dataStartRow));
+                if (stripos($firstCellNext, 'e.g') !== false
+                    || stripos($firstCellNext, 'optional') !== false
+                    || stripos($firstCellNext, 'YYYY') !== false
+                    || stripos($firstCellNext, 'must match') !== false) {
+                    $dataStartRow++;
                 }
 
                 $previewData = [];
-                for ($row = 2; $row <= $highestRow; $row++) {
-                    $rowData = [];
+                for ($row = $dataStartRow; $row <= $highestRow; $row++) {
+                    $rowData  = [];
                     $colIndex = 0;
-                    for ($col = 'A'; $col <= $highestColumn; $col++) {
+                    $hasData  = false;
+                    for ($c = 1; $c <= $highestColIdx; $c++) {
+                        $cellVal = (string) $getCell($c, $row);
                         if ($colIndex < count($headers)) {
-                            $rowData[$headers[$colIndex]] = (string) $worksheet->getCell($col . $row)->getValue();
+                            $rowData[$headers[$colIndex]] = $cellVal;
+                            if ($cellVal !== '') $hasData = true;
                         }
                         $colIndex++;
                     }
-                    $previewData[] = $rowData;
+                    if ($hasData) {
+                        $previewData[] = $rowData;
+                    }
                 }
 
                 return response()->json(['excelColumns' => $headers, 'previewData' => $previewData]);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 return response()->json(['message' => __('Failed to parse file: :error', ['error' => $e->getMessage()])]);
             }
         } else {
@@ -1137,20 +1239,39 @@ class EmployeeController extends Controller
 
                 foreach ($data as $row) {
                     try {
-                        if (empty($row['name']) || empty($row['email'])) {
+                        // Build full name from separate fields or single name field
+                        $firstName = trim($row['first_name'] ?? '');
+                        $middleName = trim($row['middle_name'] ?? '');
+                        $lastName = trim($row['last_name'] ?? '');
+                        $fullName = trim(implode(' ', array_filter([$firstName, $middleName, $lastName])));
+                        if (empty($fullName)) {
+                            $fullName = trim($row['name'] ?? '');
+                        }
+
+                        if (empty($fullName)) {
                             $skipped++;
                             continue;
                         }
 
-                        if (User::where('email', $row['email'])->exists()) {
-                            $skipped++;
-                            continue;
+                        // Auto-generate email if not provided
+                        $email = trim($row['email'] ?? '');
+                        if (empty($email)) {
+                            $empIdSlug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $row['employee_id'] ?? $fullName));
+                            $baseEmail = $empIdSlug . '@employee.local';
+                            $email = $baseEmail;
+                            $counter = 1;
+                            while (User::where('email', $email)->exists()) {
+                                $email = $empIdSlug . $counter . '@employee.local';
+                                $counter++;
+                            }
+                        } else {
+                            if (User::where('email', $email)->exists()) {
+                                $skipped++;
+                                continue;
+                            }
                         }
 
-                        $password = null;
-                        if (!empty($row['password'])) {
-                            $password = Hash::make($row['password']);
-                        }
+                        $password = Hash::make(!empty($row['password']) ? $row['password'] : 'Password@123');
 
                         $branchId = null;
                         if (!empty($row['branch'])) {
@@ -1193,44 +1314,47 @@ class EmployeeController extends Controller
                         }
 
                         $dateOfJoining = null;
-                        $joinedDateValue = $row['date_of_joining']
-                            ?? $row['joined_date']
-                            ?? $row['joining_date']
-                            ?? $row['Date of Joining']
-                            ?? $row['Joined Date']
-                            ?? null;
-
-                        if (!empty($joinedDateValue)) {
+                        if (!empty($row['date_of_joining'])) {
                             try {
-                                if (is_numeric($joinedDateValue)) {
-                                    $dateOfJoining = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($joinedDateValue)->format('Y-m-d');
-                                } else {
-                                    $dateOfJoining = \Carbon\Carbon::parse($joinedDateValue)->format('Y-m-d');
-                                }
-                            } catch (\Exception $e) {
+                                $v = $row['date_of_joining'];
+                                $dateOfJoining = is_numeric($v)
+                                    ? \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($v)->format('Y-m-d')
+                                    : \Carbon\Carbon::parse($v)->format('Y-m-d');
+                            } catch (\Throwable $e) {
                                 $dateOfJoining = now()->format('Y-m-d');
                             }
-                        } else {
-                            $dateOfJoining = now()->format('Y-m-d');
                         }
 
-                        $employeeIdValue = $row['employee_id']
-                            ?? $row['Employee ID']
-                            ?? $row['employee_no']
-                            ?? $row['Employee No']
-                            ?? null;
+                        $dateOfBirth = null;
+                        if (!empty($row['date_of_birth'])) {
+                            try {
+                                $v = $row['date_of_birth'];
+                                $dateOfBirth = is_numeric($v)
+                                    ? \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($v)->format('Y-m-d')
+                                    : \Carbon\Carbon::parse($v)->format('Y-m-d');
+                            } catch (\Throwable $e) {
+                                $dateOfBirth = null;
+                            }
+                        }
 
+                        $employeeIdValue = trim($row['employee_id'] ?? '');
                         if (!empty($employeeIdValue)) {
-                            $exists = Employee::where('employee_id', $employeeIdValue)->exists();
+                            $exists = Employee::where('employee_id', $employeeIdValue)
+                                ->whereIn('created_by', getCompanyAndUsersId())
+                                ->exists();
                             $employeeId = $exists ? Employee::generateEmployeeId() : $employeeIdValue;
                         } else {
                             $employeeId = Employee::generateEmployeeId();
                         }
 
-                        DB::transaction(function () use ($row, $password, $branchId, $departmentId, $designationId, $shiftId, $attendancePolicyId, $dateOfJoining, $employeeId, &$imported) {
+                        // Map payment method values
+                        $paymentMethod = $row['payment_method'] ?? null;
+                        if ($paymentMethod === 'Bank Transfer') $paymentMethod = 'EFT';
+
+                        DB::transaction(function () use ($row, $fullName, $email, $password, $branchId, $departmentId, $designationId, $shiftId, $attendancePolicyId, $dateOfJoining, $dateOfBirth, $employeeId, $paymentMethod, &$imported) {
                             $user = User::create([
-                                'name' => $row['name'],
-                                'email' => $row['email'],
+                                'name' => $fullName,
+                                'email' => $email,
                                 'password' => $password,
                                 'type' => 'employee',
                                 'lang' => 'en',
@@ -1250,32 +1374,49 @@ class EmployeeController extends Controller
                             }
 
                             Employee::create([
-                                'user_id' => $user->id,
-                                'employee_id' => $employeeId,
-                                'biometric_emp_id' => !empty($row['biometric_emp_id']) ? $row['biometric_emp_id'] : null,
-                                'phone' => $row['phone'] ?? '',
-                                'date_of_birth' => !empty($row['date_of_birth']) ? $row['date_of_birth'] : null,
-                                'gender' => $row['gender'] ?? 'male',
-                                'branch_id' => $branchId,
-                                'department_id' => $departmentId,
-                                'designation_id' => $designationId,
-                                'base_salary' => $row['base_salary'] ?? null,
-                                'shift_id' => $shiftId,
-                                'attendance_policy_id' => $attendancePolicyId,
-                                'date_of_joining' => $dateOfJoining,
-                                'employment_type' => $row['employment_type'] ?? 'full-time',
-                                'employee_status' => $row['employee_status'] ?? 'active',
-                                'city' => $row['city'] ?? '',
-                                'state' => $row['state'] ?? '',
-                                'country' => $row['country'] ?? '',
-                                'postal_code' => $row['postal_code'] ?? '',
-                                'address_line_1' => $row['address'] ?? '',
-                                'payment_method' => $row['payment_method'] ?? null,
-                                'bank_name' => $row['bank_name'] ?? '',
-                                'account_number' => $row['account_number'] ?? '',
-                                'bank_identifier_code' => $row['bank_identifier_code'] ?? '',
-                                'bank_branch' => $row['bank_branch'] ?? '',
-                                'created_by' => creatorId(),
+                                'user_id'             => $user->id,
+                                'employee_id'         => $employeeId,
+                                'title'               => $row['title'] ?? null,
+                                'first_name'          => $row['first_name'] ?? null,
+                                'middle_name'         => !empty($row['middle_name']) ? $row['middle_name'] : null,
+                                'last_name'           => $row['last_name'] ?? null,
+                                'biometric_emp_id'    => !empty($row['biometric_emp_id']) ? $row['biometric_emp_id'] : null,
+                                'phone'               => $row['phone'] ?? '',
+                                'date_of_birth'       => $dateOfBirth,
+                                'gender'              => strtolower($row['gender'] ?? 'male'),
+                                'nationality'         => $row['nationality'] ?? null,
+                                'marital_status'      => !empty($row['marital_status']) ? strtolower($row['marital_status']) : null,
+                                'branch_id'           => $branchId,
+                                'department_id'       => $departmentId,
+                                'designation_id'      => $designationId,
+                                'base_salary'         => !empty($row['base_salary']) ? $row['base_salary'] : null,
+                                'shift_id'            => $shiftId,
+                                'attendance_policy_id'=> $attendancePolicyId,
+                                'date_of_joining'     => $dateOfJoining,
+                                'employment_type'     => $row['employment_type'] ?? 'Full-time',
+                                'employee_status'     => strtolower($row['employee_status'] ?? 'active'),
+                                'city'                => $row['city'] ?? '',
+                                'state'               => $row['state'] ?? '',
+                                'country'             => $row['country'] ?? '',
+                                'postal_code'         => $row['postal_code'] ?? '',
+                                'address_line_1'      => $row['address_line_1'] ?? $row['address'] ?? '',
+                                'address_line_2'      => $row['address_line_2'] ?? null,
+                                'payment_method'      => $paymentMethod,
+                                'bank_name'           => $row['bank_name'] ?? '',
+                                'account_holder_name' => $row['account_holder_name'] ?? null,
+                                'account_number'      => $row['account_number'] ?? '',
+                                'bank_identifier_code'=> $row['bank_identifier_code'] ?? '',
+                                'bank_branch'         => $row['bank_branch'] ?? '',
+                                'tpin'                => $row['tpin'] ?? null,
+                                'nrc'                 => $row['nrc'] ?? null,
+                                'passport_no'         => $row['passport_no'] ?? null,
+                                'permit_no'           => $row['permit_no'] ?? null,
+                                'napsa_number'        => $row['napsa_number'] ?? null,
+                                'nhima_number'        => $row['nhima_number'] ?? null,
+                                'exempt_from_napsa'   => !empty($row['exempt_from_napsa']) ? (int)$row['exempt_from_napsa'] : 0,
+                                'exempt_from_nhima'   => !empty($row['exempt_from_nhima']) ? (int)$row['exempt_from_nhima'] : 0,
+                                'exempt_from_sdl'     => !empty($row['exempt_from_sdl']) ? (int)$row['exempt_from_sdl'] : 0,
+                                'created_by'          => creatorId(),
                             ]);
 
                             $imported++;
