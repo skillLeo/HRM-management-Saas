@@ -29,6 +29,7 @@ class User extends BaseAuthenticatable implements MustVerifyEmail
         'is_enable_login',
         'mode',
         'created_by',
+        'branch_id',
         'google2fa_enable',
         'google2fa_secret',
         'status',

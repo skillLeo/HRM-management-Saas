@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UserRequest;
+use App\Models\Branch;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -59,6 +60,11 @@ class UserController extends BaseController
                 });
             }
 
+            // Handle branch filter
+            if ($request->has('branch') && $request->branch !== 'all') {
+                $userQuery->where('branch_id', $request->branch);
+            }
+
             // Handle sorting
             if ($request->has('sort_field') && $request->has('sort_direction')) {
                 $userQuery->orderBy($request->sort_field, $request->sort_direction);
@@ -70,13 +76,16 @@ class UserController extends BaseController
 
             # Roles listing - Get all roles without filtering
             if ($authUserRole == 'company') {
-                // $roles = Role::where('created_by', $authUser->id)->get();
                 $roles = Role::whereIn('created_by', getCompanyAndUsersId())
                     ->where('name', '!=', 'employee')
                     ->get();
             } else {
                 $roles = Role::where('name', '!=', 'employee')->whereIn('created_by', getCompanyAndUsersId())->get();
             }
+
+            $branches = Branch::whereIn('created_by', getCompanyAndUsersId())
+                ->where('status', 'active')
+                ->get(['id', 'name']);
 
             // Get plan limits for company users and staff users (only in SaaS mode)
             $planLimits = null;
@@ -107,10 +116,12 @@ class UserController extends BaseController
             return Inertia::render('users/index', [
                 'users' => $users,
                 'roles' => $roles,
+                'branches' => $branches,
                 'planLimits' => $planLimits,
                 'filters' => [
                     'search' => $request->search ?? '',
                     'role' => $request->role ?? 'all',
+                    'branch' => $request->branch ?? 'all',
                     'per_page' => $perPage,
                     'sort_field' => $request->sort_field ?? 'created_at',
                     'sort_direction' => $request->sort_direction ?? 'desc',
@@ -133,7 +144,7 @@ class UserController extends BaseController
             $userLang = isset($companySettings['defaultLanguage']) ? $companySettings['defaultLanguage'] : $authUser->lang;
             // Check plan limits for company users (only in SaaS mode)
             if (isSaas() && $authUser->type === 'company' && $authUser->plan) {
-                $currentUserCount = User::where('created_by', $authUser->id)->count();
+                $currentUserCount = User::whereIn('created_by', getCompanyAndUsersId())->where('type', '!=', 'employee')->count();
                 $maxUsers = $authUser->plan->max_users;
 
                 if ($currentUserCount >= $maxUsers) {
@@ -144,7 +155,7 @@ class UserController extends BaseController
             elseif (isSaas() && $authUser->type !== 'superadmin' && $authUser->created_by) {
                 $companyUser = User::find($authUser->created_by);
                 if ($companyUser && $companyUser->type === 'company' && $companyUser->plan) {
-                    $currentUserCount = User::where('created_by', $companyUser->id)->count();
+                    $currentUserCount = User::whereIn('created_by', getCompanyAndUsersId())->where('type', '!=', 'employee')->count();
                     $maxUsers = $companyUser->plan->max_users;
 
                     if ($currentUserCount >= $maxUsers) {
@@ -165,6 +176,7 @@ class UserController extends BaseController
                 'password' => Hash::make($request->password),
                 'created_by' => creatorId(),
                 'lang' => $userLang,
+                'branch_id' => $request->branch_id ?: null,
             ]);
 
             if ($user && $request->roles) {
@@ -201,6 +213,7 @@ class UserController extends BaseController
             if ($user) {
                 $user->name = $request->name;
                 $user->email = $request->email;
+                $user->branch_id = $request->branch_id ?: null;
 
                 // find and syncing role
                 if ($request->roles) {

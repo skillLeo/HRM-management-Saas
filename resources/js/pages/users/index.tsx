@@ -23,7 +23,7 @@ import { useTranslation } from 'react-i18next';
 
 export default function Users() {
   const { t } = useTranslation();
-  const { auth, users, roles, planLimits, filters: pageFilters = {} } = usePage().props as any;
+  const { auth, users, roles, branches, planLimits, filters: pageFilters = {} } = usePage().props as any;
   const permissions = auth?.permissions || [];
   const getInitials = useInitials();
   
@@ -31,6 +31,7 @@ export default function Users() {
   const [activeView, setActiveView] = useState('list');
   const [searchTerm, setSearchTerm] = useState(pageFilters.search || '');
   const [selectedRole, setSelectedRole] = useState(pageFilters.role || 'all');
+  const [selectedBranch, setSelectedBranch] = useState(pageFilters.branch || 'all');
   const [showFilters, setShowFilters] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -40,12 +41,11 @@ export default function Users() {
   
   // Check if any filters are active
   const hasActiveFilters = () => {
-    return selectedRole !== 'all' || searchTerm !== '';
+    return selectedRole !== 'all' || selectedBranch !== 'all' || searchTerm !== '';
   };
-  
-  // Count active filters
+
   const activeFilterCount = () => {
-    return (selectedRole !== 'all' ? 1 : 0) + (searchTerm ? 1 : 0);
+    return (selectedRole !== 'all' ? 1 : 0) + (selectedBranch !== 'all' ? 1 : 0) + (searchTerm ? 1 : 0);
   };
   
   const handleSearch = (e: React.FormEvent) => {
@@ -53,44 +53,29 @@ export default function Users() {
     applyFilters();
   };
   
-  const applyFilters = () => {
+  const buildParams = (overrides: any = {}) => {
     const params: any = { page: 1 };
-    
-    if (searchTerm) {
-      params.search = searchTerm;
-    }
-    
-    if (selectedRole !== 'all') {
-      params.role = selectedRole;
-    }
-    
-    // Add per_page if it exists
-    if (pageFilters.per_page) {
-      params.per_page = pageFilters.per_page;
-    }
-    
-    router.get(route('users.index'), params, { preserveState: true, preserveScroll: true });
+    if (searchTerm) params.search = searchTerm;
+    if (selectedRole !== 'all') params.role = selectedRole;
+    if (selectedBranch !== 'all') params.branch = selectedBranch;
+    if (pageFilters.per_page) params.per_page = pageFilters.per_page;
+    return { ...params, ...overrides };
   };
-  
+
+  const applyFilters = () => {
+    router.get(route('users.index'), buildParams(), { preserveState: true, preserveScroll: true });
+  };
+
   const handleRoleFilter = (value: string) => {
     setSelectedRole(value);
-    
-    const params: any = { page: 1 };
-    
-    if (searchTerm) {
-      params.search = searchTerm;
-    }
-    
-    if (value !== 'all') {
-      params.role = value;
-    }
-    
-    // Add per_page if it exists
-    if (pageFilters.per_page) {
-      params.per_page = pageFilters.per_page;
-    }
-    
-    router.get(route('users.index'), params, { preserveState: true, preserveScroll: true });
+    const override: any = { role: value !== 'all' ? value : undefined };
+    router.get(route('users.index'), buildParams(override), { preserveState: true, preserveScroll: true });
+  };
+
+  const handleBranchFilter = (value: string) => {
+    setSelectedBranch(value);
+    const override: any = { branch: value !== 'all' ? value : undefined };
+    router.get(route('users.index'), buildParams(override), { preserveState: true, preserveScroll: true });
   };
   
   const handleSort = (field: string) => {
@@ -275,13 +260,10 @@ export default function Users() {
   
   const handleResetFilters = () => {
     setSelectedRole('all');
+    setSelectedBranch('all');
     setSearchTerm('');
     setShowFilters(false);
-    
-    router.get(route('users.index'), { 
-      page: 1, 
-      per_page: pageFilters.per_page 
-    }, { preserveState: true, preserveScroll: true });
+    router.get(route('users.index'), { page: 1, per_page: pageFilters.per_page }, { preserveState: true, preserveScroll: true });
   };
 
   // Define page actions
@@ -419,6 +401,20 @@ export default function Users() {
                 ...(roles || []).map((role: any) => ({
                   value: role.id.toString(),
                   label: role.label || role.name
+                }))
+              ]
+            },
+            {
+              name: 'branch',
+              label: t('Branch'),
+              type: 'select',
+              value: selectedBranch,
+              onChange: handleBranchFilter,
+              options: [
+                { value: 'all', label: t('All Branches') },
+                ...(branches || []).map((branch: any) => ({
+                  value: branch.id.toString(),
+                  label: branch.name
                 }))
               ]
             }
@@ -657,22 +653,36 @@ export default function Users() {
               required: true,
               conditional: (mode) => mode === 'create'
             },
-            { 
-              name: 'roles', 
-              label: t('Role'), 
-              type: 'select', 
+            {
+              name: 'roles',
+              label: t('Role'),
+              type: 'select',
               options: roles ? roles.map((role: any) => ({
                 value: role.id.toString(),
                 label: role.label || role.name
               })) : [],
               required: true
+            },
+            {
+              name: 'branch_id',
+              label: t('Branch'),
+              type: 'select',
+              options: [
+                { value: '', label: t('-- No Branch --') },
+                ...(branches || []).map((branch: any) => ({
+                  value: branch.id.toString(),
+                  label: branch.name
+                }))
+              ],
+              required: false
             }
           ],
           modalSize: 'lg'
         }}
         initialData={currentItem ? {
           ...currentItem,
-          roles: currentItem.roles && currentItem.roles.length > 0 ? currentItem.roles[0].id.toString() : ''
+          roles: currentItem.roles && currentItem.roles.length > 0 ? currentItem.roles[0].id.toString() : '',
+          branch_id: currentItem.branch_id ? currentItem.branch_id.toString() : ''
         } : null}
         title={
           formMode === 'create' 
