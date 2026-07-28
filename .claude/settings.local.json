@@ -14,7 +14,9 @@
       "Bash(cp \"c:/xampp/htdocs/HRM-management-Saas/public/images/logos/Afripay HR Logo_page-0001.jpg\" \"c:/xampp/htdocs/HRM-management-Saas/storage/app/public/media/logo/afripay-logo-light.jpg\")",
       "Bash(cp \"c:/xampp/htdocs/HRM-management-Saas/public/images/logos/Afripay HR Logo_page-0004.jpg\" \"c:/xampp/htdocs/HRM-management-Saas/storage/app/public/media/logo/afripay-logo-dark.jpg\")",
       "Bash(php -r ' *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(php -r \"echo class_exists\\('\\\\PhpOffice\\\\PhpSpreadsheet\\\\IOFactory'\\) ? 'PhpSpreadsheet: OK' : 'PhpSpreadsheet: MISSING';\")",
+      "Bash(composer require *)"
     ]
   }
 }

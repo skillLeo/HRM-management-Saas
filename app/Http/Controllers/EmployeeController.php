@@ -252,97 +252,105 @@ class EmployeeController extends Controller
                     ($request->last_name ?? '')
                 );
 
-                $user = new User;
-                $user->name = $fullName;
-                $user->email = $request->email;
-                $user->password = Hash::make($request->password);
-                $user->type = 'employee';
-                $user->lang = 'en';
-                $user->created_by = creatorId();
+                $redirectRoute = DB::transaction(function () use ($request, $fullName) {
+                    $user = new User;
+                    $user->name = $fullName;
+                    $user->email = $request->email;
+                    $user->password = Hash::make($request->password);
+                    $user->type = 'employee';
+                    $user->lang = 'en';
+                    $user->created_by = creatorId();
 
-                if ($request->has('profile_image')) {
-                    $user->avatar = $request->profile_image;
-                }
-                $user->save();
+                    if ($request->has('profile_image')) {
+                        $user->avatar = $request->profile_image;
+                    }
+                    $user->save();
 
-                if (isSaaS()) {
-                    $employeeRole = Role::where('created_by', createdBy())->where('name', 'employee')->first();
-                } else {
-                    $employeeRole = Role::where('name', 'employee')->first();
-                }
-                if ($employeeRole) {
-                    $user->assignRole($employeeRole);
-                }
+                    if (isSaaS()) {
+                        $employeeRole = Role::where('created_by', createdBy())->where('name', 'employee')->first();
+                    } else {
+                        $employeeRole = Role::where('name', 'employee')->first();
+                    }
+                    if ($employeeRole) {
+                        $user->assignRole($employeeRole);
+                    }
 
-                $employee = new Employee;
-                $employee->user_id = $user->id;
-                $employee->employee_id = Employee::generateEmployeeId();
-                $employee->created_by = creatorId();
-                $employee->biometric_emp_id = $request->biometric_emp_id;
-                $employee->title = $request->title;
-                $employee->first_name = $request->first_name;
-                $employee->middle_name = $request->middle_name;
-                $employee->last_name = $request->last_name;
-                $employee->nationality = $request->nationality;
-                $employee->marital_status = $request->marital_status;
-                $employee->nrc = $request->nationality === 'Zambian' ? $request->nrc : null;
-                $employee->passport_no = $request->nationality !== 'Zambian' ? $request->passport_no : null;
-                $employee->permit_no = $request->nationality !== 'Zambian' ? $request->permit_no : null;
-                $employee->tpin = $request->tpin;
-                $employee->phone = $request->phone;
-                $employee->date_of_birth = $request->date_of_birth;
-                $employee->gender = $request->gender;
-                $employee->branch_id = $request->branch_id;
-                $employee->department_id = $request->department_id;
-                $employee->designation_id = $request->designation_id;
-                $employee->shift_id = $request->shift_id;
-                $employee->attendance_policy_id = $request->attendance_policy_id;
-                $employee->date_of_joining = $request->date_of_joining;
-                $employee->employment_type = $request->employment_type;
-                $employee->employee_status = $request->employee_status ?? 'active';
-                $employee->napsa_number = $request->napsa_number;
-                $employee->nhima_number = $request->nhima_number;
-                $employee->base_salary = $request->salary;
-                $employee->address_line_1 = $request->address_line_1;
-                $employee->address_line_2 = $request->address_line_2;
-                $employee->city = $request->city;
-                $employee->state = $request->state;
-                $employee->country = $request->country;
-                $employee->postal_code = $request->postal_code;
-                $employee->emergency_contact_name = $request->emergency_contact_name;
-                $employee->emergency_contact_relationship = $request->emergency_contact_relationship;
-                $employee->emergency_contact_number = $request->emergency_contact_number;
-                $employee->payment_method = $request->payment_method;
-                $employee->bank_name = $request->bank_name;
-                $employee->account_holder_name = $request->account_holder_name;
-                $employee->account_number = $request->account_number;
-                $employee->bank_identifier_code = $request->bank_identifier_code;
-                $employee->bank_branch = $request->bank_branch;
-                $employee->exempt_from_napsa = $request->boolean('exempt_from_napsa');
-                $employee->exempt_from_nhima = $request->boolean('exempt_from_nhima');
-                $employee->exempt_from_sdl = $request->boolean('exempt_from_sdl');
-                $employee->save();
+                    $employee = new Employee;
+                    $employee->user_id = $user->id;
+                    $employee->employee_id = Employee::generateEmployeeId();
+                    $employee->created_by = creatorId();
+                    $employee->biometric_emp_id = $request->biometric_emp_id;
+                    $employee->title = $request->title;
+                    $employee->first_name = $request->first_name;
+                    $employee->middle_name = $request->middle_name;
+                    $employee->last_name = $request->last_name;
+                    $employee->nationality = $request->nationality;
+                    $employee->marital_status = $request->marital_status;
+                    $employee->nrc = $request->nationality === 'Zambian' ? $request->nrc : null;
+                    $employee->passport_no = $request->nationality !== 'Zambian' ? $request->passport_no : null;
+                    $employee->permit_no = $request->nationality !== 'Zambian' ? $request->permit_no : null;
+                    $employee->tpin = $request->tpin;
+                    $employee->phone = $request->phone;
+                    $employee->date_of_birth = $request->date_of_birth;
+                    $employee->gender = $request->gender;
+                    $employee->branch_id = $request->branch_id;
+                    $employee->department_id = $request->department_id;
+                    $employee->designation_id = $request->designation_id;
+                    $employee->shift_id = $request->shift_id;
+                    $employee->attendance_policy_id = $request->attendance_policy_id;
+                    $employee->date_of_joining = $request->date_of_joining;
+                    $employee->employment_type = $request->employment_type;
+                    $employee->employee_status = $request->employee_status ?? 'active';
+                    $employee->napsa_number = $request->napsa_number;
+                    $employee->nhima_number = $request->nhima_number;
+                    $employee->base_salary = $request->salary;
+                    $employee->address_line_1 = $request->address_line_1;
+                    $employee->address_line_2 = $request->address_line_2;
+                    $employee->city = $request->city;
+                    $employee->state = $request->state;
+                    $employee->country = $request->country;
+                    $employee->postal_code = $request->postal_code;
+                    $employee->emergency_contact_name = $request->emergency_contact_name;
+                    $employee->emergency_contact_relationship = $request->emergency_contact_relationship;
+                    $employee->emergency_contact_number = $request->emergency_contact_number;
+                    $employee->payment_method = $request->payment_method;
+                    $employee->bank_name = $request->bank_name;
+                    $employee->account_holder_name = $request->account_holder_name;
+                    $employee->account_number = $request->account_number;
+                    $employee->bank_identifier_code = $request->bank_identifier_code;
+                    $employee->bank_branch = $request->bank_branch;
+                    $employee->exempt_from_napsa = $request->boolean('exempt_from_napsa');
+                    $employee->exempt_from_nhima = $request->boolean('exempt_from_nhima');
+                    $employee->exempt_from_sdl = $request->boolean('exempt_from_sdl');
+                    $employee->save();
 
-                if ($request->has('documents') && is_array($request->documents)) {
-                    foreach ($request->documents as $document) {
-                        if (isset($document['file_path']) && !empty($document['file_path'])) {
-                            EmployeeDocument::create([
-                                'employee_id' => $employee->user_id,
-                                'document_type_id' => $document['document_type_id'],
-                                'file_path' => $document['file_path'],
-                                'expiry_date' => $document['expiry_date'] ?? null,
-                                'verification_status' => 'pending',
-                                'created_by' => creatorId(),
-                            ]);
+                    if ($request->has('documents') && is_array($request->documents)) {
+                        foreach ($request->documents as $document) {
+                            if (isset($document['file_path']) && !empty($document['file_path'])) {
+                                EmployeeDocument::create([
+                                    'employee_id' => $employee->user_id,
+                                    'document_type_id' => $document['document_type_id'],
+                                    'file_path' => $document['file_path'],
+                                    'expiry_date' => $document['expiry_date'] ?? null,
+                                    'verification_status' => 'pending',
+                                    'created_by' => creatorId(),
+                                ]);
+                            }
                         }
                     }
-                }
 
-                if ($request->has('candidate_id')) {
-                    $candidate = Candidate::find($request->candidate_id);
-                    if ($candidate) {
-                        $candidate->update(['is_employee' => true]);
+                    if ($request->has('candidate_id')) {
+                        $candidate = Candidate::find($request->candidate_id);
+                        if ($candidate) {
+                            $candidate->update(['is_employee' => true]);
+                        }
+                        return 'candidates';
                     }
+
+                    return 'employees';
+                });
+
+                if ($redirectRoute === 'candidates') {
                     return redirect()->route('hr.recruitment.candidates.index')->with('success', __('Candidate converted to employee successfully'));
                 }
 
@@ -1253,7 +1261,7 @@ class EmployeeController extends Controller
                             continue;
                         }
 
-                        // Auto-generate email if not provided
+                        // Email: use exactly as provided; skip row if duplicate
                         $email = trim($row['email'] ?? '');
                         if (empty($email)) {
                             $empIdSlug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $row['employee_id'] ?? $fullName));

@@ -105,11 +105,27 @@ export function ImportModal({
         method: 'POST',
         body: formData,
         headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
         }
       });
 
-      const data = await response.json();
+      if (response.status === 419) {
+        if (!globalSettings?.is_demo) toast.dismiss();
+        toast.error(t('Session expired. Please refresh the page and try again.'));
+        setTimeout(() => window.location.reload(), 2000);
+        return;
+      }
+
+      const text = await response.text();
+      let data: any;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.error('Server response (non-JSON):', text.substring(0, 500));
+        throw new Error(`Server error (${response.status}). Check the browser console for details.`);
+      }
 
       if (data.excelColumns && data.previewData) {
         setExcelColumns(data.excelColumns);

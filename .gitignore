@@ -23,3 +23,8 @@ yarn-error.log
 /config/verification.php
 node_modules
 /vendor
+
+# ad-hoc deploy/build helper scripts (must never be public/committed)
+/public/_*.php
+/public/*.zip
+/public/*_upload.zip

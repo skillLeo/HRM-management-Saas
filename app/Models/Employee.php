@@ -130,8 +130,12 @@ class Employee extends Model
      */
     public static function generateEmployeeId()
     {
-        $lastEmployee = self::orderBy('id', 'desc')->first();
-        $nextId = $lastEmployee ? $lastEmployee->id + 1 : 1;
+        $creatorId = creatorId();
+        $last = self::where('created_by', $creatorId)
+            ->orderBy('id', 'desc')
+            ->value('employee_id');
+
+        $nextId = $last ? ((int) substr($last, 3)) + 1 : 1;
 
         return 'EMP' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
     }

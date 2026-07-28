@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -r \"require 'vendor/autoload.php'; echo class_exists\\('\\\\PhpOffice\\\\PhpSpreadsheet\\\\IOFactory'\\) ? 'PhpSpreadsheet: OK' : 'PhpSpreadsheet: MISSING';\")",
+      "Bash(php -r ' *)"
+    ]
+  }
+}

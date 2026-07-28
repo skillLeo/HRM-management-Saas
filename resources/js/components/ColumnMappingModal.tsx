@@ -35,7 +35,8 @@ export function ColumnMappingModal({
     if (isOpen && excelColumns.length > 0) {
       const autoMapping: Record<string, string> = {};
       databaseFields.forEach(field => {
-        const match = excelColumns.find(col =>col.toLowerCase().replace(/[_\s]/g, '') === field.key.toLowerCase().replace(/[_\s]/g, ''));
+        const normalize = (s: string) => s.toLowerCase().replace(/[_\s*#]/g, '');
+        const match = excelColumns.find(col => normalize(col) === normalize(field.key));
         if (match) {
           autoMapping[field.key] = match;
         }
